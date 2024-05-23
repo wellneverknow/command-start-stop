@@ -5,7 +5,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "../types/database";
 
-import { COMMIT_HASH } from "../../../handlers/shared/commit-hash";
 import { LogLevel, PrettyLogs } from "../pretty-logs";
 import { Context } from "../../../types/context";
 
@@ -104,9 +103,6 @@ export class Logs {
         metadata.caller = match[1];
       }
     }
-
-    const gitCommit = COMMIT_HASH?.substring(0, 7) ?? null;
-    metadata.revision = gitCommit;
 
     return metadata;
   }

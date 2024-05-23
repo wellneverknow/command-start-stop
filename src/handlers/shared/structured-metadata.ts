@@ -1,7 +1,7 @@
 import { LogLevel } from "../../adapters/supabase/pretty-logs";
-import { COMMIT_HASH } from "./commit-hash";
 
 type Metadata<T extends object> = T & {
+  revision: string;
   logMessage?: {
     type: LogLevel;
     message: string;
@@ -12,8 +12,7 @@ function createStructuredMetadata<T extends object>(className: string, metadata:
   const jsonPretty = JSON.stringify(metadata, null, 2);
   const stackLine = new Error().stack?.split("\n")[2] ?? "";
   const caller = stackLine.match(/at (\S+)/)?.[1] ?? "";
-  const revision = COMMIT_HASH?.substring(0, 7) ?? null;
-  const ubiquityMetadataHeader = `<!-- Ubiquity - ${className} - ${caller} - ${revision}`;
+  const ubiquityMetadataHeader = `<!-- Ubiquity - ${className} - ${caller} - ${metadata.revision}`;
 
   let metadataSerialized: string;
   const metadataSerializedVisible = ["```json", jsonPretty, "```"].join("\n");

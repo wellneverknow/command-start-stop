@@ -1,0 +1,6 @@
+name = "ubiquibot-assistive-pricing"
+main = "src/worker.ts"
+compatibility_date = "2024-05-23"
+node_compat = true
+[env.dev]
+[env.prod]

@@ -23,6 +23,16 @@ export async function start(context: Context, issue: any, sender: { id: number; 
     throw logger.error(`Skipping '/start' since the issue is a parent issue`);
   }
 
+  let commitHash = null;
+
+  commitHash = await context.octokit.repos.getCommit({
+    owner: context.payload.repository.owner.login,
+    repo: context.payload.repository.name,
+    ref: context.payload.repository.default_branch,
+  });
+
+  commitHash = commitHash.data.sha;
+
   // check max assigned issues
 
   const openedPullRequests = await getAvailableOpenedPullRequests(context, sender.login);
@@ -71,7 +81,7 @@ export async function start(context: Context, issue: any, sender: { id: number; 
   }
 
   const { id, login } = sender;
-  const toCreate = { duration, priceLabel };
+  const toCreate = { duration, priceLabel, revision: commitHash.substring(0, 7) };
 
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, id, duration);
   const metadata = structuredMetadata.create<typeof toCreate>("Assignment", toCreate);
