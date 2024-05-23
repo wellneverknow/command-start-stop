@@ -16,9 +16,9 @@ export async function userStartStop(context: Context): Promise<{ output: string 
   }
 
   if (directive === "stop") {
-    await stop(context, issue, sender, repository);
+    return await stop(context, issue, sender, repository);
   } else if (directive === "start") {
-    await start(context, issue, sender);
+    return await start(context, issue, sender);
   }
   return { output: null };
 }

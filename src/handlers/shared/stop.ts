@@ -5,27 +5,30 @@ import { addCommentToIssue, closePullRequestForAnIssue } from "../../utils/issue
 export async function stop(context: Context, issue: any, sender: { id: number; login: string }, repo: any) {
   const { logger } = context;
   const issueNumber = issue.number;
+  const out = { output: null };
 
   // is it an issue?
   if (!issue) {
     logger.info(`Skipping '/stop' because of no issue instance`);
-    return;
+    console.error("Issue is not defined");
+    return out;
   }
 
   // is there an assignee?
   const assignees = issue.assignees ?? [];
   if (assignees.length == 0) {
     logger.error("No assignees found for issue", { issueNumber });
-    return;
+    console.error("No assignees found for issue");
+    return out;
   }
 
   // should unassign?
-
   const shouldUnassign = assignees[0]?.login.toLowerCase() == sender.login.toLowerCase();
 
   if (!shouldUnassign) {
     logger.error("You are not assigned to this task", { issueNumber, user: sender.login });
-    return;
+    console.error("You are not assigned to this task");
+    return out;
   }
 
   // close PR
@@ -52,4 +55,5 @@ export async function stop(context: Context, issue: any, sender: { id: number; l
   });
 
   addCommentToIssue(context, "````diff\n+ You have been unassigned from this task.\n````").catch(console.error);
+  return { output: "Task unassigned successfully" };
 }

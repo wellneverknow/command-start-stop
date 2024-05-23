@@ -11,7 +11,7 @@ export function getTimeLabelsAssigned(context: Context, labels: Label[], config:
   const timeLabelsAssigned: Label[] = [];
   for (const _label of labels) {
     const _labelType = typeof _label;
-    let _labelName;
+    let _labelName: string;
 
     if (_labelType === "string") {
       _labelName = _label.toString();

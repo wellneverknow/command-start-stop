@@ -110,4 +110,6 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
       metadata,
     ].join("\n") as string
   );
+
+  return { output: "Task assigned successfully" };
 }
