@@ -1,5 +1,5 @@
 {
-  "name": "@ubiquibot-plugins/start-stop",
+  "name": "@ubiquibot/command-start-stop",
   "version": "1.0.0",
   "description": "Enables the assignment of tasks to hunters and the graceful unassignment.",
   "main": "build/index.ts",

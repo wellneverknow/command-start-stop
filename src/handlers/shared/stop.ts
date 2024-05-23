@@ -1,8 +1,7 @@
 import { Context } from "../../types";
 import { addCommentToIssue, closePullRequestForAnIssue } from "../../utils/issue";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function stop(context: Context, issue: any, sender: { id: number; login: string }, repo: any) {
+export async function stop(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"], repo: Context["payload"]["repository"]) {
   const { logger } = context;
   const issueNumber = issue.number;
   const out = { output: null };

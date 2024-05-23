@@ -1,5 +1,5 @@
 import { Context } from "../types/context";
-import { GitHubIssue, GitHubPayload, GitHubRepository, HandlerReturnValuesNoVoid, IssueType } from "../types/payload";
+import { GitHubIssue, HandlerReturnValuesNoVoid, IssueType } from "../types/payload";
 import { LogReturn } from "../adapters/supabase/helpers/logs";
 import { getLinkedPullRequests } from "./get-linked-prs";
 
@@ -69,7 +69,7 @@ export async function closePullRequest(context: Context, pullNumber: number) {
   }
 }
 
-export async function closePullRequestForAnIssue(context: Context, issueNumber: number, repository: GitHubRepository) {
+export async function closePullRequestForAnIssue(context: Context, issueNumber: number, repository: Context["payload"]["repository"]) {
   const logger = context.logger;
   if (!issueNumber) {
     throw logger.fatal("Issue is not defined");
@@ -96,7 +96,7 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
 }
 
 export async function addAssignees(context: Context, issueNo: number, assignees: string[]) {
-  const payload = context.payload as GitHubPayload;
+  const payload = context.payload;
 
   try {
     await context.octokit.rest.issues.addAssignees({
@@ -111,7 +111,7 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
 }
 
 export async function getAllPullRequests(context: Context, state: "open" | "closed" | "all" = "open") {
-  const payload = context.payload as GitHubPayload;
+  const payload = context.payload;
 
   try {
     return await context.octokit.paginate(context.octokit.rest.pulls.list, {
