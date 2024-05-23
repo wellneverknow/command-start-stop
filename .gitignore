@@ -14,3 +14,4 @@ coverage
 junit.xml
 cypress/screenshots
 script.ts
+.wrangler
