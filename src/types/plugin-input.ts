@@ -1,11 +1,10 @@
-import { EmitterWebhookEvent as WebhookEvent, EmitterWebhookEventName as WebhookEventName } from "@octokit/webhooks";
-import { SupportedEvents } from "./context";
+import { SupportedEvents, SupportedEventsU } from "./context";
 import { StaticDecode, Type as T } from "@sinclair/typebox";
 
-export interface PluginInputs<T extends WebhookEventName = SupportedEvents> {
+export interface PluginInputs<T extends SupportedEventsU = SupportedEventsU, TU extends SupportedEvents[T] = SupportedEvents[T]> {
   stateId: string;
   eventName: T;
-  eventPayload: WebhookEvent<T>["payload"];
+  eventPayload: TU["payload"];
   settings: StartStopSettings;
   authToken: string;
   ref: string;

@@ -1,4 +1,4 @@
-import { Context, IssueType, Label, GitHubUser } from "../../types";
+import { Context, IssueType, Label } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
@@ -8,8 +8,7 @@ import { getTimeLabelsAssigned } from "./get-time-labels-assigned";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function start(context: Context, issue: any, sender: { id: number; login: string }) {
+export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"]) {
   const { logger, config } = context;
   const { maxConcurrentTasks } = config.miscellaneous;
   const { taskStaleTimeoutDuration } = config.timers;
@@ -88,7 +87,7 @@ export async function start(context: Context, issue: any, sender: { id: number; 
 
   // add assignee
 
-  if (!assignees.map((i: GitHubUser) => i.login).includes(login)) {
+  if (!assignees.map((i) => i?.login).includes(login)) {
     await addAssignees(context, issue.number, [login]);
   }
 

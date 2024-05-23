@@ -21,7 +21,6 @@ export default {
       }
 
       const webhookPayload = await request.json();
-      console.log("webhookPayload: ", webhookPayload);
       const settings = Value.Decode(startStopSchema, Value.Default(startStopSchema, JSON.parse(webhookPayload.settings)));
       webhookPayload.eventPayload = JSON.parse(webhookPayload.eventPayload);
       webhookPayload.settings = settings;
