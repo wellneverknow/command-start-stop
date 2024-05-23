@@ -34,7 +34,7 @@ export async function getMultiplierInfoToDisplay(context: Context, labels: Label
 
 function parsePrice(priceString: string) {
   const match = priceString.match(/Price: ([\d.]+) (\w+)/);
-  if (!match) {
+  if (!match || match.length < 3) {
     throw new Error("Invalid price string");
   }
 

@@ -16,7 +16,7 @@ export async function run() {
     eventName: payload.eventName,
     eventPayload: JSON.parse(payload.eventPayload),
     settings,
-    authToken: env.GITHUB_TOKEN,
+    authToken: env.UBIQUIBOT_TOKEN,
     ref: payload.ref,
   };
 
