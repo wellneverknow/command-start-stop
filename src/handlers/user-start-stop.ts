@@ -12,7 +12,7 @@ export async function userStartStop(context: Context): Promise<{ output: string 
 
   if (isCommandDisabled) {
     await addCommentToIssue(context, "```diff\n! The /start command is disabled for this repository.\n```");
-    throw logger.error(`The '/${directive}' command is disabled for this repository.`);
+    throw new Error(`The '/${directive}' command is disabled for this repository.`);
   }
 
   if (directive === "stop") {

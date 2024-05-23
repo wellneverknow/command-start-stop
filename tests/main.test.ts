@@ -23,26 +23,6 @@ if (!url || !key) {
   throw new Error("Supabase URL and Key are required");
 }
 
-const mockedTable = {
-  select: jest.fn().mockReturnValue({
-    eq: jest.fn().mockReturnValue({
-      single: jest.fn().mockResolvedValue({
-        data: {
-          id: 1,
-          wallets: {
-            address: "0x123",
-          },
-        },
-      }),
-    }),
-  }),
-};
-
-const mockedSupabase = {
-  from: jest.fn().mockReturnValue(mockedTable),
-};
-
-const supabase = mockedSupabase as unknown as ReturnType<typeof createClient>;
 beforeAll(() => {
   server.listen();
 });
@@ -63,7 +43,7 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(supabase, context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
     const { output } = await userStartStop(context as unknown as Context);
 
@@ -77,11 +57,196 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender, "/stop");
 
-    context.adapters = createAdapters(supabase, context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
     const { output } = await userStartStop(context as unknown as Context);
 
     expect(output).toEqual("Task unassigned successfully");
+  });
+
+  test("User can't stop an issue they're not assigned to", async () => {
+    const errorSpy = jest.spyOn(console, "error").mockImplementation();
+    // using the second issue
+    const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender, "/stop");
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    await userStartStop(context as unknown as Context);
+
+    expect(errorSpy).toHaveBeenCalledWith("You are not assigned to this task");
+  });
+
+  test("User can't start an issue that's already assigned", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender, "/start");
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    const err = "Issue is already assigned";
+
+    try {
+      await userStartStop(context as unknown as Context);
+    } catch (error) {
+      if (error instanceof Error) {
+        expect(error.message).toEqual(err);
+      }
+    }
+  });
+
+  test("User can't start an issue without a price label", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 3 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender);
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    const err = "No price label is set to calculate the duration";
+
+    try {
+      await userStartStop(context as unknown as Context);
+    } catch (error) {
+      if (error instanceof Error) {
+        expect(error.message).toEqual(err);
+      }
+    }
+  });
+
+  test("User can't start an issue without a wallet address", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender);
+
+    context.adapters = createAdapters(getSupabase(false), context as unknown as Context);
+
+    try {
+      await userStartStop(context as unknown as Context);
+    } catch (error) {
+      if (error instanceof Error) {
+        expect(error.message).toEqual("No wallet address found");
+      }
+    }
+  });
+
+  test("User can't start an issue that's closed", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 4 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender);
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    try {
+      await userStartStop(context as unknown as Context);
+    } catch (error) {
+      if (error instanceof Error) {
+        expect(error.message).toEqual("Issue is closed");
+      }
+    }
+  });
+
+  test("User can't start if command is disabled", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender, "/start", true);
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    try {
+      await userStartStop(context as unknown as Context);
+    } catch (error) {
+      if (error instanceof Error) {
+        expect(error.message).toEqual("The '/start' command is disabled for this repository.");
+      }
+    }
+  });
+
+  test("User can't stop if command is disabled", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender, "/stop", true);
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    try {
+      await userStartStop(context as unknown as Context);
+    } catch (error) {
+      if (error instanceof Error) {
+        expect(error.message).toEqual("The '/stop' command is disabled for this repository.");
+      }
+    }
+  });
+
+  test("User can't start an issue that's a parent issue", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender, "/start");
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    try {
+      await userStartStop(context as unknown as Context);
+    } catch (error) {
+      if (error instanceof Error) {
+        expect(error.message).toEqual("Issue is a parent issue");
+      }
+    }
+  });
+
+  test("User can't start another issue if they have reached the max limit", async () => {
+    // getAvailableOpenedPullRequests()
+    jest.mock("../src/utils/issue", () => ({
+      getAvailableOpenedPullRequests: jest.fn().mockResolvedValue([
+        {
+          number: 1,
+          reviews: [
+            {
+              state: "APPROVED",
+            },
+          ],
+        },
+        {
+          number: 2,
+          reviews: [
+            {
+              state: "APPROVED",
+            },
+          ],
+        },
+        {
+          number: 3,
+          reviews: [
+            {
+              state: "APPROVED",
+            },
+          ],
+        },
+      ]),
+    }));
+
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender);
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    try {
+      await userStartStop(context as unknown as Context);
+    } catch (error) {
+      if (error instanceof Error) {
+        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 3 issues.");
+      }
+    }
   });
 });
 
@@ -122,6 +287,38 @@ async function setupTests() {
         login: "user2",
       },
     ],
+    owner: "ubiquity",
+  });
+
+  db.issue.create({
+    ...issueTemplate,
+    id: 3,
+    node_id: "MDU6SXNzdWUy",
+    title: "Third issue",
+    number: 3,
+    labels: [],
+    body: "Third issue body",
+    owner: "ubiquity",
+  });
+
+  db.issue.create({
+    ...issueTemplate,
+    id: 4,
+    node_id: "MDU6SXNzdWUy",
+    title: "Fourth issue",
+    number: 4,
+    body: "Fourth issue body",
+    owner: "ubiquity",
+    state: "CLOSED",
+  });
+
+  db.issue.create({
+    ...issueTemplate,
+    id: 5,
+    node_id: "MDU6SXNzdWUy",
+    title: "Fifth issue",
+    number: 5,
+    body: "- [x] #1\n- [ ] #2",
     owner: "ubiquity",
   });
 
@@ -225,4 +422,34 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       SUPABASE_URL: url,
     },
   };
+}
+
+function getSupabase(withData = true) {
+  const mockedTable = {
+    select: jest.fn().mockReturnValue({
+      eq: jest.fn().mockReturnValue({
+        single: jest.fn().mockResolvedValue({
+          data: withData
+            ? {
+                id: 1,
+                wallets: {
+                  address: "0x123",
+                },
+              }
+            : {
+                id: 1,
+                wallets: {
+                  address: undefined,
+                },
+              },
+        }),
+      }),
+    }),
+  };
+
+  const mockedSupabase = {
+    from: jest.fn().mockReturnValue(mockedTable),
+  };
+
+  return mockedSupabase as unknown as ReturnType<typeof createClient>;
 }

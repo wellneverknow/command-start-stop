@@ -19,7 +19,8 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
       context,
       "```diff\n# Please select a child issue from the specification checklist to work on. The '/start' command is disabled on parent issues.\n```"
     );
-    throw logger.error(`Skipping '/start' since the issue is a parent issue`);
+    console.error(`Skipping '/start' since the issue is a parent issue`);
+    throw new Error("Issue is a parent issue");
   }
 
   let commitHash = null;
@@ -44,22 +45,20 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   if (assignedIssues.length - openedPullRequests.length >= maxConcurrentTasks) {
     await addCommentToIssue(context, "```diff\n! Too many assigned issues, you have reached your max limit.\n```");
-    throw logger.error("Too many assigned issues, you have reached your max limit", {
-      maxConcurrentTasks,
-    });
+    throw new Error(`Too many assigned issues, you have reached your max limit of ${maxConcurrentTasks} issues.`);
   }
 
   // is it assignable?
 
   if (issue.state === IssueType.CLOSED) {
     await addCommentToIssue(context, "```diff\n! The issue is closed. Please choose another unassigned bounty.\n```");
-    throw logger.error(`Skipping '/start' since the issue is closed`);
+    throw new Error("Issue is closed");
   }
 
   const assignees = (issue?.assignees ?? []).filter(Boolean);
   if (assignees.length !== 0) {
     await addCommentToIssue(context, "```diff\n! The issue is already assigned. Please choose another unassigned bounty.\n```");
-    throw logger.error(`Skipping '/start' since the issue is already assigned`);
+    throw new Error("Issue is already assigned");
   }
 
   // get labels
@@ -71,7 +70,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   if (!priceLabel) {
     await addCommentToIssue(context, "```diff\n! No price label is set to calculate the duration.\n```");
-    throw logger.error(`Skipping '/start' since no price label is set to calculate the duration`);
+    throw new Error("No price label is set to calculate the duration");
   }
 
   const timeLabelsAssigned = getTimeLabelsAssigned(context, issue.labels, config);
