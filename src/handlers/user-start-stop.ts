@@ -4,7 +4,7 @@ import { start } from "./shared/start";
 import { stop } from "./shared/stop";
 
 export async function userStartStop(context: Context): Promise<{ output: string | null }> {
-  const { payload, logger, config } = context;
+  const { payload, config } = context;
   const { issue, comment, sender, repository } = payload;
   const directive = comment.body.split(" ")[0].replace("/", "");
   const { disabledCommands } = config;
@@ -20,5 +20,6 @@ export async function userStartStop(context: Context): Promise<{ output: string 
   } else if (directive === "start") {
     return await start(context, issue, sender);
   }
+
   return { output: null };
 }

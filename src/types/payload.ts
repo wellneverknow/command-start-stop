@@ -43,7 +43,6 @@ const userSchema = Type.Object({
   site_admin: Type.Boolean(),
 });
 
-export type GitHubUser = Static<typeof userSchema>;
 export enum AuthorAssociation {
   OWNER = "OWNER",
   COLLABORATOR = "COLLABORATOR",

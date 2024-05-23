@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable sonarjs/no-duplicate-string */
 import { http, HttpResponse } from "msw";
 import { db } from "./db";
 import issueTemplate from "./issue-template";
@@ -34,18 +36,15 @@ export const handlers = [
     return HttpResponse.json({ owner, repo, issue_number });
   }),
   // get commit
-  http.get(
-    "https://api.github.com/repos/:owner/:repo/commits/:ref",
-    ({ params: { owner, repo, ref } }: { params: { owner: string; repo: string; ref: string } }) => {
-      const res = {
-        data: {
-          sha: "commitHash",
-        },
-      };
+  http.get("https://api.github.com/repos/:owner/:repo/commits/:ref", () => {
+    const res = {
+      data: {
+        sha: "commitHash",
+      },
+    };
 
-      return HttpResponse.json(res);
-    }
-  ),
+    return HttpResponse.json(res);
+  }),
   // list pull requests
   http.get("https://api.github.com/repos/:owner/:repo/pulls", ({ params: { owner, repo } }: { params: { owner: string; repo: string } }) => {
     return HttpResponse.json(db.pull.findMany({ where: { owner: { equals: owner }, repo: { equals: repo } } }));
@@ -79,7 +78,7 @@ export const handlers = [
     return HttpResponse.json(db.pull.findMany({ where: { owner: { equals: owner as string }, repo: { equals: repo as string } } }));
   }),
   // get commit hash
-  http.get("https://api.github.com/repos/:owner/:repo/commits", ({ params: { owner, repo } }) => {
+  http.get("https://api.github.com/repos/:owner/:repo/commits", () => {
     return HttpResponse.json({ sha: "commitHash" });
   }),
   // list all pull request reviews
