@@ -5,8 +5,6 @@ import { Context } from "../../../types/context";
 import { addCommentToIssue } from "../../../utils/issue";
 
 export class User extends Super {
-  locationResponse: LocationResponse | undefined;
-
   user_id: string | undefined;
   comment_id: string | undefined;
   issue_id: string | undefined;
@@ -79,27 +77,3 @@ export class User extends Super {
 
 const FAILED_TO_GET_USER = "Failed to get user";
 const SUCCESSFULLY_FETCHED_USER = "Successfully fetched user";
-
-interface LocationResponse {
-  data: {
-    node: {
-      id: string;
-      author: {
-        login: string;
-        id: string;
-      };
-      issue: {
-        id: string;
-        number: number;
-        repository: {
-          id: string;
-          name: string;
-          owner: {
-            id: string;
-            login: string;
-          };
-        };
-      };
-    };
-  };
-}
