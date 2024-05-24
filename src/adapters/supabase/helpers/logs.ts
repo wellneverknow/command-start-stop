@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // This is disabled because logs should be able to log any type of data
 // Normally this is forbidden
 
@@ -8,33 +7,35 @@ import { Database } from "../types/database";
 import { LogLevel, PrettyLogs } from "../pretty-logs";
 import { Context } from "../../../types/context";
 
-type LogFunction = (message: string, metadata?: any) => void;
+type Metadata = Record<string, unknown>;
+
+type LogFunction = (message: string, metadata?: Metadata) => void;
 type LogInsert = Database["public"]["Tables"]["logs"]["Insert"];
 type LogParams = {
   level: LogLevel;
   consoleLog: LogFunction;
   logMessage: string;
-  metadata?: any;
+  metadata?: Metadata;
   postComment?: boolean;
-  type: PublicMethods<Logs>;
+  type: PublicMethods<Logs> | NonNullable<string>;
 };
 export class LogReturn {
   logMessage: LogMessage;
-  metadata?: any;
+  metadata?: Metadata;
 
-  constructor(logMessage: LogMessage, metadata?: any) {
+  constructor(logMessage: LogMessage, metadata?: Metadata) {
     this.logMessage = logMessage;
     this.metadata = metadata;
   }
 }
 
 type FunctionPropertyNames<T> = {
-  [K in keyof T]: T[K] extends (...args: any[]) => any ? K : never;
+  [K in keyof T]: T[K] extends (...args: unknown[]) => unknown ? K : never;
 }[keyof T];
 
 type PublicMethods<T> = Exclude<FunctionPropertyNames<T>, "constructor" | keyof object>;
 
-export type LogMessage = { raw: string; diff: string; level: LogLevel; type: PublicMethods<Logs> };
+export type LogMessage = { raw: string; diff: string; level: LogLevel; type: PublicMethods<Logs> | NonNullable<string> };
 
 export class Logs {
   private _supabase: SupabaseClient;
@@ -82,7 +83,7 @@ export class Logs {
       metadata
     );
   }
-  private _addDiagnosticInformation(metadata: any) {
+  private _addDiagnosticInformation(metadata?: Metadata) {
     // this is a utility function to get the name of the function that called the log
     // I have mixed feelings on this because it manipulates metadata later possibly without the developer understanding why and where,
     // but seems useful for the metadata parser to understand where the comment originated from
@@ -107,7 +108,7 @@ export class Logs {
     return metadata;
   }
 
-  public ok(log: string, metadata?: any, postComment?: boolean): LogReturn | null {
+  public ok(log: string, metadata?: Metadata, postComment?: boolean): LogReturn | null {
     metadata = this._addDiagnosticInformation(metadata);
     return this._log({
       level: LogLevel.INFO,
@@ -119,7 +120,7 @@ export class Logs {
     });
   }
 
-  public warn(log: string, metadata?: any, postComment?: boolean): LogReturn | null {
+  public warn(log: string, metadata?: Metadata, postComment?: boolean): LogReturn | null {
     metadata = this._addDiagnosticInformation(metadata);
     return this._log({
       level: LogLevel.ERROR,
@@ -131,7 +132,7 @@ export class Logs {
     });
   }
 
-  public info(log: string, metadata?: any, postComment?: boolean): LogReturn | null {
+  public info(log: string, metadata?: Metadata, postComment?: boolean): LogReturn | null {
     metadata = this._addDiagnosticInformation(metadata);
     return this._log({
       level: LogLevel.INFO,
@@ -143,7 +144,7 @@ export class Logs {
     });
   }
 
-  public error(log: string, metadata?: any, postComment?: boolean): LogReturn | null {
+  public error(log: string, metadata?: Metadata, postComment?: boolean): LogReturn | null {
     metadata = this._addDiagnosticInformation(metadata);
     return this._log({
       level: LogLevel.ERROR,
@@ -155,7 +156,7 @@ export class Logs {
     });
   }
 
-  public debug(log: string, metadata?: any, postComment?: boolean): LogReturn | null {
+  public debug(log: string, metadata?: Metadata, postComment?: boolean): LogReturn | null {
     metadata = this._addDiagnosticInformation(metadata);
     return this._log({
       level: LogLevel.DEBUG,
@@ -167,7 +168,7 @@ export class Logs {
     });
   }
 
-  public fatal(log: string, metadata?: any, postComment?: boolean): LogReturn | null {
+  public fatal(log: string, metadata?: Metadata, postComment?: boolean): LogReturn | null {
     if (!metadata) {
       metadata = Logs.convertErrorsIntoObjects(new Error(log));
       const stack = metadata.stack as string[];
@@ -192,7 +193,7 @@ export class Logs {
     });
   }
 
-  verbose(log: string, metadata?: any, postComment?: boolean): LogReturn | null {
+  verbose(log: string, metadata?: Metadata, postComment?: boolean): LogReturn | null {
     metadata = this._addDiagnosticInformation(metadata);
     return this._log({
       level: LogLevel.VERBOSE,
@@ -283,7 +284,7 @@ export class Logs {
     Logs.console.ok(logInsert.log, logInsert);
   }
 
-  static _commentMetaData(metadata: any, level: LogLevel) {
+  static _commentMetaData(metadata: Metadata, level: LogLevel) {
     const prettySerialized = JSON.stringify(metadata, null, 2);
     // first check if metadata is an error, then post it as a json comment
     // otherwise post it as an html comment
@@ -368,7 +369,7 @@ export class Logs {
         return -1; // Invalid level
     }
   }
-  static convertErrorsIntoObjects(obj: any): any {
+  static convertErrorsIntoObjects(obj: Error | Record<string, unknown>) {
     // this is a utility function to render native errors in the console, the database, and on GitHub.
     if (obj instanceof Error) {
       return {
@@ -377,10 +378,8 @@ export class Logs {
         stack: obj.stack ? obj.stack.split("\n") : null,
       };
     } else if (typeof obj === "object" && obj !== null) {
-      const keys = Object.keys(obj);
-      keys.forEach((key) => {
-        obj[key] = this.convertErrorsIntoObjects(obj[key]);
-      });
+      const keys = Object.keys(obj) as (keyof typeof obj)[];
+      keys.forEach((key) => (obj[key] = this.convertErrorsIntoObjects(obj[key] as Error | Record<string, unknown>)));
     }
     return obj;
   }
