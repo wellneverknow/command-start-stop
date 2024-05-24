@@ -1,4 +1,4 @@
-# `@ubiquibot-plugins/start-stop-plugin`
+# `@ubiquibot/Command-Start-Stop`
 
 This plugin allows a hunter to begin a task as well as gracefully stop a task without incurring a negative impact on the hunter's XP or karma.
 
@@ -22,11 +22,11 @@ To stop a task, a hunter should use the `/stop` command. This will unassign them
 - The command is not disabled at the repository or organization level
 - The command is called on the issue, not the associated pull request
 
-### [Configuration](./src/plugin-config.yml)
+### [Configuration](./src/types/plugin-input.ts)
 
 #### Note: The command name is `"start"` when configuring your `.ubiquibot-config.yml` file.
 
-To configure your Ubiquibot to run this plugin, add the following to your [`.ubiquibot-config.yml`](./.github/.ubiquibot-config.yml) file at either the organization or repository level:
+To configure your Ubiquibot to run this plugin, add the following to the `.ubiquibot-config.yml` file in your organization configuration repository.
 
 ```yml
 plugins:
@@ -50,5 +50,14 @@ plugins:
             labels:
               time: []
               priority: []
+```
 
+# Testing
+
+### Jest
+
+To run the Jest test suite, run the following command:
+
+```bash
+yarn test
 ```

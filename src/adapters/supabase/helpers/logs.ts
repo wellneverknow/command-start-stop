@@ -9,7 +9,7 @@ import { Context } from "../../../types/context";
 
 export type Metadata = Record<string, unknown>;
 
-type LogFunction = (message: string, metadata?: Metadata) => void;
+type LogFunction = (message: string, metadata?: Metadata | unknown | string) => void;
 type LogInsert = Database["public"]["Tables"]["logs"]["Insert"];
 type LogParams = {
   level: LogLevel;
