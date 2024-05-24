@@ -83,20 +83,20 @@ const SUCCESSFULLY_FETCHED_USER = "Successfully fetched user";
 interface LocationResponse {
   data: {
     node: {
-      id: "IC_kwDOH92Z-c5oA5cs";
+      id: string;
       author: {
-        login: "molecula451";
-        id: "MDQ6VXNlcjQxNTUyNjYz";
+        login: string;
+        id: string;
       };
       issue: {
-        id: "I_kwDOH92Z-c5yRpyq";
-        number: 846;
+        id: string;
+        number: number;
         repository: {
-          id: "R_kgDOH92Z-Q";
-          name: "ubiquibot";
+          id: string;
+          name: string;
           owner: {
-            id: "MDEyOk9yZ2FuaXphdGlvbjc2NDEyNzE3";
-            login: "ubiquity";
+            id: string;
+            login: string;
           };
         };
       };

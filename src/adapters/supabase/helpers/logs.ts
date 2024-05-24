@@ -7,7 +7,7 @@ import { Database } from "../types/database";
 import { LogLevel, PrettyLogs } from "../pretty-logs";
 import { Context } from "../../../types/context";
 
-type Metadata = Record<string, unknown>;
+export type Metadata = Record<string, unknown>;
 
 type LogFunction = (message: string, metadata?: Metadata) => void;
 type LogInsert = Database["public"]["Tables"]["logs"]["Insert"];

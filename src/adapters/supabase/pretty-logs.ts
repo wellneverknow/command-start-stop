@@ -1,6 +1,4 @@
 import util from "util";
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 type PrettyLogsWithOk = "ok" | LogLevel;
 export class PrettyLogs {
   constructor() {
@@ -12,31 +10,31 @@ export class PrettyLogs {
     this.debug = this.debug.bind(this);
     this.verbose = this.verbose.bind(this);
   }
-  public fatal(message: string, metadata?: any) {
+  public fatal(message: string, metadata?: Metadata) {
     this._logWithStack(LogLevel.FATAL, message, metadata);
   }
 
-  public error(message: string, metadata?: any) {
+  public error(message: string, metadata?: Metadata) {
     this._logWithStack(LogLevel.ERROR, message, metadata);
   }
 
-  public ok(message: string, metadata?: any) {
+  public ok(message: string, metadata?: Metadata) {
     this._logWithStack("ok", message, metadata);
   }
 
-  public warn(message: string, metadata?: any) {
+  public warn(message: string, metadata?: Metadata) {
     this._logWithStack(LogLevel.ERROR, message, metadata);
   }
 
-  public info(message: string, metadata?: any) {
+  public info(message: string, metadata?: Metadata) {
     this._logWithStack(LogLevel.INFO, message, metadata);
   }
 
-  public debug(message: string, metadata?: any) {
+  public debug(message: string, metadata?: Metadata) {
     this._logWithStack(LogLevel.DEBUG, message, metadata);
   }
 
-  public verbose(message: string, metadata?: any) {
+  public verbose(message: string, metadata?: Metadata) {
     this._logWithStack(LogLevel.VERBOSE, message, metadata);
   }
 
@@ -96,11 +94,11 @@ export class PrettyLogs {
       .join("\n");
   }
 
-  private _isEmpty(obj: Record<string, any>) {
+  private _isEmpty(obj: Record<string, unknown>) {
     return !Reflect.ownKeys(obj).some((key) => typeof obj[String(key)] !== "function");
   }
 
-  private _log(type: PrettyLogsWithOk, message: any) {
+  private _log(type: PrettyLogsWithOk, message: string | Metadata) {
     const defaultSymbols: Record<PrettyLogsWithOk, string> = {
       fatal: "×",
       ok: "✓",
@@ -146,12 +144,12 @@ export class PrettyLogs {
     }
   }
 }
-interface Metadata {
+export interface Metadata {
   error?: { stack?: string };
   stack?: string;
   message?: string;
   name?: string;
-  [key: string]: any;
+  [key: string]: NonNullable<unknown> | undefined;
 }
 
 enum Colors {
