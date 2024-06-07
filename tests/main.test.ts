@@ -417,7 +417,6 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
     octokit: new octokit.Octokit(),
     eventName: "issue_comment.created" as SupportedEventsU,
     env: {
-      UBIQUIBOT_TOKEN: "token",
       SUPABASE_KEY: key,
       SUPABASE_URL: url,
     },

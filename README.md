@@ -29,27 +29,25 @@ To stop a task, a hunter should use the `/stop` command. This will unassign them
 To configure your Ubiquibot to run this plugin, add the following to the `.ubiquibot-config.yml` file in your organization configuration repository.
 
 ```yml
-plugins:
-  issue_comment.created:
-    - uses:
-        - plugin: ubiquibot-plugins/start-stop-plugin:compute.yml@development
-          name: start-stop
-          id: start-stop-command
-          type: github
-          description: "Allows a user to start/stop a bounty without negative XP impact"
-          command: "/(start|stop)"
-          example: "/start | /stop"
-          with:
-            disabledCommands: [] # Empty array means no commands are disabled
-                - start # Disables the start command
-            timers:
-              reviewDelayTolerance: 86000
-              taskStaleTimeoutDuration: 2580000
-            miscellaneous:
-              maxConcurrentTasks: 3
-            labels:
-              time: []
-              priority: []
+- plugin: http://localhost:4000 # or the URL where the plugin is hosted
+  name: start-stop
+  id: start-stop-command
+  type: github
+  description: "Allows a user to start/stop a bounty without negative XP impact"
+  command: "/(start|stop)"
+  example: "/start | /stop"
+  with:
+    disabledCommands: []
+    # "start",
+    # "stop"
+    timers:
+      reviewDelayTolerance: 86000
+      taskStaleTimeoutDuration: 2580000
+    miscellaneous:
+      maxConcurrentTasks: 3
+    labels:
+      time: []
+      priority: []
 ```
 
 # Testing

@@ -14,7 +14,7 @@ export async function getMultiplierInfoToDisplay(context: Context, labels: Label
   let totalPriceOfTask: string | null = null;
 
   if (value && value != 1) {
-    const task = taskPaymentMetaData(context, labels);
+    const task = taskPaymentMetaData(labels);
 
     if (task.priceLabel) {
       const price = parsePrice(task.priceLabel);

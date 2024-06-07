@@ -22,8 +22,6 @@ jobs:
           secrets: |
             SUPABASE_URL
             SUPABASE_KEY
-            UBIQUIBOT_TOKEN
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          UBIQUIBOT_TOKEN: ${{ secrets.UBIQUIBOT_TOKEN }}

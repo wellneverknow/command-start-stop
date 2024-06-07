@@ -4,7 +4,6 @@ import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
 import { generateAssignmentComment } from "./generate-assignment-comment";
 import { getMultiplierInfoToDisplay } from "./get-multiplier-info";
-import { getTimeLabelsAssigned } from "./get-time-labels-assigned";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
@@ -66,17 +65,12 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const labels = issue.labels;
   const priceLabel = labels.find((label: Label) => label.name.startsWith("Price: "));
 
-  let duration: number | null = null;
-
   if (!priceLabel) {
     await addCommentToIssue(context, "```diff\n! No price label is set to calculate the duration.\n```");
     throw new Error("No price label is set to calculate the duration");
   }
 
-  const timeLabelsAssigned = getTimeLabelsAssigned(context, issue.labels, config);
-  if (timeLabelsAssigned) {
-    duration = calculateDurations(timeLabelsAssigned).shift() || null;
-  }
+  const duration: number | null = calculateDurations(labels).shift() || null;
 
   const { id, login } = sender;
   const toCreate = { duration, priceLabel, revision: commitHash.substring(0, 7) };

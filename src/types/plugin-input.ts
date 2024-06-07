@@ -14,18 +14,6 @@ const oneDay = 24 * 60 * 60 * 1000;
 
 export const startStopSchema = T.Object({
   disabledCommands: T.Array(T.String(), { default: ["start", "stop"] }),
-  labels: T.Object(
-    {
-      time: T.Array(T.String()),
-      priority: T.Array(T.String()),
-    },
-    {
-      default: {
-        time: ["Time: <1 hour", "Time: <2 hours", "Time: <4 hours", "Time: <1 day", "Time: <2 days", "Time: <1 week"],
-        priority: ["Priority: 1 (Normal)", "Priority: 2 (Medium)", "Priority: 3 (high)", "Priority: 4 (Urgent)", "Priority: 5 (Emergency)"],
-      },
-    }
-  ),
   timers: T.Object(
     {
       reviewDelayTolerance: T.Number(),
