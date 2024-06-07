@@ -160,8 +160,6 @@ const repositorySchema = Type.Object({
   web_commit_signoff_required: Type.Boolean(),
 });
 
-export type GitHubRepository = Static<typeof repositorySchema>;
-
 const organizationSchema = Type.Object({
   login: Type.String(),
   id: Type.Number(),
@@ -234,7 +232,5 @@ export const payloadSchema = Type.Object({
   repositories_added: Type.Optional(Type.Array(repositorySchema)),
   changes: Type.Optional(changesSchema),
 });
-
-export type GitHubPayload = Static<typeof payloadSchema>;
 
 export type HandlerReturnValuesNoVoid = null | string | LogReturn;

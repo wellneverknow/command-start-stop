@@ -22,15 +22,18 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     throw new Error("Issue is a parent issue");
   }
 
-  let commitHash = null;
+  let commitHash: string | null = null;
 
-  commitHash = await context.octokit.repos.getCommit({
-    owner: context.payload.repository.owner.login,
-    repo: context.payload.repository.name,
-    ref: context.payload.repository.default_branch,
-  });
-
-  commitHash = commitHash.data.sha;
+  try {
+    const hashResponse = await context.octokit.repos.getCommit({
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name,
+      ref: context.payload.repository.default_branch,
+    });
+    commitHash = hashResponse.data.sha;
+  } catch (e) {
+    console.error("Error while getting commit hash", e);
+  }
 
   // check max assigned issues
 

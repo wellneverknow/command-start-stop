@@ -1,7 +1,7 @@
 import { Value } from "@sinclair/typebox/value";
 import { startStopBounty } from "./plugin";
 import { Env } from "./types/env";
-import { startStopSchema } from "./types/plugin-input";
+import { startStopSchema, startStopSettingsValidator } from "./types/plugin-input";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -22,6 +22,11 @@ export default {
 
       const webhookPayload = await request.json();
       const settings = Value.Decode(startStopSchema, Value.Default(startStopSchema, JSON.parse(webhookPayload.settings)));
+
+      if (!startStopSettingsValidator.test(settings)) {
+        throw new Error("Invalid settings provided");
+      }
+
       webhookPayload.eventPayload = JSON.parse(webhookPayload.eventPayload);
       webhookPayload.settings = settings;
       await startStopBounty(webhookPayload, env);

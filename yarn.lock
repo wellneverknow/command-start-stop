@@ -6794,6 +6794,11 @@ type-fest@^4.9.0:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-4.10.3.tgz#ff01cb0a1209f59583d61e1312de9715e7ea4874"
   integrity sha512-JLXyjizi072smKGGcZiAJDCNweT8J+AuRxmPZ1aG7TERg4ijx9REl8CNhbr36RV4qXqL1gO1FF9HL8OkVmmrsA==
 
+typebox-validators@^0.3.5:
+  version "0.3.5"
+  resolved "https://registry.yarnpkg.com/typebox-validators/-/typebox-validators-0.3.5.tgz#b913bad0a87571ffe0edd01d2b6090a268e1ecc9"
+  integrity sha512-FXrmSUAN6bSGxDANResNCZQ8VRRLr5bSyy73/HyqSXGdiVuogppGAoRocy7NTVZY4Wc2sWUofmWwwIXE6OxS6Q==
+
 typed-array-buffer@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/typed-array-buffer/-/typed-array-buffer-1.0.1.tgz#0608ffe6bca71bf15a45bff0ca2604107a1325f5"
