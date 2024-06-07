@@ -76,7 +76,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const duration: number | null = calculateDurations(labels).shift() || null;
 
   const { id, login } = sender;
-  const toCreate = { duration, priceLabel, revision: commitHash.substring(0, 7) };
+  const toCreate = { duration, priceLabel, revision: commitHash?.substring(0, 7) };
 
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, id, duration);
   const metadata = structuredMetadata.create<typeof toCreate>("Assignment", toCreate);

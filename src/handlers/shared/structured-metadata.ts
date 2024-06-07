@@ -1,11 +1,12 @@
 import { LogLevel } from "../../adapters/supabase/pretty-logs";
 
 type Metadata<T extends object> = T & {
-  revision: string;
+  revision?: string;
   logMessage?: {
-    type: LogLevel;
-    message: string;
+    type?: LogLevel;
+    message?: string;
   };
+  [key: string]: unknown;
 };
 
 function createStructuredMetadata<T extends object>(className: string, metadata: Metadata<T>) {
