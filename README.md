@@ -38,16 +38,11 @@ To configure your Ubiquibot to run this plugin, add the following to the `.ubiqu
   example: "/start | /stop"
   with:
     disabledCommands: []
-    # "start",
-    # "stop"
     timers:
       reviewDelayTolerance: 86000
       taskStaleTimeoutDuration: 2580000
     miscellaneous:
       maxConcurrentTasks: 3
-    labels:
-      time: []
-      priority: []
 ```
 
 # Testing
