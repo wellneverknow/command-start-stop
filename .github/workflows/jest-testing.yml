@@ -2,9 +2,10 @@ name: Run Jest testing suite
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Build"]
+    workflows: ["Knip"]
     types:
       - completed
+
 
 env:
   NODE_ENV: "test"
