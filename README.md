@@ -12,7 +12,7 @@ To start a task, a hunter should use the `/start` command. This will assign them
 - The issue is not already assigned
 - The hunter has not reached the maximum number of concurrent tasks
 - The command is not disabled at the repository or organization level
-- TODO: If the hunter meets the required karma and XP requirements
+- TODO: If the hunter meets the required XP requirements
 
 ### Stop a task
 

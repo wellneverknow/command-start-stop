@@ -4,6 +4,9 @@ import { Super } from "./supabase";
 import { Context } from "../../../types/context";
 import { addCommentToIssue } from "../../../utils/issue";
 
+const FAILED_TO_GET_USER = "Failed to get user";
+const SUCCESSFULLY_FETCHED_USER = "Successfully fetched user";
+
 export class User extends Super {
   user_id: string | undefined;
   comment_id: string | undefined;
@@ -74,6 +77,3 @@ export class User extends Super {
     return locationData;
   }
 }
-
-const FAILED_TO_GET_USER = "Failed to get user";
-const SUCCESSFULLY_FETCHED_USER = "Successfully fetched user";
