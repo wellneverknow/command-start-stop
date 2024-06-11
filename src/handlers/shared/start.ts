@@ -1,4 +1,4 @@
-import { Context, issueType, Label } from "../../types";
+import { Context, IssueType, Label } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
@@ -52,7 +52,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   // is it assignable?
 
-  if (issue.state === issueType.CLOSED) {
+  if (issue.state === IssueType.CLOSED) {
     await addCommentToIssue(context, "```diff\n! The issue is closed. Please choose another unassigned bounty.\n```");
     throw new Error("Issue is closed");
   }

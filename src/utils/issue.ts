@@ -1,5 +1,5 @@
 import { Context } from "../types/context";
-import { Issue, HandlerReturnValuesNoVoid, issueType } from "../types/payload";
+import { Issue, HandlerReturnValuesNoVoid, IssueType } from "../types/payload";
 import { LogReturn } from "../adapters/supabase/helpers/logs";
 import { getLinkedPullRequests } from "./get-linked-prs";
 
@@ -17,7 +17,7 @@ export async function getAssignedIssues(context: Context, username: string): Pro
       {
         owner: payload.repository.owner.login,
         repo: payload.repository.name,
-        state: issueType.OPEN,
+        state: IssueType.OPEN,
         per_page: 1000,
       },
       ({ data: issues }) => issues.filter((issue) => !issue.pull_request && issue.assignee && issue.assignee.login === username)
