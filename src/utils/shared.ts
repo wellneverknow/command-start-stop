@@ -1,5 +1,5 @@
 import ms from "ms";
-import { Label } from "../types/label";
+import { Label } from "../types";
 
 export function calculateLabelValue(label: string): number {
   const matches = label.match(/\d+/);

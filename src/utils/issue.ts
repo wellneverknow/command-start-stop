@@ -1,5 +1,5 @@
 import { Context } from "../types/context";
-import { GitHubIssue, HandlerReturnValuesNoVoid, IssueType } from "../types/payload";
+import { Issue, HandlerReturnValuesNoVoid, issueType } from "../types/payload";
 import { LogReturn } from "../adapters/supabase/helpers/logs";
 import { getLinkedPullRequests } from "./get-linked-prs";
 
@@ -8,20 +8,20 @@ export function isParentIssue(body: string) {
   return body.match(parentPattern);
 }
 
-export async function getAssignedIssues(context: Context, username: string): Promise<GitHubIssue[]> {
+export async function getAssignedIssues(context: Context, username: string): Promise<Issue[]> {
   const payload = context.payload;
 
   try {
-    return (await context.octokit.paginate(
+    return await context.octokit.paginate(
       context.octokit.issues.listForRepo,
       {
         owner: payload.repository.owner.login,
         repo: payload.repository.name,
-        state: IssueType.OPEN,
+        state: issueType.OPEN,
         per_page: 1000,
       },
       ({ data: issues }) => issues.filter((issue) => !issue.pull_request && issue.assignee && issue.assignee.login === username)
-    )) as GitHubIssue[];
+    );
   } catch (err: unknown) {
     context.logger.fatal("Fetching assigned issues failed!", err);
     return [];

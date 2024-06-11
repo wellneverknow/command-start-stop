@@ -6,7 +6,6 @@ on:
     types:
       - completed
 
-
 env:
   NODE_ENV: "test"
 
