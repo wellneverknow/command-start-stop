@@ -5,7 +5,6 @@ export function calculateLabelValue(label: string): number {
   const matches = label.match(/\d+/);
   const number = matches && matches.length > 0 ? parseInt(matches[0]) || 0 : 0;
   if (label.toLowerCase().includes("priority")) return number;
-  // throw new Error(`Label ${label} is not a priority label`);
   if (label.toLowerCase().includes("minute")) return number * 0.002;
   if (label.toLowerCase().includes("hour")) return number * 0.125;
   if (label.toLowerCase().includes("day")) return 1 + (number - 1) * 0.25;

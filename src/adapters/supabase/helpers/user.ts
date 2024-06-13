@@ -4,30 +4,9 @@ import { Super } from "./supabase";
 import { Context } from "../../../types/context";
 import { addCommentToIssue } from "../../../utils/issue";
 
-const FAILED_TO_GET_USER = "Failed to get user";
-const SUCCESSFULLY_FETCHED_USER = "Successfully fetched user";
-
 export class User extends Super {
-  user_id: string | undefined;
-  comment_id: string | undefined;
-  issue_id: string | undefined;
-  repository_id: string | undefined;
-  node_id: string | undefined;
-  node_type: string | undefined;
-
   constructor(supabase: SupabaseClient<Database>, context: Context) {
     super(supabase, context);
-  }
-
-  async getUserById(userId: number, issueNumber: number) {
-    const { data, error } = await this.supabase.from("users").select("*").eq("id", userId).single();
-    if (error) {
-      console.error(FAILED_TO_GET_USER, { userId, error, issueNumber });
-      return null;
-    }
-
-    console.info(SUCCESSFULLY_FETCHED_USER, { userId, issueNumber, ...data });
-    return data;
   }
 
   async getWalletByUserId(userId: number, issueNumber: number) {
