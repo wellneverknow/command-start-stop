@@ -3,7 +3,6 @@ import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAs
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
 import { generateAssignmentComment } from "./generate-assignment-comment";
-import { getMultiplierInfoToDisplay } from "./get-multiplier-info";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
@@ -88,15 +87,11 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   }
 
   const isTaskStale = checkTaskStale(taskStaleTimeoutDuration, issue.created_at);
-  const { multiplierAmount, multiplierReason, totalPriceOfTask } = await getMultiplierInfoToDisplay(context, issue.labels);
 
   await addCommentToIssue(
     context,
     [
       assignTableComment({
-        multiplierAmount,
-        multiplierReason,
-        totalPriceOfTask,
         isTaskStale,
         daysElapsedSinceTaskCreation: assignmentComment.daysElapsedSinceTaskCreation,
         taskDeadline: assignmentComment.deadline,

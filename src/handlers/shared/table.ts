@@ -1,9 +1,6 @@
 export function assignTableComment({
   taskDeadline,
   registeredWallet,
-  multiplierAmount,
-  multiplierReason,
-  totalPriceOfTask,
   isTaskStale,
   daysElapsedSinceTaskCreation,
 }: AssignTableCommentParams) {
@@ -25,18 +22,14 @@ export function assignTableComment({
   <td>Registered Wallet</td>
   <td>${registeredWallet}</td>
   </tr>
-  ${multiplierAmount ? `<tr><td>Payment Multiplier</td><td>${multiplierAmount}</td></tr>` : ``}
-  ${multiplierReason ? `<tr><td>Multiplier Reason</td><td>${multiplierReason}</td></tr>` : ``}
-  ${totalPriceOfTask ? `<tr><td>Total Price</td><td>${totalPriceOfTask}</td></tr>` : ``}
-  </table></code>`;
+  </table>
+  </code>
+  `;
 }
 
 interface AssignTableCommentParams {
   taskDeadline: string | null;
   registeredWallet: string;
-  multiplierAmount: number | null;
-  multiplierReason: string | null;
-  totalPriceOfTask: string | null;
   isTaskStale: boolean;
   daysElapsedSinceTaskCreation: number;
 }

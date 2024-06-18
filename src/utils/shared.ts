@@ -1,18 +1,6 @@
 import ms from "ms";
 import { Label } from "../types";
 
-export function calculateLabelValue(label: string): number {
-  const matches = label.match(/\d+/);
-  const number = matches && matches.length > 0 ? parseInt(matches[0]) || 0 : 0;
-  if (label.toLowerCase().includes("priority")) return number;
-  if (label.toLowerCase().includes("minute")) return number * 0.002;
-  if (label.toLowerCase().includes("hour")) return number * 0.125;
-  if (label.toLowerCase().includes("day")) return 1 + (number - 1) * 0.25;
-  if (label.toLowerCase().includes("week")) return number + 1;
-  if (label.toLowerCase().includes("month")) return 5 + (number - 1) * 8;
-  return 0;
-}
-
 export function calculateDurations(labels: Label[]): number[] {
   // from shortest to longest
   const durations: number[] = [];
