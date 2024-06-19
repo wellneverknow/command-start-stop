@@ -143,7 +143,7 @@ export async function getAllPullRequestReviews(context: Context, pullNumber: num
       },
     });
   } catch (err: unknown) {
-    console.error("Fetching all pull request reviews failed!", err);
+    context.logger.error("Fetching all pull request reviews failed!", err);
     return [];
   }
 }

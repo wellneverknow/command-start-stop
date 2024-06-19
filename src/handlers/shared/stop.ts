@@ -9,7 +9,6 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
   // is it an issue?
   if (!issue) {
     logger.info(`Skipping '/stop' because of no issue instance`);
-    console.error("Issue is not defined");
     return out;
   }
 
@@ -17,7 +16,6 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
   const assignees = issue.assignees ?? [];
   if (assignees.length == 0) {
     logger.error("No assignees found for issue", { issueNumber });
-    console.error("No assignees found for issue");
     return out;
   }
 
@@ -26,7 +24,6 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
 
   if (!shouldUnassign) {
     logger.error("You are not assigned to this task", { issueNumber, user: sender.login });
-    console.error("You are not assigned to this task");
     return out;
   }
 
@@ -53,6 +50,6 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
     user: sender.login,
   });
 
-  addCommentToIssue(context, "````diff\n+ You have been unassigned from this task.\n````").catch(console.error);
+  addCommentToIssue(context, "````diff\n+ You have been unassigned from this task.\n````").catch(logger.error);
   return { output: "Task unassigned successfully" };
 }

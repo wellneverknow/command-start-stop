@@ -3,6 +3,7 @@ import { Octokit } from "@octokit/rest";
 import { StartStopSettings } from "./plugin-input";
 import { createAdapters } from "../adapters";
 import { Env } from "./env";
+import { Logs } from "../adapters/supabase/helpers/logs";
 
 export interface Logger {
   fatal: (message: unknown, ...optionalParams: unknown[]) => void;
@@ -25,5 +26,5 @@ export interface Context<T extends SupportedEventsU = SupportedEventsU, TU exten
   adapters: ReturnType<typeof createAdapters>;
   config: StartStopSettings;
   env: Env;
-  logger: Logger;
+  logger: Logger | Logs;
 }

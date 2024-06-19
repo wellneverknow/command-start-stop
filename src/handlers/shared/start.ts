@@ -17,7 +17,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
       context,
       "```diff\n# Please select a child issue from the specification checklist to work on. The '/start' command is disabled on parent issues.\n```"
     );
-    console.error(`Skipping '/start' since the issue is a parent issue`);
+    logger.error(`Skipping '/start' since the issue is a parent issue`);
     throw new Error("Issue is a parent issue");
   }
 
@@ -31,7 +31,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     });
     commitHash = hashResponse.data.sha;
   } catch (e) {
-    console.error("Error while getting commit hash", e);
+    logger.error("Error while getting commit hash", e);
   }
 
   // check max assigned issues

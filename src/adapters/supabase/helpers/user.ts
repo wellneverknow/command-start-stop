@@ -12,12 +12,12 @@ export class User extends Super {
   async getWalletByUserId(userId: number, issueNumber: number) {
     const { data, error } = await this.supabase.from("users").select("wallets(*)").eq("id", userId).single();
     if ((error && !data) || !data.wallets?.address) {
-      console.error("No wallet address found", { userId, issueNumber }, true);
+      this.context.logger.error("No wallet address found", { userId, issueNumber }, true);
       await addCommentToIssue(this.context, "```diff\n # Please set your wallet address with the /wallet command first and try again.\n```");
       throw new Error("No wallet address found");
     }
 
-    console.info("Successfully fetched wallet", { userId, address: data.wallets?.address });
+    this.context.logger.info("Successfully fetched wallet", { userId, address: data.wallets?.address });
     return data.wallets?.address;
   }
 
@@ -45,14 +45,14 @@ export class User extends Super {
       .eq("user_id", userId)
       .order("id", { ascending: false }) // get the latest one
       .maybeSingle();
-    if (accessError) throw console.error("Error getting access data", accessError);
+    if (accessError) throw this.context.logger.error("Error getting access data", accessError);
     return accessData;
   }
 
   public async getLocationsFromRepo(repositoryId: number) {
     const { data: locationData, error } = await this.supabase.from("locations").select("id").eq("repository_id", repositoryId);
 
-    if (error) throw console.error("Error getting location data", new Error(error.message));
+    if (error) throw this.context.logger.error("Error getting location data", new Error(error.message));
     return locationData;
   }
 }

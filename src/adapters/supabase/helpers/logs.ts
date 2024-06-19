@@ -6,6 +6,7 @@ import { Database } from "../types/database";
 
 import { LogLevel, PrettyLogs } from "../pretty-logs";
 import { Context } from "../../../types/context";
+import { Logger } from "@octokit/webhooks/dist-types/createLogger";
 
 export type Metadata = Record<string, unknown>;
 
@@ -37,7 +38,7 @@ type PublicMethods<T> = Exclude<FunctionPropertyNames<T>, "constructor" | keyof 
 
 export type LogMessage = { raw: string; diff: string; level: LogLevel; type: PublicMethods<Logs> | NonNullable<string> };
 
-export class Logs {
+export class Logs implements Logger {
   private _supabase: SupabaseClient;
   private _context: Context | null = null;
 
