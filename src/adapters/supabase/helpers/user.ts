@@ -13,12 +13,17 @@ export class User extends Super {
     const { data, error } = await this.supabase.from("users").select("wallets(*)").eq("id", userId).single();
     if ((error && !data) || !data.wallets?.address) {
       this.context.logger.error("No wallet address found", { userId, issueNumber }, true);
-      await addCommentToIssue(this.context, "```diff\n # Please set your wallet address with the /wallet command first and try again.\n```");
-      throw new Error("No wallet address found");
+      if (this.context.config.miscellaneous.startRequiresWallet) {
+        await addCommentToIssue(this.context, "```diff\n! Please set your wallet address with the /wallet command first and try again.\n```");
+        throw new Error("No wallet address found");
+      } else {
+        await addCommentToIssue(this.context, "```diff\n# Please set your wallet address with the /wallet command in order to receive a task reward.\n```");
+      }
+    } else {
+      this.context.logger.info("Successfully fetched wallet", { userId, address: data.wallets?.address });
     }
 
-    this.context.logger.info("Successfully fetched wallet", { userId, address: data.wallets?.address });
-    return data.wallets?.address;
+    return data?.wallets?.address || null;
   }
 
   public async getMultiplier(userId: number, repositoryId: number) {

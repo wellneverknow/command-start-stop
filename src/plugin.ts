@@ -6,7 +6,6 @@ import { Octokit } from "@octokit/rest";
 import { createClient } from "@supabase/supabase-js";
 import { createAdapters } from "./adapters";
 import { Database } from "./adapters/supabase/types/database";
-import { Logs } from "./adapters/supabase/helpers/logs";
 
 export async function startStopBounty(inputs: PluginInputs, env: Env) {
   const octokit = new Octokit({ auth: inputs.authToken });
@@ -39,7 +38,6 @@ export async function startStopBounty(inputs: PluginInputs, env: Env) {
   };
 
   context.adapters = createAdapters(supabase, context);
-  context.logger = new Logs(supabase, 0, "ERROR", context)
 
   if (context.eventName === "issue_comment.created") {
     await userStartStop(context);

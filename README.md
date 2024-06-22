@@ -32,7 +32,6 @@ To configure your Ubiquibot to run this plugin, add the following to the `.ubiqu
 - plugin: http://localhost:4000 # or the URL where the plugin is hosted
   name: start-stop
   id: start-stop-command
-  type: github
   description: "Allows a user to start/stop a bounty without negative XP impact"
   command: "/(start|stop)"
   example: "/start | /stop"
@@ -43,6 +42,7 @@ To configure your Ubiquibot to run this plugin, add the following to the `.ubiqu
       taskStaleTimeoutDuration: 2580000
     miscellaneous:
       maxConcurrentTasks: 3
+      startRequiresWallet: true # default is true
 ```
 
 # Testing
