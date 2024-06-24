@@ -1,6 +1,5 @@
 import { Context } from "../types/context";
-import { Issue, HandlerReturnValuesNoVoid, ISSUE_TYPE } from "../types/payload";
-import { LogReturn } from "../adapters/supabase/helpers/logs";
+import { Issue, ISSUE_TYPE } from "../types/payload";
 import { getLinkedPullRequests } from "./get-linked-prs";
 
 export function isParentIssue(body: string) {
@@ -28,15 +27,8 @@ export async function getAssignedIssues(context: Context, username: string): Pro
   }
 }
 
-export async function addCommentToIssue(context: Context, message: HandlerReturnValuesNoVoid) {
+export async function addCommentToIssue(context: Context, message: string | null) {
   let comment = message as string;
-  if (message instanceof LogReturn) {
-    comment = message.logMessage.diff;
-    console.trace("one of the places that metadata is being serialized as an html comment. this one is unexpected and serves as a fallback");
-    const metadataSerialized = JSON.stringify(message.metadata);
-    const metadataSerializedAsComment = `<!-- ${metadataSerialized} -->`;
-    comment = comment.concat(metadataSerializedAsComment);
-  }
 
   const { payload } = context;
 
@@ -106,7 +98,7 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
       assignees,
     });
   } catch (e: unknown) {
-    throw context.logger.fatal("Adding the assignee failed", { assignee: assignees, issueNo }, e);
+    throw context.logger.fatal("Adding the assignee failed", { assignee: assignees, issueNo, error: e });
   }
 }
 

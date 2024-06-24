@@ -16,6 +16,7 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
   const assignees = issue.assignees ?? [];
   if (assignees.length == 0) {
     logger.error("No assignees found for issue", { issueNumber });
+    await addCommentToIssue(context, "````diff\n! You are not assigned to this task.\n````");
     return out;
   }
 

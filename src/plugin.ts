@@ -6,6 +6,7 @@ import { Octokit } from "@octokit/rest";
 import { createClient } from "@supabase/supabase-js";
 import { createAdapters } from "./adapters";
 import { Database } from "./adapters/supabase/types/database";
+import { PrettyLogs } from "./adapters/supabase/pretty-logs";
 
 export async function startStopBounty(inputs: PluginInputs, env: Env) {
   const octokit = new Octokit({ auth: inputs.authToken });
@@ -17,28 +18,11 @@ export async function startStopBounty(inputs: PluginInputs, env: Env) {
     config: inputs.settings,
     octokit,
     env,
-    logger: {
-      debug(message: unknown, ...optionalParams: unknown[]) {
-        console.debug(message, ...optionalParams);
-      },
-      info(message: unknown, ...optionalParams: unknown[]) {
-        console.log(message, ...optionalParams);
-      },
-      warn(message: unknown, ...optionalParams: unknown[]) {
-        console.warn(message, ...optionalParams);
-      },
-      error(message: unknown, ...optionalParams: unknown[]) {
-        console.error(message, ...optionalParams);
-      },
-      fatal(message: unknown, ...optionalParams: unknown[]) {
-        console.error(message, ...optionalParams);
-      },
-    },
+    logger: new PrettyLogs(),
     adapters: {} as ReturnType<typeof createAdapters>,
   };
 
   context.adapters = createAdapters(supabase, context);
-
   if (context.eventName === "issue_comment.created") {
     await userStartStop(context);
   } else {
