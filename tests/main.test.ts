@@ -9,6 +9,7 @@ import issueTemplate from "./__mocks__/issue-template";
 import { createAdapters } from "../src/adapters";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import { PrettyLogs } from "../src/adapters/supabase/pretty-logs";
 dotenv.config();
 
 type Issue = Context["payload"]["issue"];
@@ -65,18 +66,33 @@ describe("User start/stop", () => {
   });
 
   test("User can't stop an issue they're not assigned to", async () => {
-    const errorSpy = jest.spyOn(console, "error").mockImplementation();
     // using the second issue
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
+    console.log(issue.assignees, issue.assignee?.login, sender)
     const context = createContext(issue, sender, "/stop");
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
-    await userStartStop(context as unknown as Context);
+    const output = await userStartStop(context as unknown as Context);
 
-    expect(errorSpy).toHaveBeenCalledWith("You are not assigned to this task");
+    expect(output).toEqual({ output: "You are not assigned to this task" });
+  });
+
+  test("User can't stop an issue without assignees", async () => {
+    // using the second issue
+    const issue = db.issue.findFirst({ where: { id: { equals: 6 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    console.log(issue.assignees, issue.assignee?.login, sender)
+    const context = createContext(issue, sender, "/stop");
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    const output = await userStartStop(context as unknown as Context);
+
+    expect(output).toEqual({ output: "No assignees found for this task" });
   });
 
   test("User can't start an issue that's already assigned", async () => {
@@ -322,6 +338,17 @@ async function setupTests() {
     owner: "ubiquity",
   });
 
+  db.issue.create({
+    ...issueTemplate,
+    id: 6,
+    node_id: "MDU6SXNzdWUg",
+    title: "Sixth issue",
+    number: 5,
+    body: "Sixth issue body",
+    owner: "ubiquity",
+    assignees: [],
+  });
+
   db.pull.create({
     id: 1,
     html_url: "",
@@ -393,13 +420,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       installation: { id: 1 } as unknown as Context["payload"]["installation"],
       organization: { login: "ubiquity" } as unknown as Context["payload"]["organization"],
     },
-    logger: {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      fatal: jest.fn(),
-    },
+    logger: new PrettyLogs(),
     config: {
       disabledCommands: disabled ? ["start"] : [],
       timers: {
@@ -430,17 +451,17 @@ function getSupabase(withData = true) {
         single: jest.fn().mockResolvedValue({
           data: withData
             ? {
-                id: 1,
-                wallets: {
-                  address: "0x123",
-                },
-              }
-            : {
-                id: 1,
-                wallets: {
-                  address: undefined,
-                },
+              id: 1,
+              wallets: {
+                address: "0x123",
               },
+            }
+            : {
+              id: 1,
+              wallets: {
+                address: undefined,
+              },
+            },
         }),
       }),
     }),
