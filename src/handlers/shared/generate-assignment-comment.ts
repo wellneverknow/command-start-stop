@@ -15,19 +15,13 @@ export async function generateAssignmentComment(
   issueCreatedAt: string,
   issueNumber: number,
   senderId: number,
-  duration: number | null = null
+  duration: number
 ) {
   const startTime = new Date().getTime();
   let endTime: null | Date = null;
   let deadline: null | string = null;
-  if (duration) {
-    endTime = new Date(startTime + duration * 1000);
-    deadline = endTime.toLocaleString("en-US", options);
-  }
-
-  if (!issueCreatedAt) {
-    throw context.logger.fatal("Issue creation time is not defined");
-  }
+  endTime = new Date(startTime + duration * 1000);
+  deadline = endTime.toLocaleString("en-US", options);
 
   return {
     daysElapsedSinceTaskCreation: Math.floor((startTime - new Date(issueCreatedAt).getTime()) / 1000 / 60 / 60 / 24),

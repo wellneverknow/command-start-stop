@@ -52,13 +52,13 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   // is it assignable?
 
   if (issue.state === ISSUE_TYPE.CLOSED) {
-    await addCommentToIssue(context, "```diff\n! The issue is closed. Please choose another unassigned bounty.\n```");
+    await addCommentToIssue(context, "```diff\n! The issue is closed. Please choose another unassigned task.\n```");
     throw new Error("Issue is closed");
   }
 
   const assignees = (issue?.assignees ?? []).filter(Boolean);
   if (assignees.length !== 0) {
-    await addCommentToIssue(context, "```diff\n! The issue is already assigned. Please choose another unassigned bounty.\n```");
+    await addCommentToIssue(context, "```diff\n! The issue is already assigned. Please choose another unassigned task.\n```");
     throw new Error("Issue is already assigned");
   }
 
@@ -72,7 +72,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     throw new Error("No price label is set to calculate the duration");
   }
 
-  const duration: number | null = calculateDurations(labels).shift() || null;
+  const duration: number = calculateDurations(labels).shift() ?? 0;
 
   const { id, login } = sender;
   const toCreate = { duration, priceLabel, revision: commitHash?.substring(0, 7) };

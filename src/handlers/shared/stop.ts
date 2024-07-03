@@ -4,13 +4,6 @@ import { addCommentToIssue, closePullRequestForAnIssue } from "../../utils/issue
 export async function stop(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"], repo: Context["payload"]["repository"]) {
   const { logger } = context;
   const issueNumber = issue.number;
-  const out = { output: null };
-
-  // is it an issue?
-  if (!issue) {
-    logger.info(`Skipping '/stop' because of no issue instance`);
-    return out;
-  }
 
   // is there an assignee?
   const assignees = issue.assignees ?? [];
@@ -51,6 +44,6 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
     user: sender.login,
   });
 
-  addCommentToIssue(context, "````diff\n+ You have been unassigned from this task.\n````").catch(logger.error);
+  addCommentToIssue(context, "```diff\n+ You have been unassigned from this task.\n````").catch(logger.error);
   return { output: "Task unassigned successfully" };
 }
