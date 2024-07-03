@@ -44,8 +44,6 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     const { output } = await userStartStop(context as unknown as Context);
 
     expect(output).toEqual("Task assigned successfully");
@@ -57,8 +55,6 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender, "/stop");
-
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
     const { output } = await userStartStop(context as unknown as Context);
 
@@ -72,8 +68,6 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender, "/stop");
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     const output = await userStartStop(context as unknown as Context);
 
     expect(output).toEqual({ output: "You are not assigned to this task" });
@@ -86,8 +80,6 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender, "/stop");
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     const output = await userStartStop(context as unknown as Context);
 
     expect(output).toEqual({ output: "No assignees found for this task" });
@@ -98,8 +90,6 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender, "/start");
-
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
     const err = "Issue is already assigned";
 
@@ -118,8 +108,6 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     const err = "No price label is set to calculate the duration";
 
     try {
@@ -134,10 +122,7 @@ describe("User start/stop", () => {
   test("User can't start an issue without a wallet address", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
-
     const context = createContext(issue, sender);
-
-    context.adapters = createAdapters(getSupabase(false), context as unknown as Context);
 
     try {
       await userStartStop(context as unknown as Context);
@@ -154,8 +139,6 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     try {
       await userStartStop(context as unknown as Context);
     } catch (error) {
@@ -169,7 +152,7 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
-    const context = createContext(issue, sender, "/start", true);
+    const context = createContext(issue, sender, "/start", false);
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
@@ -186,9 +169,7 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
-    const context = createContext(issue, sender, "/stop", true);
-
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    const context = createContext(issue, sender, "/stop", false);
 
     try {
       await userStartStop(context as unknown as Context);
@@ -205,8 +186,6 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender, "/start");
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     try {
       await userStartStop(context as unknown as Context);
     } catch (error) {
@@ -217,7 +196,6 @@ describe("User start/stop", () => {
   });
 
   test("User can't start another issue if they have reached the max limit", async () => {
-    // getAvailableOpenedPullRequests()
     jest.mock("../src/utils/issue", () => ({
       getAvailableOpenedPullRequests: jest.fn().mockResolvedValue([
         {
@@ -406,8 +384,8 @@ async function setupTests() {
   });
 }
 
-function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start", disabled = false) {
-  return {
+function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start", isEnabled = true) {
+  const ctx = {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
       issue: issue as unknown as Context["payload"]["issue"],
@@ -420,7 +398,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
     },
     logger: new PrettyLogs(),
     config: {
-      isEnabled: disabled,
+      isEnabled,
       timers: {
         reviewDelayTolerance: 86000,
         taskStaleTimeoutDuration: 2580000,
@@ -440,6 +418,9 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       SUPABASE_URL: url,
     },
   };
+
+  ctx.adapters = createAdapters(getSupabase(), ctx as unknown as Context);
+  return ctx;
 }
 
 function getSupabase(withData = true) {
