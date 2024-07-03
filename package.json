@@ -14,7 +14,7 @@
     "format": "run-s format:lint format:prettier format:cspell",
     "format:lint": "eslint --fix .",
     "format:prettier": "prettier --write .",
-    "format:cspell": "cspell **/*",
+    "format:cspell": "tsx .github/cspell.ts",
     "knip": "knip --config .github/knip.ts",
     "knip-ci": "knip --no-exit-code --reporter json --config .github/knip.ts",
     "prepare": "husky install",

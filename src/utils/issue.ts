@@ -28,7 +28,7 @@ export async function getAssignedIssues(context: Context, username: string): Pro
 }
 
 export async function addCommentToIssue(context: Context, message: string | null) {
-  let comment = message as string;
+  const comment = message as string;
 
   const { payload } = context;
 

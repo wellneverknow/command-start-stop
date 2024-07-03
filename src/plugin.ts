@@ -5,12 +5,11 @@ import { Env, PluginInputs } from "./types";
 import { Octokit } from "@octokit/rest";
 import { createClient } from "@supabase/supabase-js";
 import { createAdapters } from "./adapters";
-import { Database } from "./adapters/supabase/types/database";
 import { PrettyLogs } from "./adapters/supabase/pretty-logs";
 
 export async function startStopTask(inputs: PluginInputs, env: Env) {
   const octokit = new Octokit({ auth: inputs.authToken });
-  const supabase = createClient<Database>(env.SUPABASE_URL, env.SUPABASE_KEY);
+  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_KEY);
 
   const context: Context = {
     eventName: inputs.eventName,

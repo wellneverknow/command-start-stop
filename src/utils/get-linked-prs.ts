@@ -21,14 +21,16 @@ export async function getLinkedPullRequests(context: Context, { owner, repositor
     issue_number: issue,
   });
 
-  const LINKED_PRS = timeline.filter(
-    (event) =>
-      event.event === "cross-referenced"
-      && "source" in event
-      && !!event.source.issue
-      && "repository" in event.source.issue
-      && "pull_request" in event.source.issue
-  ).map((event) => (event as { source: { issue: Issue } }).source.issue);
+  const LINKED_PRS = timeline
+    .filter(
+      (event) =>
+        event.event === "cross-referenced" &&
+        "source" in event &&
+        !!event.source.issue &&
+        "repository" in event.source.issue &&
+        "pull_request" in event.source.issue
+    )
+    .map((event) => (event as { source: { issue: Issue } }).source.issue);
 
   return LINKED_PRS.map((pr) => {
     return {

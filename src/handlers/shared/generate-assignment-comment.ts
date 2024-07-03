@@ -10,13 +10,7 @@ const options: Intl.DateTimeFormatOptions = {
   timeZoneName: "short",
 };
 
-export async function generateAssignmentComment(
-  context: Context,
-  issueCreatedAt: string,
-  issueNumber: number,
-  senderId: number,
-  duration: number
-) {
+export async function generateAssignmentComment(context: Context, issueCreatedAt: string, issueNumber: number, senderId: number, duration: number) {
   const startTime = new Date().getTime();
   let endTime: null | Date = null;
   let deadline: null | string = null;
