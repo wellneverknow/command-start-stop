@@ -7,11 +7,11 @@ export async function userStartStop(context: Context): Promise<{ output: string 
   const { payload, config } = context;
   const { issue, comment, sender, repository } = payload;
   const slashCommand = comment.body.split(" ")[0].replace("/", "");
-  const { disabledCommands } = config;
-  const isCommandDisabled = disabledCommands.some((command: string) => command === slashCommand);
+  const { isEnabled } = config;
 
-  if (isCommandDisabled) {
-    await addCommentToIssue(context, "```diff\n! The /start command is disabled for this repository.\n```");
+  if (!isEnabled) {
+    const backTicks = "```";
+    await addCommentToIssue(context, `${backTicks}diff\n! The /${slashCommand} command is disabled for this repository.\n${backTicks}`);
     throw new Error(`The '/${slashCommand}' command is disabled for this repository.`);
   }
 

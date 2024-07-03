@@ -420,7 +420,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
     },
     logger: new PrettyLogs(),
     config: {
-      disabledCommands: disabled ? ["start"] : [],
+      isEnabled: disabled,
       timers: {
         reviewDelayTolerance: 86000,
         taskStaleTimeoutDuration: 2580000,

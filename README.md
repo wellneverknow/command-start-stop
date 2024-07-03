@@ -36,7 +36,7 @@ To configure your Ubiquibot to run this plugin, add the following to the `.ubiqu
   command: "\/start|\/stop"
   example: "/start" # or "/stop"
   with:
-    disabledCommands: []
+    isEnabled: true
     timers:
       reviewDelayTolerance: 86000
       taskStaleTimeoutDuration: 2580000

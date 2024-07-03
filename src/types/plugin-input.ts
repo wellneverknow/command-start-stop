@@ -14,7 +14,7 @@ export interface PluginInputs<T extends SupportedEventsU = SupportedEventsU, TU 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 
 export const startStopSchema = T.Object({
-  disabledCommands: T.Array(T.String(), { default: ["start", "stop"] }),
+  isEnabled: T.Boolean(),
   timers: T.Object(
     {
       reviewDelayTolerance: T.Number(),
