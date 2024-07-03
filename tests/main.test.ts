@@ -122,7 +122,7 @@ describe("User start/stop", () => {
   test("User can't start an issue without a wallet address", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
-    const context = createContext(issue, sender);
+    const context = createContext(issue, sender, "/start", true, false);
 
     try {
       await userStartStop(context as unknown as Context);
@@ -384,7 +384,7 @@ async function setupTests() {
   });
 }
 
-function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start", isEnabled = true) {
+function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start", isEnabled = true, withData = true) {
   const ctx = {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
@@ -405,10 +405,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       },
       miscellaneous: {
         maxConcurrentTasks: 3,
-      },
-      labels: {
-        time: ["Time: 1h", "Time: <4 hours", "Time: <1 Day", "Time: <3 Days", "Time: <1 Week"],
-        priority: ["Priority: 1 (Normal)", "Priority: 2 (High)", "Priority: 3 (Critical)"],
+        startRequiresWallet: true,
       },
     },
     octokit: new octokit.Octokit(),
@@ -417,9 +414,14 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       SUPABASE_KEY: key,
       SUPABASE_URL: url,
     },
-  };
+  } as unknown as Context;
 
-  ctx.adapters = createAdapters(getSupabase(), ctx as unknown as Context);
+  if (withData) {
+    ctx.adapters = createAdapters(getSupabase(), ctx);
+  } else {
+    ctx.adapters = createAdapters(getSupabase(false), ctx);
+  }
+
   return ctx;
 }
 
