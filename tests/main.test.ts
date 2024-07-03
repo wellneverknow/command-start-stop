@@ -70,7 +70,6 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
-    console.log(issue.assignees, issue.assignee?.login, sender)
     const context = createContext(issue, sender, "/stop");
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
@@ -85,7 +84,6 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 6 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
-    console.log(issue.assignees, issue.assignee?.login, sender)
     const context = createContext(issue, sender, "/stop");
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);

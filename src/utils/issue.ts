@@ -17,12 +17,12 @@ export async function getAssignedIssues(context: Context, username: string): Pro
         owner: payload.repository.owner.login,
         repo: payload.repository.name,
         state: ISSUE_TYPE.OPEN,
-        per_page: 1000,
+        per_page: 100,
       },
       ({ data: issues }) => issues.filter((issue) => !issue.pull_request && issue.assignee && issue.assignee.login === username)
     );
   } catch (err: unknown) {
-    context.logger.fatal("Fetching assigned issues failed!", err);
+    context.logger.error("Fetching assigned issues failed!", err);
     return [];
   }
 }
@@ -41,11 +41,11 @@ export async function addCommentToIssue(context: Context, message: string | null
       body: comment,
     });
   } catch (e: unknown) {
-    context.logger.fatal("Adding a comment failed!", e);
+    context.logger.error("Adding a comment failed!", e);
   }
 }
 
-//// Pull Requests \\\\
+// Pull requests
 
 export async function closePullRequest(context: Context, pullNumber: number) {
   const { repository } = context.payload;
@@ -57,14 +57,14 @@ export async function closePullRequest(context: Context, pullNumber: number) {
       state: "closed",
     });
   } catch (err: unknown) {
-    context.logger.fatal("Closing pull requests failed!", err);
+    context.logger.error("Closing pull requests failed!", err);
   }
 }
 
 export async function closePullRequestForAnIssue(context: Context, issueNumber: number, repository: Context["payload"]["repository"]) {
   const logger = context.logger;
   if (!issueNumber) {
-    throw logger.fatal("Issue is not defined");
+    throw logger.error("Issue is not defined");
   }
 
   const linkedPullRequests = await getLinkedPullRequests(context, {
@@ -81,7 +81,7 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
   let comment = `These linked pull requests are closed: `;
   for (let i = 0; i < linkedPullRequests.length; i++) {
     await closePullRequest(context, linkedPullRequests[i].number);
-    comment += ` <a href="${linkedPullRequests[i].href}">#${linkedPullRequests[i].number}</a> `;
+    comment += ` ${linkedPullRequests[i].href} `;
   }
   await addCommentToIssue(context, comment);
   return logger.info(comment);
@@ -98,7 +98,7 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
       assignees,
     });
   } catch (e: unknown) {
-    throw context.logger.fatal("Adding the assignee failed", { assignee: assignees, issueNo, error: e });
+    throw context.logger.error("Adding the assignee failed", { assignee: assignees, issueNo, error: e });
   }
 }
 
@@ -113,7 +113,7 @@ export async function getAllPullRequests(context: Context, state: "open" | "clos
       per_page: 100,
     });
   } catch (err: unknown) {
-    context.logger.fatal("Fetching all pull requests failed!", err);
+    context.logger.error("Fetching all pull requests failed!", err);
     return [];
   }
 }
