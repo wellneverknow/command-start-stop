@@ -22,7 +22,7 @@ export async function getAssignedIssues(context: Context, username: string): Pro
       ({ data: issues }) => issues.filter((issue) => !issue.pull_request && issue.assignee && issue.assignee.login === username)
     );
   } catch (err: unknown) {
-    context.logger.error("Fetching assigned issues failed!", err);
+    context.logger.error("Fetching assigned issues failed!", { error: err as Error });
     return [];
   }
 }
@@ -41,7 +41,7 @@ export async function addCommentToIssue(context: Context, message: string | null
       body: comment,
     });
   } catch (e: unknown) {
-    context.logger.error("Adding a comment failed!", e);
+    context.logger.error("Adding a comment failed!", { error: e as Error });
   }
 }
 
@@ -57,7 +57,7 @@ export async function closePullRequest(context: Context, pullNumber: number) {
       state: "closed",
     });
   } catch (err: unknown) {
-    context.logger.error("Closing pull requests failed!", err);
+    context.logger.error("Closing pull requests failed!", { error: err as Error });
   }
 }
 
@@ -77,7 +77,7 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
     return logger.info(`No linked pull requests to close`);
   }
 
-  logger.info(`Opened prs`, linkedPullRequests);
+  logger.info(`Opened prs`, { message: JSON.stringify(linkedPullRequests) });
   let comment = `These linked pull requests are closed: `;
   for (let i = 0; i < linkedPullRequests.length; i++) {
     await closePullRequest(context, linkedPullRequests[i].number);
@@ -98,7 +98,7 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
       assignees,
     });
   } catch (e: unknown) {
-    throw context.logger.error("Adding the assignee failed", { assignee: assignees, issueNo, error: e });
+    throw context.logger.error("Adding the assignee failed", { assignee: assignees, issueNo, error: e as Error });
   }
 }
 
@@ -113,7 +113,7 @@ export async function getAllPullRequests(context: Context, state: "open" | "clos
       per_page: 100,
     });
   } catch (err: unknown) {
-    context.logger.error("Fetching all pull requests failed!", err);
+    context.logger.error("Fetching all pull requests failed!", { error: err as Error });
     return [];
   }
 }
@@ -135,7 +135,7 @@ export async function getAllPullRequestReviews(context: Context, pullNumber: num
       },
     });
   } catch (err: unknown) {
-    context.logger.error("Fetching all pull request reviews failed!", err);
+    context.logger.error("Fetching all pull request reviews failed!", { error: err as Error });
     return [];
   }
 }

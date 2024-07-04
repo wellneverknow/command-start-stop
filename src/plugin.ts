@@ -5,7 +5,7 @@ import { Env, PluginInputs } from "./types";
 import { Octokit } from "@octokit/rest";
 import { createClient } from "@supabase/supabase-js";
 import { createAdapters } from "./adapters";
-import { PrettyLogs } from "./adapters/supabase/pretty-logs";
+import { Logs } from "@ubiquity-dao/ubiquibot-logger";
 
 export async function startStopTask(inputs: PluginInputs, env: Env) {
   const octokit = new Octokit({ auth: inputs.authToken });
@@ -17,7 +17,7 @@ export async function startStopTask(inputs: PluginInputs, env: Env) {
     config: inputs.settings,
     octokit,
     env,
-    logger: new PrettyLogs(),
+    logger: new Logs("info"),
     adapters: {} as ReturnType<typeof createAdapters>,
   };
 

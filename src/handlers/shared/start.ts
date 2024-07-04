@@ -31,7 +31,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     });
     commitHash = hashResponse.data.sha;
   } catch (e) {
-    logger.error("Error while getting commit hash", e);
+    logger.error("Error while getting commit hash", { error: e as Error });
   }
 
   // check max assigned issues
@@ -40,7 +40,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed: ${JSON.stringify(openedPullRequests)}`);
 
   const assignedIssues = await getAssignedIssues(context, sender.login);
-  logger.info("Max issue allowed is", maxConcurrentTasks);
+  logger.info("Max issue allowed is", { maxConcurrentTasks });
 
   // check for max and enforce max
 
@@ -75,13 +75,12 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const duration: number = calculateDurations(labels).shift() ?? 0;
 
   const { id, login } = sender;
-  const toCreate = { duration, priceLabel, revision: commitHash?.substring(0, 7) };
+  const logMessage = logger.info("Task assigned successfully", { duration, priceLabel, revision: commitHash?.substring(0, 7) });
 
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, id, duration);
-  const metadata = structuredMetadata.create<typeof toCreate>("Assignment", toCreate);
+  const metadata = structuredMetadata.create("Assignment", logMessage);
 
   // add assignee
-
   if (!assignees.map((i) => i?.login).includes(login)) {
     await addAssignees(context, issue.number, [login]);
   }

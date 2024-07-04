@@ -9,7 +9,7 @@ import issueTemplate from "./__mocks__/issue-template";
 import { createAdapters } from "../src/adapters";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import { PrettyLogs } from "../src/adapters/supabase/pretty-logs";
+import { Logs } from "@ubiquity-dao/ubiquibot-logger/.";
 dotenv.config();
 
 type Issue = Context["payload"]["issue"];
@@ -396,7 +396,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       installation: { id: 1 } as unknown as Context["payload"]["installation"],
       organization: { login: "ubiquity" } as unknown as Context["payload"]["organization"],
     },
-    logger: new PrettyLogs(),
+    logger: new Logs("debug"),
     config: {
       isEnabled,
       timers: {
@@ -432,17 +432,17 @@ function getSupabase(withData = true) {
         single: jest.fn().mockResolvedValue({
           data: withData
             ? {
-                id: 1,
-                wallets: {
-                  address: "0x123",
-                },
-              }
-            : {
-                id: 1,
-                wallets: {
-                  address: undefined,
-                },
+              id: 1,
+              wallets: {
+                address: "0x123",
               },
+            }
+            : {
+              id: 1,
+              wallets: {
+                address: undefined,
+              },
+            },
         }),
       }),
     }),
