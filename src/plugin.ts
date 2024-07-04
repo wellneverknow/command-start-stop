@@ -22,6 +22,7 @@ export async function startStopTask(inputs: PluginInputs, env: Env) {
   };
 
   context.adapters = createAdapters(supabase, context);
+
   if (context.eventName === "issue_comment.created") {
     await userStartStop(context);
   } else {
