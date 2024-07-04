@@ -1,7 +1,7 @@
 {
   "name": "@ubiquibot/command-start-stop",
   "version": "1.0.0",
-  "description": "Enables the assignment of tasks to hunters and the graceful unassignment.",
+  "description": "Enables the assignment and graceful unassignment of tasks to contributors.",
   "main": "build/index.ts",
   "author": "Ubiquity DAO",
   "license": "MIT",
