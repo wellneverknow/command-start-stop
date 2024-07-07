@@ -9,6 +9,7 @@ import issueTemplate from "./__mocks__/issue-template";
 import { createAdapters } from "../src/adapters";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import { Logs } from "@ubiquity-dao/ubiquibot-logger/.";
 dotenv.config();
 
 type Issue = Context["payload"]["issue"];
@@ -43,8 +44,6 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     const { output } = await userStartStop(context as unknown as Context);
 
     expect(output).toEqual("Task assigned successfully");
@@ -57,26 +56,33 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender, "/stop");
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     const { output } = await userStartStop(context as unknown as Context);
 
     expect(output).toEqual("Task unassigned successfully");
   });
 
   test("User can't stop an issue they're not assigned to", async () => {
-    const errorSpy = jest.spyOn(console, "error").mockImplementation();
     // using the second issue
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender, "/stop");
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    const output = await userStartStop(context as unknown as Context);
 
-    await userStartStop(context as unknown as Context);
+    expect(output).toEqual({ output: "You are not assigned to this task" });
+  });
 
-    expect(errorSpy).toHaveBeenCalledWith("You are not assigned to this task");
+  test("User can't stop an issue without assignees", async () => {
+    // using the second issue
+    const issue = db.issue.findFirst({ where: { id: { equals: 6 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender, "/stop");
+
+    const output = await userStartStop(context as unknown as Context);
+
+    expect(output).toEqual({ output: "No assignees found for this task" });
   });
 
   test("User can't start an issue that's already assigned", async () => {
@@ -84,8 +90,6 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender, "/start");
-
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
     const err = "Issue is already assigned";
 
@@ -104,8 +108,6 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     const err = "No price label is set to calculate the duration";
 
     try {
@@ -120,10 +122,7 @@ describe("User start/stop", () => {
   test("User can't start an issue without a wallet address", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
-
-    const context = createContext(issue, sender);
-
-    context.adapters = createAdapters(getSupabase(false), context as unknown as Context);
+    const context = createContext(issue, sender, "/start", true, false);
 
     try {
       await userStartStop(context as unknown as Context);
@@ -140,8 +139,6 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     try {
       await userStartStop(context as unknown as Context);
     } catch (error) {
@@ -155,7 +152,7 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
-    const context = createContext(issue, sender, "/start", true);
+    const context = createContext(issue, sender, "/start", false);
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
@@ -172,9 +169,7 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
-    const context = createContext(issue, sender, "/stop", true);
-
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    const context = createContext(issue, sender, "/stop", false);
 
     try {
       await userStartStop(context as unknown as Context);
@@ -191,8 +186,6 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender, "/start");
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     try {
       await userStartStop(context as unknown as Context);
     } catch (error) {
@@ -203,7 +196,6 @@ describe("User start/stop", () => {
   });
 
   test("User can't start another issue if they have reached the max limit", async () => {
-    // getAvailableOpenedPullRequests()
     jest.mock("../src/utils/issue", () => ({
       getAvailableOpenedPullRequests: jest.fn().mockResolvedValue([
         {
@@ -322,6 +314,17 @@ async function setupTests() {
     owner: "ubiquity",
   });
 
+  db.issue.create({
+    ...issueTemplate,
+    id: 6,
+    node_id: "MDU6SXNzdWUg",
+    title: "Sixth issue",
+    number: 5,
+    body: "Sixth issue body",
+    owner: "ubiquity",
+    assignees: [],
+  });
+
   db.pull.create({
     id: 1,
     html_url: "",
@@ -381,8 +384,8 @@ async function setupTests() {
   });
 }
 
-function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start", disabled = false) {
-  return {
+function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start", isEnabled = true, withData = true) {
+  const ctx = {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
       issue: issue as unknown as Context["payload"]["issue"],
@@ -393,25 +396,16 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       installation: { id: 1 } as unknown as Context["payload"]["installation"],
       organization: { login: "ubiquity" } as unknown as Context["payload"]["organization"],
     },
-    logger: {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      fatal: jest.fn(),
-    },
+    logger: new Logs("debug"),
     config: {
-      disabledCommands: disabled ? ["start"] : [],
+      isEnabled,
       timers: {
         reviewDelayTolerance: 86000,
         taskStaleTimeoutDuration: 2580000,
       },
       miscellaneous: {
         maxConcurrentTasks: 3,
-      },
-      labels: {
-        time: ["Time: 1h", "Time: <4 hours", "Time: <1 Day", "Time: <3 Days", "Time: <1 Week"],
-        priority: ["Priority: 1 (Normal)", "Priority: 2 (High)", "Priority: 3 (Critical)"],
+        startRequiresWallet: true,
       },
     },
     octokit: new octokit.Octokit(),
@@ -420,7 +414,15 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       SUPABASE_KEY: key,
       SUPABASE_URL: url,
     },
-  };
+  } as unknown as Context;
+
+  if (withData) {
+    ctx.adapters = createAdapters(getSupabase(), ctx);
+  } else {
+    ctx.adapters = createAdapters(getSupabase(false), ctx);
+  }
+
+  return ctx;
 }
 
 function getSupabase(withData = true) {
@@ -430,17 +432,17 @@ function getSupabase(withData = true) {
         single: jest.fn().mockResolvedValue({
           data: withData
             ? {
-                id: 1,
-                wallets: {
-                  address: "0x123",
-                },
-              }
-            : {
-                id: 1,
-                wallets: {
-                  address: undefined,
-                },
+              id: 1,
+              wallets: {
+                address: "0x123",
               },
+            }
+            : {
+              id: 1,
+              wallets: {
+                address: undefined,
+              },
+            },
         }),
       }),
     }),

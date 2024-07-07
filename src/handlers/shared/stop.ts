@@ -4,21 +4,13 @@ import { addCommentToIssue, closePullRequestForAnIssue } from "../../utils/issue
 export async function stop(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"], repo: Context["payload"]["repository"]) {
   const { logger } = context;
   const issueNumber = issue.number;
-  const out = { output: null };
-
-  // is it an issue?
-  if (!issue) {
-    logger.info(`Skipping '/stop' because of no issue instance`);
-    console.error("Issue is not defined");
-    return out;
-  }
 
   // is there an assignee?
   const assignees = issue.assignees ?? [];
   if (assignees.length == 0) {
     logger.error("No assignees found for issue", { issueNumber });
-    console.error("No assignees found for issue");
-    return out;
+    await addCommentToIssue(context, "````diff\n! You are not assigned to this task.\n````");
+    return { output: "No assignees found for this task" };
   }
 
   // should unassign?
@@ -26,8 +18,7 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
 
   if (!shouldUnassign) {
     logger.error("You are not assigned to this task", { issueNumber, user: sender.login });
-    console.error("You are not assigned to this task");
-    return out;
+    return { output: "You are not assigned to this task" };
   }
 
   // close PR
@@ -53,6 +44,6 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
     user: sender.login,
   });
 
-  addCommentToIssue(context, "````diff\n+ You have been unassigned from this task.\n````").catch(console.error);
+  addCommentToIssue(context, "```diff\n+ You have been unassigned from this task.\n````").catch(logger.error);
   return { output: "Task unassigned successfully" };
 }

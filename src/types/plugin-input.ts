@@ -11,22 +11,23 @@ export interface PluginInputs<T extends SupportedEventsU = SupportedEventsU, TU 
   ref: string;
 }
 
-const oneDay = 24 * 60 * 60 * 1000;
+const ONE_DAY = 24 * 60 * 60 * 1000;
 
 export const startStopSchema = T.Object({
-  disabledCommands: T.Array(T.String(), { default: ["start", "stop"] }),
+  isEnabled: T.Boolean(),
   timers: T.Object(
     {
       reviewDelayTolerance: T.Number(),
       taskStaleTimeoutDuration: T.Number(),
     },
-    { default: { reviewDelayTolerance: oneDay * 5, taskStaleTimeoutDuration: oneDay * 30 } }
+    { default: { reviewDelayTolerance: ONE_DAY * 5, taskStaleTimeoutDuration: ONE_DAY * 30 } }
   ),
   miscellaneous: T.Object(
     {
       maxConcurrentTasks: T.Number(),
+      startRequiresWallet: T.Boolean(),
     },
-    { default: { maxConcurrentTasks: 3 } }
+    { default: { maxConcurrentTasks: 3, startRequiresWallet: true } }
   ),
 });
 

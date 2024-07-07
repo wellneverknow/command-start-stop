@@ -3,14 +3,7 @@ import { Octokit } from "@octokit/rest";
 import { StartStopSettings } from "./plugin-input";
 import { createAdapters } from "../adapters";
 import { Env } from "./env";
-
-export interface Logger {
-  fatal: (message: unknown, ...optionalParams: unknown[]) => void;
-  error: (message: unknown, ...optionalParams: unknown[]) => void;
-  warn: (message: unknown, ...optionalParams: unknown[]) => void;
-  info: (message: unknown, ...optionalParams: unknown[]) => void;
-  debug: (message: unknown, ...optionalParams: unknown[]) => void;
-}
+import { Logs } from "@ubiquity-dao/ubiquibot-logger/.";
 
 export type SupportedEventsU = "issue_comment.created";
 
@@ -25,5 +18,5 @@ export interface Context<T extends SupportedEventsU = SupportedEventsU, TU exten
   adapters: ReturnType<typeof createAdapters>;
   config: StartStopSettings;
   env: Env;
-  logger: Logger;
+  logger: Logs
 }

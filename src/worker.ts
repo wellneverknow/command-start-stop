@@ -1,5 +1,5 @@
 import { Value } from "@sinclair/typebox/value";
-import { startStopBounty } from "./plugin";
+import { startStopTask } from "./plugin";
 import { Env } from "./types/env";
 import { startStopSchema, startStopSettingsValidator } from "./types/plugin-input";
 
@@ -29,7 +29,7 @@ export default {
       }
 
       webhookPayload.settings = settings;
-      await startStopBounty(webhookPayload, env);
+      await startStopTask(webhookPayload, env);
       return new Response(JSON.stringify("OK"), { status: 200, headers: { "content-type": "application/json" } });
     } catch (error) {
       return handleUncaughtError(error);

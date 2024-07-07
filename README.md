@@ -1,4 +1,4 @@
-# `@ubiquibot/Command-Start-Stop`
+# `@ubiquibot/command-start-stop`
 
 This plugin allows a hunter to begin a task as well as gracefully stop a task without incurring a negative impact on the hunter's XP or karma.
 
@@ -32,17 +32,17 @@ To configure your Ubiquibot to run this plugin, add the following to the `.ubiqu
 - plugin: http://localhost:4000 # or the URL where the plugin is hosted
   name: start-stop
   id: start-stop-command
-  type: github
-  description: "Allows a user to start/stop a bounty without negative XP impact"
-  command: "/(start|stop)"
-  example: "/start | /stop"
+  description: "Allows a user to start/stop a task without negative XP impact"
+  command: "\/start|\/stop"
+  example: "/start" # or "/stop"
   with:
-    disabledCommands: []
+    isEnabled: true
     timers:
       reviewDelayTolerance: 86000
       taskStaleTimeoutDuration: 2580000
     miscellaneous:
       maxConcurrentTasks: 3
+      startRequiresWallet: true # default is true
 ```
 
 # Testing

@@ -1,25 +1,21 @@
-import { LogLevel } from "../../adapters/supabase/pretty-logs";
+import { L as LogReturn } from "@ubiquity-dao/ubiquibot-logger/dist/pretty-logs--Bv8yJMk";
+function createStructuredMetadata(className: string, logReturn: LogReturn | null) {
+  let logMessage, metadata
+  if (logReturn) {
+    logMessage = logReturn.logMessage;
+    metadata = logReturn.metadata;
+  }
 
-type Metadata<T extends object> = T & {
-  revision?: string;
-  logMessage?: {
-    type?: LogLevel;
-    message?: string;
-  };
-  [key: string]: unknown;
-};
-
-function createStructuredMetadata<T extends object>(className: string, metadata: Metadata<T>) {
   const jsonPretty = JSON.stringify(metadata, null, 2);
   const stackLine = new Error().stack?.split("\n")[2] ?? "";
   const caller = stackLine.match(/at (\S+)/)?.[1] ?? "";
-  const ubiquityMetadataHeader = `<!-- Ubiquity - ${className} - ${caller} - ${metadata.revision}`;
+  const ubiquityMetadataHeader = `<!-- Ubiquity - ${className} - ${caller} - ${metadata?.revision}`;
 
   let metadataSerialized: string;
   const metadataSerializedVisible = ["```json", jsonPretty, "```"].join("\n");
   const metadataSerializedHidden = [ubiquityMetadataHeader, jsonPretty, "-->"].join("\n");
 
-  if (metadata.logMessage?.type === LogLevel.FATAL) {
+  if (logMessage?.type === "fatal") {
     // if the log message is fatal, then we want to show the metadata
     metadataSerialized = [metadataSerializedVisible, metadataSerializedHidden].join("\n");
   } else {
@@ -30,37 +26,6 @@ function createStructuredMetadata<T extends object>(className: string, metadata:
   return metadataSerialized;
 }
 
-function parseStructuredMetadata(comment: string) {
-  const regex = /<!-- Ubiquity - (.+?) - (.+?) - (.+?)\n(.*?)-->/gs;
-
-  const match = regex.exec(comment);
-
-  if (!match) {
-    return null;
-  }
-
-  const [, type, caller, revision, jsonString] = match;
-
-  let metadata;
-  try {
-    // TODO: fix metadata writing to encode html comments inside json without the html parser getting confused
-    metadata = JSON.parse(jsonString.trim());
-  } catch (error) {
-    console.trace(jsonString);
-    console.error("Failed to parse JSON:", error);
-
-    return null;
-  }
-
-  return {
-    className: type.trim(),
-    caller: caller.trim(),
-    revision: revision.trim(),
-    metadata,
-  };
-}
-
 export default {
   create: createStructuredMetadata,
-  parse: parseStructuredMetadata,
 };

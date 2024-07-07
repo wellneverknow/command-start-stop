@@ -3,7 +3,7 @@ import * as github from "@actions/github";
 import { Octokit } from "@octokit/rest";
 import { Value } from "@sinclair/typebox/build/cjs/value";
 import { envSchema, startStopSchema, PluginInputs } from "./types";
-import { startStopBounty } from "./plugin";
+import { startStopTask } from "./plugin";
 
 export async function run() {
   const payload = github.context.payload.inputs;
@@ -20,12 +20,12 @@ export async function run() {
     ref: payload.ref,
   };
 
-  await startStopBounty(inputs, env);
+  await startStopTask(inputs, env);
 
-  return returnDataToKernel(inputs.authToken, inputs.stateId, {});
+  return toKernel(inputs.authToken, inputs.stateId, {});
 }
 
-async function returnDataToKernel(repoToken: string, stateId: string, output: object) {
+async function toKernel(repoToken: string, stateId: string, output: object) {
   const octokit = new Octokit({ auth: repoToken });
   await octokit.repos.createDispatchEvent({
     owner: github.context.repo.owner,
