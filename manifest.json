@@ -5,12 +5,12 @@
     {
       "command": "/start",
       "example": "/start",
-      "description": "Assigns yourself to the issue."
+      "description": "Assign yourself to the issue."
     },
     {
       "command": "/stop",
       "example": "/stop",
-      "description": "Unassigns yourself from the issue."
+      "description": "Unassign yourself from the issue."
     }
   ]
 }
