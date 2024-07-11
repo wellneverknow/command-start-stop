@@ -3,7 +3,7 @@ import { Octokit } from "@octokit/rest";
 import { StartStopSettings } from "./plugin-input";
 import { createAdapters } from "../adapters";
 import { Env } from "./env";
-import { Logs } from "@ubiquity-dao/ubiquibot-logger/.";
+import { Logs } from "@ubiquity-dao/ubiquibot-logger/";
 
 export type SupportedEventsU = "issue_comment.created";
 

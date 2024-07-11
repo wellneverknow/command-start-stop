@@ -21,6 +21,9 @@ jobs:
       - uses: actions/checkout@master
         with:
           fetch-depth: 0
+      
+      - name: Enable corepack
+        run: corepack enable
 
       - name: Jest With Coverage Comment
         # Ensures this step is run even on previous step failure (e.g. test failed)
