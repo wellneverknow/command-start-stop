@@ -7,8 +7,8 @@
       "description": "Assign yourself to the issue."
     },
     "stop": {
-      "example": "/stop",
-      "ubiquity:description": "Unassign yourself from the issue."
+      "ubiquity:example": "/stop",
+      "description": "Unassign yourself from the issue."
     }
   }
 }
