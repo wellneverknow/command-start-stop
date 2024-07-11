@@ -1,16 +1,14 @@
 {
   "name": "Start | Stop",
   "description": "Assign or un-assign yourself from an issue.",
-  "commands": [
-    {
-      "command": "/start",
+  "commands": {
+    "start": {
       "example": "/start",
       "description": "Assign yourself to the issue."
     },
-    {
-      "command": "/stop",
+    "stop": {
       "example": "/stop",
       "description": "Unassign yourself from the issue."
     }
-  ]
+  }
 }
