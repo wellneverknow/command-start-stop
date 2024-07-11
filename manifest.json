@@ -1,0 +1,14 @@
+{
+  "name": "Start | Stop",
+  "description": "Assign or un-assign yourself from an issue.",
+  "commands": {
+    "start": {
+      "ubiquity:example": "/start",
+      "description": "Assign yourself to the issue."
+    },
+    "stop": {
+      "example": "/stop",
+      "ubiquity:description": "Unassign yourself from the issue."
+    }
+  }
+}
