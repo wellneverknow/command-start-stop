@@ -81,7 +81,14 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const duration: number = calculateDurations(labels).shift() ?? 0;
 
   const { id, login } = sender;
-  const logMessage = logger.info("Task assigned successfully", { duration, priceLabel, revision: commitHash?.substring(0, 7), teammate: teammates, assignee: login, issue: issue.number });
+  const logMessage = logger.info("Task assigned successfully", {
+    duration,
+    priceLabel,
+    revision: commitHash?.substring(0, 7),
+    teammate: teammates,
+    assignee: login,
+    issue: issue.number,
+  });
 
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, id, duration);
   const metadata = structuredMetadata.create("Assignment", logMessage);

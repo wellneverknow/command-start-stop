@@ -45,6 +45,25 @@ describe("User start/stop", () => {
     expect(output).toEqual("Task assigned successfully");
   });
 
+  test("User can start an issue with teammates", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender, "/start @user2");
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    const { output } = await userStartStop(context as unknown as Context);
+
+    expect(output).toEqual("Task assigned successfully");
+
+    const issue2 = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+
+    expect(issue2.assignees).toHaveLength(2);
+
+    expect(issue2.assignees).toEqual(expect.arrayContaining(["ubiquity", "user2"]));
+  });
+
   test("User can stop an issue", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
@@ -59,7 +78,7 @@ describe("User start/stop", () => {
   });
 
   test("Stopping an issue should close the author's linked PR", async () => {
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => { });
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
     const context = createContext(issue, sender, "/stop");
@@ -466,6 +485,7 @@ async function setupTests() {
         state: "open",
         body: `Resolves #2`,
         html_url: "https://github.com/ubiquity/test-repo/pull/10",
+        state: "open",
         repository: {
           full_name: TEST_REPO,
         },
@@ -588,17 +608,17 @@ function getSupabase(withData = true) {
         single: jest.fn().mockResolvedValue({
           data: withData
             ? {
-                id: 1,
-                wallets: {
-                  address: "0x123",
-                },
-              }
-            : {
-                id: 1,
-                wallets: {
-                  address: undefined,
-                },
+              id: 1,
+              wallets: {
+                address: "0x123",
               },
+            }
+            : {
+              id: 1,
+              wallets: {
+                address: undefined,
+              },
+            },
         }),
       }),
     }),
