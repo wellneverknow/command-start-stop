@@ -62,13 +62,14 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   const assignees = (issue?.assignees ?? []).filter(Boolean);
   if (assignees.length !== 0) {
-    const log = logger.error("The issue is already assigned. Please choose another unassigned task.", { issueNumber: issue.number });
-    await addCommentToIssue(context, log?.logMessage.diff as string);
-    throw new Error("Issue is already assigned");
+    // const log = logger.error("The issue is already assigned. Please choose another unassigned task.", { issueNumber: issue.number });
+    // await addCommentToIssue(context, log?.logMessage.diff as string);
+    const currentUserAssigned = !!assignees.find((assignee) => assignee?.login === sender.login);
+    const log = logger.error(currentUserAssigned ? "You are already assigned to this task." : "The issue is already assigned. Please choose another unassigned task.", { issueNumber: issue.number });
+    return await addCommentToIssue(context, log?.logMessage.diff as string);
   }
 
   // get labels
-
   const labels = issue.labels;
   const priceLabel = labels.find((label: Label) => label.name.startsWith("Price: "));
 
