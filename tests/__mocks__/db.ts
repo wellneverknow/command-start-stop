@@ -145,6 +145,7 @@ export const db = factory({
       issue: {
         number: Number,
         html_url: String,
+        state: String,
         repository: {
           full_name: String,
         },

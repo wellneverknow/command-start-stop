@@ -457,6 +457,7 @@ async function setupTests() {
     source: {
       issue: {
         number: 10,
+        state: "open",
         html_url: "https://github.com/ubiquity/test-repo/pull/10",
         repository: {
           full_name: TEST_REPO,
@@ -483,6 +484,7 @@ async function setupTests() {
     source: {
       issue: {
         number: 2,
+        state: "open",
         html_url: "http://github.com/ubiquity/test-repo/pull/2",
         repository: {
           full_name: TEST_REPO,
@@ -509,6 +511,7 @@ async function setupTests() {
     source: {
       issue: {
         number: 3,
+        state: "open",
         html_url: "http://github.com/ubiquity/test-repo/pull/3",
         repository: {
           full_name: TEST_REPO,

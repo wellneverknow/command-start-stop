@@ -66,9 +66,33 @@ export const handlers = [
     return HttpResponse.json({ owner, repo, pull_number });
   }),
   // add assignee to an issue
-  http.post("https://api.github.com/repos/:owner/:repo/issues/:issue_number/assignees", ({ params: { owner, repo, issue_number } }) => {
-    return HttpResponse.json({ owner, repo, issue_number });
-  }),
+  http.post(
+    "https://api.github.com/repos/:owner/:repo/issues/:issue_number/assignees",
+    async ({ params: { owner, repo, issue_number }, request: { body } }) => {
+      const reader = body?.getReader();
+      if (!reader) {
+        return HttpResponse.json({ owner, repo, issue_number });
+      }
+      const { assignees } = await reader.read().then(({ value }) => {
+        return JSON.parse(new TextDecoder().decode(value));
+      });
+
+      const issue = db.issue.findFirst({
+        where: { owner: { equals: owner as string }, repo: { equals: repo as string }, number: { equals: Number(issue_number) } },
+      });
+
+      if (issue) {
+        db.issue.update({
+          where: { id: { equals: issue.id } },
+          data: {
+            assignees,
+          },
+        });
+      }
+
+      return HttpResponse.json({ owner, repo, issue_number, assignees });
+    }
+  ),
   // list all pull requests
   http.get("https://api.github.com/repos/:owner/:repo/pulls", ({ params: { owner, repo } }) => {
     return HttpResponse.json(db.pull.findMany({ where: { owner: { equals: owner as string }, repo: { equals: repo as string } } }));
