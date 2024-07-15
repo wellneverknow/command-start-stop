@@ -2,6 +2,7 @@ import { Assignee, Context, ISSUE_TYPE, Label } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
+import { wasPreviouslyUnassigned } from "./check-unassigns";
 import { generateAssignmentComment } from "./generate-assignment-comment";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
@@ -73,11 +74,17 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   const labels = issue.labels;
   const priceLabel = labels.find((label: Label) => label.name.startsWith("Price: "));
+  const isUnassigned = await wasPreviouslyUnassigned(context, sender, issue);
 
   if (!priceLabel) {
     const log = logger.error("No price label is set to calculate the duration", { issueNumber: issue.number });
     await addCommentToIssue(context, log?.logMessage.diff as string);
     throw new Error("No price label is set to calculate the duration");
+  }
+
+  if (isUnassigned) {
+    await addCommentToIssue(context, "```diff\n! You were previously unassigned from this task. You cannot reassign yourself\n```");
+    throw new Error(`Too many assigned issues, you have reached your max limit of ${maxConcurrentTasks} issues.`);
   }
 
   const duration: number = calculateDurations(labels).shift() ?? 0;
