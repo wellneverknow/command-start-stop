@@ -3,11 +3,11 @@
   "description": "Assign or un-assign yourself from an issue.",
   "commands": {
     "start": {
-      "ubiquity:example": "/start",
+      "ubiquibot:example": "/start",
       "description": "Assign yourself to the issue."
     },
     "stop": {
-      "ubiquity:example": "/stop",
+      "ubiquibot:example": "/stop",
       "description": "Unassign yourself from the issue."
     }
   }
