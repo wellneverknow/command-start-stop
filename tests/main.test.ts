@@ -9,13 +9,14 @@ import issueTemplate from "./__mocks__/issue-template";
 import { createAdapters } from "../src/adapters";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import { Logs } from "@ubiquity-dao/ubiquibot-logger/.";
+import { Logs, cleanLogString } from "@ubiquity-dao/ubiquibot-logger";
 dotenv.config();
 
 type Issue = Context["payload"]["issue"];
 type Sender = Context["payload"]["sender"];
 
 const octokit = jest.requireActual("@octokit/rest");
+const TEST_REPO = "ubiquity/test-repo";
 
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_KEY;
@@ -44,6 +45,8 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender);
 
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
     const { output } = await userStartStop(context as unknown as Context);
 
     expect(output).toEqual("Task assigned successfully");
@@ -56,9 +59,32 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender, "/stop");
 
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
     const { output } = await userStartStop(context as unknown as Context);
 
     expect(output).toEqual("Task unassigned successfully");
+  });
+
+  test("Stopping an issue should close the author's linked PR", async () => {
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
+    // using the second issue
+    const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
+    const context = createContext(issue, sender, "/stop");
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    const { output } = await userStartStop(context as unknown as Context);
+
+    expect(output).toEqual("Task unassigned successfully");
+    const logs = infoSpy.mock.calls.flat();
+    expect(logs[0]).toMatch(/Opened prs/);
+    expect(cleanLogString(logs[3])).toMatch(
+      cleanLogString(
+        " › ```diff# These linked pull requests are closed:  http://github.com/ubiquity/test-repo/pull/2  http://github.com/ubiquity/test-repo/pull/3"
+      )
+    );
   });
 
   test("User can't stop an issue they're not assigned to", async () => {
@@ -67,6 +93,8 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender, "/stop");
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
     const output = await userStartStop(context as unknown as Context);
 
@@ -78,7 +106,10 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 6 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
+    console.log(issue.assignees, issue.assignee?.login, sender);
     const context = createContext(issue, sender, "/stop");
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
     const output = await userStartStop(context as unknown as Context);
 
@@ -90,6 +121,8 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender, "/start");
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
     const err = "Issue is already assigned";
 
@@ -108,6 +141,8 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender);
 
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
     const err = "No price label is set to calculate the duration";
 
     try {
@@ -122,7 +157,10 @@ describe("User start/stop", () => {
   test("User can't start an issue without a wallet address", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
-    const context = createContext(issue, sender, "/start", true, false);
+
+    const context = createContext(issue, sender);
+
+    context.adapters = createAdapters(getSupabase(false), context as unknown as Context);
 
     try {
       await userStartStop(context as unknown as Context);
@@ -139,6 +177,8 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender);
 
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
     try {
       await userStartStop(context as unknown as Context);
     } catch (error) {
@@ -152,7 +192,7 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
-    const context = createContext(issue, sender, "/start", false);
+    const context = createContext(issue, sender, "/start", true);
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
@@ -169,7 +209,9 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
-    const context = createContext(issue, sender, "/stop", false);
+    const context = createContext(issue, sender, "/stop", true);
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
     try {
       await userStartStop(context as unknown as Context);
@@ -186,6 +228,8 @@ describe("User start/stop", () => {
 
     const context = createContext(issue, sender, "/start");
 
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
     try {
       await userStartStop(context as unknown as Context);
     } catch (error) {
@@ -196,6 +240,7 @@ describe("User start/stop", () => {
   });
 
   test("User can't start another issue if they have reached the max limit", async () => {
+    // getAvailableOpenedPullRequests()
     jest.mock("../src/utils/issue", () => ({
       getAvailableOpenedPullRequests: jest.fn().mockResolvedValue([
         {
@@ -301,7 +346,7 @@ async function setupTests() {
     number: 4,
     body: "Fourth issue body",
     owner: "ubiquity",
-    state: "CLOSED",
+    state: "closed",
   });
 
   db.issue.create({
@@ -333,9 +378,54 @@ async function setupTests() {
       id: 2,
       name: "user2",
     },
-    body: "Pull request body",
-    owner: "user2",
+    user: {
+      id: 2,
+      login: "user2",
+    },
+    body: "Pull body",
+    owner: "ubiquity",
     repo: "test-repo",
+    state: "open",
+    closed_at: null,
+  });
+
+  db.pull.create({
+    id: 2,
+    html_url: "",
+    number: 2,
+    author: {
+      id: 2,
+      name: "user2",
+    },
+    user: {
+      id: 2,
+      login: "user2",
+    },
+    body: "Pull request",
+    owner: "ubiquity",
+    repo: "test-repo",
+    state: "open",
+    closed_at: null,
+  });
+
+  db.pull.create({
+    id: 3,
+    html_url: "",
+    number: 3,
+    author: {
+      id: 1,
+      name: "ubiquity",
+    },
+    user: {
+      id: 1,
+      login: "ubiquity",
+    },
+    body: "Pull request body",
+    owner: "ubiquity",
+
+    repo: "test-repo",
+    state: "open",
+    closed_at: null,
   });
 
   db.review.create({
@@ -353,39 +443,89 @@ async function setupTests() {
     pull_number: 1,
   });
 
+  const CROSS_REFERENCED = "cross-referenced";
+
   db.event.create({
     id: 1,
-    actor: {
-      id: 2,
-      name: "user2",
-    },
+    created_at: new Date().toISOString(),
     commit_id: "123",
     commit_url: "",
-    created_at: new Date().toISOString(),
-    event: "cross-referenced",
+    event: CROSS_REFERENCED,
     issue_number: 1,
     owner: "ubiquity",
     repo: "test-repo",
+    source: {
+      issue: {
+        number: 10,
+        html_url: "https://github.com/ubiquity/test-repo/pull/10",
+        repository: {
+          full_name: TEST_REPO,
+        },
+        user: {
+          login: "ubiquity",
+        },
+        pull_request: {
+          html_url: "https://github.com/ubiquity/test-repo/pull/10",
+        },
+      },
+    },
   });
 
   db.event.create({
     id: 2,
-    actor: {
-      id: 1,
-      name: "ubiquity",
-    },
     commit_id: "123",
     commit_url: "",
     created_at: new Date().toISOString(),
-    event: "cross-referenced",
+    event: CROSS_REFERENCED,
     issue_number: 2,
     owner: "ubiquity",
     repo: "test-repo",
+    source: {
+      issue: {
+        number: 2,
+        html_url: "http://github.com/ubiquity/test-repo/pull/2",
+        repository: {
+          full_name: TEST_REPO,
+        },
+        user: {
+          login: "user2",
+        },
+        pull_request: {
+          html_url: "http://github.com/ubiquity/test-repo/pull/2",
+        },
+      },
+    },
+  });
+
+  db.event.create({
+    id: 3,
+    commit_id: "123",
+    commit_url: "",
+    created_at: new Date().toISOString(),
+    event: CROSS_REFERENCED,
+    issue_number: 2,
+    owner: "ubiquity",
+    repo: "test-repo",
+    source: {
+      issue: {
+        number: 3,
+        html_url: "http://github.com/ubiquity/test-repo/pull/3",
+        repository: {
+          full_name: TEST_REPO,
+        },
+        user: {
+          login: "user2",
+        },
+        pull_request: {
+          html_url: "http://github.com/ubiquity/test-repo/pull/3",
+        },
+      },
+    },
   });
 }
 
-function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start", isEnabled = true, withData = true) {
-  const ctx = {
+function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start", disabled = false) {
+  return {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
       issue: issue as unknown as Context["payload"]["issue"],
@@ -398,14 +538,17 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
     },
     logger: new Logs("debug"),
     config: {
-      isEnabled,
+      isEnabled: !disabled,
       timers: {
         reviewDelayTolerance: 86000,
         taskStaleTimeoutDuration: 2580000,
       },
       miscellaneous: {
         maxConcurrentTasks: 3,
-        startRequiresWallet: true,
+      },
+      labels: {
+        time: ["Time: 1h", "Time: <4 hours", "Time: <1 Day", "Time: <3 Days", "Time: <1 Week"],
+        priority: ["Priority: 1 (Normal)", "Priority: 2 (High)", "Priority: 3 (Critical)"],
       },
     },
     octokit: new octokit.Octokit(),
@@ -414,15 +557,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       SUPABASE_KEY: key,
       SUPABASE_URL: url,
     },
-  } as unknown as Context;
-
-  if (withData) {
-    ctx.adapters = createAdapters(getSupabase(), ctx);
-  } else {
-    ctx.adapters = createAdapters(getSupabase(false), ctx);
-  }
-
-  return ctx;
+  };
 }
 
 function getSupabase(withData = true) {
@@ -432,17 +567,17 @@ function getSupabase(withData = true) {
         single: jest.fn().mockResolvedValue({
           data: withData
             ? {
-              id: 1,
-              wallets: {
-                address: "0x123",
-              },
-            }
+                id: 1,
+                wallets: {
+                  address: "0x123",
+                },
+              }
             : {
-              id: 1,
-              wallets: {
-                address: undefined,
+                id: 1,
+                wallets: {
+                  address: undefined,
+                },
               },
-            },
         }),
       }),
     }),

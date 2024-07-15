@@ -13,7 +13,7 @@ export class User extends Super {
   }
 
   async getWalletByUserId(userId: number, issueNumber: number) {
-    const { data, error } = await this.supabase.from("users").select("wallets(*)").eq("id", userId).single() as { data: { wallets: Wallet }, error: unknown };
+    const { data, error } = (await this.supabase.from("users").select("wallets(*)").eq("id", userId).single()) as { data: { wallets: Wallet }; error: unknown };
     if ((error && !data) || !data.wallets?.address) {
       this.context.logger.error("No wallet address found", { userId, issueNumber });
       if (this.context.config.miscellaneous.startRequiresWallet) {

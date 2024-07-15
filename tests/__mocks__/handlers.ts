@@ -58,12 +58,8 @@ export const handlers = [
     );
   }),
   // list events for an issue timeline
-  http.get("https://api.github.com/repos/:owner/:repo/issues/:issue_number/timeline", ({ params: { owner, repo, issue_number } }) => {
-    return HttpResponse.json(
-      db.event.findMany({
-        where: { owner: { equals: owner as string }, repo: { equals: repo as string }, issue_number: { equals: issue_number as unknown as number } },
-      })
-    );
+  http.get("https://api.github.com/repos/:owner/:repo/issues/:issue_number/timeline", () => {
+    return HttpResponse.json(db.event.getAll());
   }),
   // update a pull request
   http.patch("https://api.github.com/repos/:owner/:repo/pulls/:pull_number", ({ params: { owner, repo, pull_number } }) => {
