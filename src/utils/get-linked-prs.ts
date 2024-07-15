@@ -38,6 +38,9 @@ export async function getLinkedPullRequests(context: Context, { owner, repositor
       number: pr.number,
       href: pr.html_url,
       author: pr.user?.login,
+      state: pr.state,
     };
-  }).filter((pr) => pr !== null) as GetLinkedResults[];
+  })
+    .filter((pr) => pr !== null)
+    .filter((pr) => pr.state === "open") as GetLinkedResults[];
 }

@@ -92,6 +92,7 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
   }
 
   const currentRepo = context.payload.repository;
+  let isClosed = false;
 
   for await (const pr of linkedPullRequests) {
     if (pr.author !== author || pr.organization !== currentRepo.owner.login || pr.repository !== currentRepo.name) {
@@ -99,10 +100,11 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
     } else {
       await closePullRequest(context, pr);
       comment += ` ${pr.href} `;
+      isClosed = true;
     }
   }
 
-  if (comment === "```diff\n# These linked pull requests are closed: `") {
+  if (!isClosed) {
     return logger.info(`No PRs were closed`);
   }
 
