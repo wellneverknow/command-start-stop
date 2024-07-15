@@ -1,11 +1,18 @@
 import { Context } from "./types/context";
 import { userStartStop } from "./handlers/user-start-stop";
 import { Env, PluginInputs } from "./types";
-
 import { Octokit } from "@octokit/rest";
 import { createClient } from "@supabase/supabase-js";
 import { createAdapters } from "./adapters";
 import { Logs } from "@ubiquity-dao/ubiquibot-logger";
+
+export type UserRole = "admin" | "member" | "contributor";
+
+export const maxTask: Record<UserRole, number> = {
+  admin: Infinity,
+  member: 6,
+  contributor: 3,
+};
 
 export async function startStopTask(inputs: PluginInputs, env: Env) {
   const octokit = new Octokit({ auth: inputs.authToken });

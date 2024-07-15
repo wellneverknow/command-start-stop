@@ -1,17 +1,19 @@
+import { maxTask, UserRole } from "../../plugin";
 import { Context, ISSUE_TYPE, Label } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
-import { isUserMember } from "./check-org-member";
 import { checkTaskStale } from "./check-task-stale";
 import { generateAssignmentComment } from "./generate-assignment-comment";
+import { getUserRole } from "./get-user-role";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
 export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"]) {
   const { logger, config } = context;
-  const { maxConcurrentTasks } = config.miscellaneous;
   const { taskStaleTimeoutDuration } = config.timers;
   const assignee = context.payload.issue.user.login;
+  const userRole = (await getUserRole(context, assignee)) as UserRole;
+  const maxConcurrentTasks = maxTask[userRole];
 
   // is it a child issue?
   if (issue.body && isParentIssue(issue.body)) {
@@ -46,7 +48,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   // check for max and enforce max
 
-  if (assignedIssues.length - openedPullRequests.length >= maxConcurrentTasks && !isUserMember(context, assignee)) {
+  if (assignedIssues.length - openedPullRequests.length >= maxConcurrentTasks && userRole !== "admin") {
     await addCommentToIssue(context, "```diff\n! Too many assigned issues, you have reached your max limit.\n```");
     throw new Error(`Too many assigned issues, you have reached your max limit of ${maxConcurrentTasks} issues.`);
   }
