@@ -45,7 +45,7 @@ export async function addCommentToIssue(context: Context, message: string | null
   }
 }
 
-//// Pull Requests \\\\
+// Pull Requests
 
 export async function closePullRequest(context: Context, results: GetLinkedResults) {
   const { payload } = context;
