@@ -1,7 +1,6 @@
 import { Assignee, Context, ISSUE_TYPE, Label } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue, getTimeValue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
-import { isUserMember } from "./check-org-member";
 import { checkTaskStale } from "./check-task-stale";
 import { generateAssignmentComment } from "./generate-assignment-comment";
 import { getUserRoleAndTaskLimit } from "./get-user-task-limit-and-role";
