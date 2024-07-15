@@ -7,7 +7,7 @@ import { getUserRoleAndTaskLimit } from "./get-user-task-limit-and-role";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
-export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"]) {
+export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"], teammates: string[]) {
   const { logger, config } = context;
   const { taskStaleTimeoutDuration } = config;
   const maxTask = await getUserRoleAndTaskLimit(context, sender.login);
@@ -36,7 +36,6 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   }
 
   // check max assigned issues
-
   const openedPullRequests = await getAvailableOpenedPullRequests(context, sender.login);
   logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed`, {
     openedPullRequests: openedPullRequests.map((pr) => pr.html_url),
@@ -82,7 +81,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const duration: number = calculateDurations(labels).shift() ?? 0;
 
   const { id, login } = sender;
-  const logMessage = logger.info("Task assigned successfully", { duration, priceLabel, revision: commitHash?.substring(0, 7) });
+  const logMessage = logger.info("Task assigned successfully", { duration, priceLabel, revision: commitHash?.substring(0, 7), teammate: teammates, assignee: login, issue: issue.number });
 
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, id, duration);
   const metadata = structuredMetadata.create("Assignment", logMessage);
