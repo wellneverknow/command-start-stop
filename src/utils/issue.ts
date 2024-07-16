@@ -1,5 +1,5 @@
 import { Context } from "../types/context";
-import { Issue, ISSUE_TYPE, PullRequest, Review } from "../types/payload";
+import { Issue, PullRequest, Review } from "../types/payload";
 import { getLinkedPullRequests, GetLinkedResults } from "./get-linked-prs";
 
 export function isParentIssue(body: string) {
@@ -8,12 +8,14 @@ export function isParentIssue(body: string) {
 }
 
 export async function getAssignedIssues(context: Context, username: string): Promise<Issue[]> {
-  const { payload } = context
+  const { payload } = context;
 
   try {
-    return await context.octokit.search.issuesAndPullRequests({
-      q: `is:open assignee:${username} org:${payload.repository.owner.login}`,
-    }).then((response) => response.data.items) as Issue[];
+    return (await context.octokit.search
+      .issuesAndPullRequests({
+        q: `is:open assignee:${username} org:${payload.repository.owner.login}`,
+      })
+      .then((response) => response.data.items)) as Issue[];
   } catch (err: unknown) {
     context.logger.error("Fetching assigned issues failed!", { error: err as Error });
     return [];
