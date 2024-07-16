@@ -8,19 +8,12 @@ export function isParentIssue(body: string) {
 }
 
 export async function getAssignedIssues(context: Context, username: string): Promise<Issue[]> {
-  const payload = context.payload;
+  const { payload } = context
 
   try {
-    return await context.octokit.paginate(
-      context.octokit.issues.listForRepo,
-      {
-        owner: payload.repository.owner.login,
-        repo: payload.repository.name,
-        state: ISSUE_TYPE.OPEN,
-        per_page: 100,
-      },
-      ({ data: issues }) => issues.filter((issue: Issue) => !issue.pull_request && issue.assignee && issue.assignee.login === username)
-    );
+    return await context.octokit.search.issuesAndPullRequests({
+      q: `is:open assignee:${username} org:${payload.repository.owner.login}`,
+    }).then((response) => response.data.items) as Issue[];
   } catch (err: unknown) {
     context.logger.error("Fetching assigned issues failed!", { error: err as Error });
     return [];

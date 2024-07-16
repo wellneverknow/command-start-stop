@@ -61,13 +61,23 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     throw new Error("Issue is closed");
   }
 
-  const assignees = (issue?.assignees ?? []).filter(Boolean);
+  const assignees = issue?.assignees ?? []
+
   if (assignees.length !== 0) {
     // const log = logger.error("The issue is already assigned. Please choose another unassigned task.", { issueNumber: issue.number });
     // await addCommentToIssue(context, log?.logMessage.diff as string);
     const currentUserAssigned = !!assignees.find((assignee) => assignee?.login === sender.login);
-    const log = logger.error(currentUserAssigned ? "You are already assigned to this task." : "The issue is already assigned. Please choose another unassigned task.", { issueNumber: issue.number });
-    return await addCommentToIssue(context, log?.logMessage.diff as string);
+    const comment = currentUserAssigned ? "You are already assigned to this task." : "The issue is already assigned. Please choose another unassigned task.";
+    await addCommentToIssue(context, `\`\`\`diff\n! ${comment}`);
+    throw new Error(comment);
+  }
+
+  teammates.push(sender.login)
+
+  // check max assigned issues
+  for (const user of teammates) {
+    if (!user) continue;
+    await handleTaskLimitChecks(user, context, maxConcurrentTasks, logger, sender.login);
   }
 
   // get labels
@@ -117,4 +127,20 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   );
 
   return { output: "Task assigned successfully" };
+}
+
+async function handleTaskLimitChecks(username: string, context: Context, maxConcurrentTasks: number, logger: Context["logger"], sender: string) {
+  const openedPullRequests = await getAvailableOpenedPullRequests(context, username);
+  logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed: `, { openedPullRequests });
+
+  const assignedIssues = await getAssignedIssues(context, username);
+  logger.info("Max issue allowed is", { maxConcurrentTasks, assignedIssues: assignedIssues.map((issue) => `${issue.url}`) });
+
+  // check for max and enforce max
+  if (assignedIssues.length - openedPullRequests.length >= maxConcurrentTasks) {
+    const isSender = username === sender;
+    const comment = (isSender ? "You have" : `${username} has`) + ` reached the max limit of ${maxConcurrentTasks} assigned issues.`;
+    await addCommentToIssue(context, `\`\`\`diff\n! ${comment}\n\`\`\``);
+    throw new Error(`Too many assigned issues, you have reached your max limit of ${maxConcurrentTasks} issues.`);
+  }
 }

@@ -138,7 +138,7 @@ describe("User start/stop", () => {
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
-    const err = "Issue is already assigned";
+    const err = "The issue is already assigned. Please choose another unassigned task.";
 
     try {
       await userStartStop(context as unknown as Context);
