@@ -60,18 +60,15 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     throw new Error("Issue is closed");
   }
 
-  const assignees = issue?.assignees ?? []
+  const assignees = issue?.assignees ?? [];
 
   if (assignees.length !== 0) {
-    // const log = logger.error("The issue is already assigned. Please choose another unassigned task.", { issueNumber: issue.number });
-    // await addCommentToIssue(context, log?.logMessage.diff as string);
-    const currentUserAssigned = !!assignees.find((assignee) => assignee?.login === sender.login);
-    const comment = currentUserAssigned ? "You are already assigned to this task." : "The issue is already assigned. Please choose another unassigned task.";
-    await addCommentToIssue(context, `\`\`\`diff\n! ${comment}`);
-    throw new Error(comment);
+    const isCurrentUserAssigned = !!assignees.find((assignee) => assignee?.login === sender.login);
+    const log = logger.error(isCurrentUserAssigned ? "You are already assigned to this task." : "The issue is already assigned. Please choose another unassigned task.", { issueNumber: issue.number });
+    return await addCommentToIssue(context, log?.logMessage.diff as string);
   }
 
-  teammates.push(sender.login)
+  teammates.push(sender.login);
 
   // check max assigned issues
   for (const user of teammates) {
