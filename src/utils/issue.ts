@@ -95,7 +95,13 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
   let isClosed = false;
 
   for await (const pr of linkedPullRequests) {
-    if (pr.author !== author || pr.organization !== currentRepo.owner.login || pr.repository !== currentRepo.name) {
+    /**
+     * If the PR author is not the same as the issue author, skip the PR
+     * If the PR organization is not the same as the issue organization, skip the PR
+     *
+     * Same organization and author, close the PR
+     */
+    if (pr.author !== author || pr.organization !== currentRepo.owner.login) {
       continue;
     } else {
       await closePullRequest(context, pr);
