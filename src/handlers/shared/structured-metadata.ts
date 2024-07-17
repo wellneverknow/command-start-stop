@@ -1,6 +1,7 @@
-import { L as LogReturn } from "@ubiquity-dao/ubiquibot-logger/dist/pretty-logs--Bv8yJMk";
+import { LogReturn } from "@ubiquity-dao/ubiquibot-logger";
+
 function createStructuredMetadata(className: string, logReturn: LogReturn | null) {
-  let logMessage, metadata
+  let logMessage, metadata;
   if (logReturn) {
     logMessage = logReturn.logMessage;
     metadata = logReturn.metadata;

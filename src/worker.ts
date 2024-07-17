@@ -1,8 +1,7 @@
 import { Value } from "@sinclair/typebox/value";
-import { startStopTask } from "./plugin";
-import { Env } from "./types";
-import { startStopSchema, startStopSettingsValidator } from "./types";
 import manifest from "../manifest.json";
+import { startStopTask } from "./plugin";
+import { Env, startStopSchema, startStopSettingsValidator } from "./types";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {

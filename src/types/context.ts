@@ -3,7 +3,7 @@ import { Octokit } from "@octokit/rest";
 import { StartStopSettings } from "./plugin-input";
 import { createAdapters } from "../adapters";
 import { Env } from "./env";
-import { Logs } from "@ubiquity-dao/ubiquibot-logger/.";
+import { Logs } from "@ubiquity-dao/ubiquibot-logger";
 
 export type SupportedEventsU = "issue_comment.created";
 
@@ -18,5 +18,5 @@ export interface Context<T extends SupportedEventsU = SupportedEventsU, TU exten
   adapters: ReturnType<typeof createAdapters>;
   config: StartStopSettings;
   env: Env;
-  logger: Logs
+  logger: Logs;
 }

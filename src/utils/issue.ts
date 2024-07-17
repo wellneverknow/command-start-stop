@@ -78,7 +78,7 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
   }
 
   logger.info(`Opened prs`, { message: JSON.stringify(linkedPullRequests) });
-  let comment = `These linked pull requests are closed: `;
+  let comment = "```diff\n# These linked pull requests are closed: ";
   for (let i = 0; i < linkedPullRequests.length; i++) {
     await closePullRequest(context, linkedPullRequests[i].number);
     comment += ` ${linkedPullRequests[i].href} `;

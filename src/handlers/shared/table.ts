@@ -9,16 +9,16 @@ export function assignTableComment({ taskDeadline, registeredWallet, isTaskStale
   }
 
   return `
-  <code>
-  <table>
-  ${taskStaleWarning}
-  ${deadlineWarning}
-  <tr>
-  <td>Registered Wallet</td>
-  <td>${registeredWallet}</td>
-  </tr>
-  </table>
-  </code>
+<samp>
+<table>
+${taskStaleWarning}
+${deadlineWarning}
+<tr>
+<td>Registered Wallet</td>
+<td>${registeredWallet}</td>
+</tr>
+</table>
+</samp>
   `;
 }
 
