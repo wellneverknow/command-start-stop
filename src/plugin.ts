@@ -6,14 +6,6 @@ import { createClient } from "@supabase/supabase-js";
 import { createAdapters } from "./adapters";
 import { Logs } from "@ubiquity-dao/ubiquibot-logger";
 
-export type UserRole = "admin" | "member" | "contributor";
-
-export const maxTask: Record<UserRole, number> = {
-  admin: Infinity,
-  member: 6,
-  contributor: 3,
-};
-
 export async function startStopTask(inputs: PluginInputs, env: Env) {
   const octokit = new Octokit({ auth: inputs.authToken });
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_KEY);

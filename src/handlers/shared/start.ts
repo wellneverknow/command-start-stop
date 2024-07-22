@@ -1,5 +1,4 @@
-import { maxTask, UserRole } from "../../plugin";
-import { Context, ISSUE_TYPE, Label } from "../../types";
+import { Context, ISSUE_TYPE, Label, UserRole } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
@@ -13,7 +12,8 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const { taskStaleTimeoutDuration } = config.timers;
   const assignee = context.payload.issue.user.login;
   const userRole = (await getUserRole(context, assignee)) as UserRole;
-  const maxConcurrentTasks = maxTask[userRole];
+  const { maxConcurrentTasks } = config.miscellaneous;
+  const maxTask = maxConcurrentTasks.find(({ role }) => role.toLowerCase() === userRole)?.limit as number;
 
   // is it a child issue?
   if (issue.body && isParentIssue(issue.body)) {
@@ -48,9 +48,9 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   // check for max and enforce max
 
-  if (assignedIssues.length - openedPullRequests.length >= maxConcurrentTasks && userRole !== "admin") {
+  if (assignedIssues.length - openedPullRequests.length >= maxTask) {
     await addCommentToIssue(context, "```diff\n! Too many assigned issues, you have reached your max limit.\n```");
-    throw new Error(`Too many assigned issues, you have reached your max limit of ${maxConcurrentTasks} issues.`);
+    throw new Error(`Too many assigned issues, you have reached your max limit of ${maxTask} issues.`);
   }
 
   // is it assignable?
