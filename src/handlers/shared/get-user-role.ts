@@ -13,15 +13,7 @@ export async function getUserRole(context: Context, user: string): Promise<strin
       username: user,
     });
 
-    const role = response.data.role;
-
-    if (role === "admin") {
-      return "admin";
-    } else if (role === "member") {
-      return "member";
-    } else {
-      return "contributor";
-    }
+    return response.data.role;
   } catch (error) {
     return "contributor";
   }
