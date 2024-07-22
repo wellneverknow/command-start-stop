@@ -14,6 +14,7 @@ export interface GetLinkedResults {
   number: number;
   href: string;
   author: string;
+  body: string | null;
 }
 
 export async function getLinkedPullRequests(context: Context, { owner, repository, issue }: GetLinkedParams): Promise<GetLinkedResults[]> {
@@ -39,6 +40,7 @@ export async function getLinkedPullRequests(context: Context, { owner, repositor
       href: pr.html_url,
       author: pr.user?.login,
       state: pr.state,
+      body: pr.body,
     };
   })
     .filter((pr) => pr !== null)

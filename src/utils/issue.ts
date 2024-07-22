@@ -61,8 +61,8 @@ export async function closePullRequest(context: Context, results: GetLinkedResul
   }
 }
 
-export async function closePullRequestForAnIssue(context: Context, issueNumber: number, repository: Context["payload"]["repository"], author?: string | null) {
-  const logger = context.logger;
+export async function closePullRequestForAnIssue(context: Context, issueNumber: number, repository: Context["payload"]["repository"], author: string) {
+  const { logger } = context;
   if (!issueNumber) {
     logger.error("Issue is not defined");
     return;
@@ -78,32 +78,26 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
     return logger.info(`No linked pull requests to close`);
   }
 
-  logger.info(`Opened prs`, { linkedPullRequests });
+  logger.info(`Opened prs`, { author, linkedPullRequests });
   let comment = "```diff\n# These linked pull requests are closed: ";
 
-  if (!author) {
-    // Close all PRs?
-    logger.error("PR author is not defined");
-    return;
-  }
-
-  if (linkedPullRequests.length === 0) {
-    return logger.info(`No open PRs to close`);
-  }
-
-  const currentRepo = context.payload.repository;
   let isClosed = false;
 
-  for await (const pr of linkedPullRequests) {
+  for (const pr of linkedPullRequests) {
     /**
      * If the PR author is not the same as the issue author, skip the PR
      * If the PR organization is not the same as the issue organization, skip the PR
      *
      * Same organization and author, close the PR
      */
-    if (pr.author !== author || pr.organization !== currentRepo.owner.login) {
+    if (pr.author !== author || pr.organization !== repository.owner.login) {
       continue;
     } else {
+      const isLinked = issueLinkedViaPrBody(pr.body, issueNumber);
+      if (!isLinked) {
+        logger.info(`Issue is not linked to the PR`, { issueNumber, prNumber: pr.number });
+        continue;
+      }
       await closePullRequest(context, pr);
       comment += ` ${pr.href} `;
       isClosed = true;
@@ -199,4 +193,39 @@ export async function getAvailableOpenedPullRequests(context: Context, username:
 async function getOpenedPullRequests(context: Context, username: string): Promise<ReturnType<typeof getAllPullRequests>> {
   const prs = await getAllPullRequests(context, "open");
   return prs.filter((pr) => !pr.draft && (pr.user?.login === username || !username));
+}
+
+/**
+ * Extracts the task id from the PR body. The format is:
+ * `Resolves #123`
+ * `Requires https://www.github.com/.../issue/123`
+ * `Fixes https://github.com/.../issues/123`
+ * `Closes #123`
+ * `Depends on #123`
+ * `Related to #123`
+ */
+export function issueLinkedViaPrBody(prBody: string | null, issueNumber: number): boolean {
+  // eslint-disable-next-line no-useless-escape
+  const regex =
+    /(?:Resolves|Fixes|Closes|Depends on|Related to) #(\d+)|https:\/\/(?:www\.)?github.com\/([^\/]+)\/([^\/]+)\/(issue|issues)\/(\d+)|#(\d+)/gi;
+  const matches = prBody?.match(regex);
+
+  if (!matches) {
+    return false;
+  }
+  let issueId;
+
+  matches.map((match) => {
+    if (match.startsWith("http")) {
+      // Extract the issue number from the URL
+      const urlParts = match.split("/");
+      issueId = urlParts[urlParts.length - 1];
+    } else {
+      // Extract the issue number directly from the hashtag
+      const hashtagParts = match.split("#");
+      issueId = hashtagParts[hashtagParts.length - 1]; // The issue number follows the '#'
+    }
+  });
+
+  return issueId === issueNumber.toString();
 }
