@@ -113,7 +113,7 @@ describe("User start/stop", () => {
 
     const output = await userStartStop(context as unknown as Context);
 
-    expect(output).toEqual({ output: "No assignees found for this task" });
+    expect(output).toEqual({ output: "You are not assigned to this task" });
   });
 
   test("User can't start an issue that's already assigned", async () => {
@@ -458,6 +458,7 @@ async function setupTests() {
       issue: {
         number: 10,
         state: "open",
+        body: `Resolves #2`,
         html_url: "https://github.com/ubiquity/test-repo/pull/10",
         repository: {
           full_name: TEST_REPO,
@@ -485,6 +486,7 @@ async function setupTests() {
       issue: {
         number: 2,
         state: "open",
+        body: `Resolves #2`,
         html_url: "http://github.com/ubiquity/test-repo/pull/2",
         repository: {
           full_name: TEST_REPO,
@@ -512,6 +514,7 @@ async function setupTests() {
       issue: {
         number: 3,
         state: "open",
+        body: `Resolves #2`,
         html_url: "http://github.com/ubiquity/test-repo/pull/3",
         repository: {
           full_name: TEST_REPO,

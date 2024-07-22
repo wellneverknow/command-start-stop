@@ -146,6 +146,7 @@ export const db = factory({
         number: Number,
         html_url: String,
         state: String,
+        body: nullable(String),
         repository: {
           full_name: String,
         },
