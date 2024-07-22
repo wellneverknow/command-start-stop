@@ -1,4 +1,4 @@
-import { Context, ISSUE_TYPE, Label, UserRole } from "../../types";
+import { Context, ISSUE_TYPE, Label } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
@@ -11,7 +11,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const { logger, config } = context;
   const { taskStaleTimeoutDuration } = config.timers;
   const assignee = context.payload.issue.user.login;
-  const userRole = (await getUserRole(context, assignee)) as UserRole;
+  const userRole = await getUserRole(context, assignee);
   const { maxConcurrentTasks } = config.miscellaneous;
   const maxTask = maxConcurrentTasks.find(({ role }) => role.toLowerCase() === userRole)?.limit as number;
 

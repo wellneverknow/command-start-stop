@@ -13,7 +13,7 @@ export interface PluginInputs<T extends SupportedEventsU = SupportedEventsU, TU 
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 
-const userRoleSchema = T.Union([T.Literal("Admin"), T.Literal("Member"), T.Literal("Contributor")]);
+const userRoleSchema = T.String();
 
 export type UserRole = StaticDecode<typeof userRoleSchema>;
 
@@ -45,7 +45,7 @@ export const startStopSchema = T.Object({
           },
           {
             role: "Member",
-            limit: 5,
+            limit: 10,
           },
           {
             role: "Contributor",
