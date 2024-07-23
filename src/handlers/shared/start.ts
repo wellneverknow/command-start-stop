@@ -10,8 +10,7 @@ import { assignTableComment } from "./table";
 export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"]) {
   const { logger, config } = context;
   const { taskStaleTimeoutDuration } = config.timers;
-  const assignee = context.payload.issue.user.login;
-  const maxTask = await getUserRole(context, assignee);
+  const maxTask = await getUserRole(context, sender.login);
 
   // is it a child issue?
   if (issue.body && isParentIssue(issue.body)) {
