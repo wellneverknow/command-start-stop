@@ -240,7 +240,6 @@ describe("User start/stop", () => {
   });
 
   test("User can't start another issue if they have reached the max limit", async () => {
-    // getAvailableOpenedPullRequests()
     jest.mock("../src/utils/issue", () => ({
       getAvailableOpenedPullRequests: jest.fn().mockResolvedValue([
         {
