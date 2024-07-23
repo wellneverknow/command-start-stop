@@ -205,8 +205,13 @@ async function getOpenedPullRequests(context: Context, username: string): Promis
  * `Related to #123`
  */
 export function issueLinkedViaPrBody(prBody: string | null, issueNumber: number): boolean {
+  if (!prBody) { return false; }
   const regex = // eslint-disable-next-line no-useless-escape
     /(?:Resolves|Fixes|Closes|Depends on|Related to) #(\d+)|https:\/\/(?:www\.)?github.com\/([^\/]+)\/([^\/]+)\/(issue|issues)\/(\d+)|#(\d+)/gi;
+
+  const containsHtmlComment = /<!--[\s\S]*?-->/g;
+  prBody = prBody?.replace(containsHtmlComment, ""); // Remove HTML comments
+
   const matches = prBody?.match(regex);
 
   if (!matches) {
