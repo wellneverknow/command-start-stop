@@ -195,7 +195,13 @@ describe("User start/stop", () => {
     }
   });
 
-  test("User can't start another issue if they have reached the max limit", async () => {
+  test("should return the role with the smallest task limit if user role is not defined in config", async () => {
+    jest.mock("../src/handlers/shared/get-user-role.ts", () => ({
+      getUserRole: jest.fn().mockReturnValue({
+        role: "unknown-role",
+      }),
+    }));
+
     jest.mock("../src/utils/issue", () => ({
       getAvailableOpenedPullRequests: jest.fn().mockResolvedValue([
         {
@@ -237,6 +243,59 @@ describe("User start/stop", () => {
     } catch (error) {
       if (error instanceof Error) {
         expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 3 issues.");
+      }
+    }
+  });
+
+  test("should set maxLimits to 5 if the user is a member", async () => {
+    jest.mock("../src/handlers/shared/get-user-role.ts", () => ({
+      getUserRole: jest.fn().mockReturnValue({
+        role: "Member",
+        limit: 5,
+      }),
+    }));
+
+    jest.mock("../src/utils/issue", () => ({
+      getAvailableOpenedPullRequests: jest.fn().mockResolvedValue([
+        {
+          number: 1,
+          reviews: [
+            {
+              state: "APPROVED",
+            },
+          ],
+        },
+        {
+          number: 2,
+          reviews: [
+            {
+              state: "APPROVED",
+            },
+          ],
+        },
+        {
+          number: 3,
+          reviews: [
+            {
+              state: "APPROVED",
+            },
+          ],
+        },
+      ]),
+    }));
+
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender);
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    try {
+      await userStartStop(context as unknown as Context);
+    } catch (error) {
+      if (error instanceof Error) {
+        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 5 issues.");
       }
     }
   });
@@ -404,7 +463,20 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
         taskStaleTimeoutDuration: 2580000,
       },
       miscellaneous: {
-        maxConcurrentTasks: 3,
+        maxConcurrentTasks: [
+          {
+            role: "Admin",
+            limit: null,
+          },
+          {
+            role: "Member",
+            limit: 5,
+          },
+          {
+            role: "Collaborator",
+            limit: 3,
+          },
+        ],
         startRequiresWallet: true,
       },
     },
@@ -432,17 +504,17 @@ function getSupabase(withData = true) {
         single: jest.fn().mockResolvedValue({
           data: withData
             ? {
-              id: 1,
-              wallets: {
-                address: "0x123",
-              },
-            }
+                id: 1,
+                wallets: {
+                  address: "0x123",
+                },
+              }
             : {
-              id: 1,
-              wallets: {
-                address: undefined,
+                id: 1,
+                wallets: {
+                  address: undefined,
+                },
               },
-            },
         }),
       }),
     }),
