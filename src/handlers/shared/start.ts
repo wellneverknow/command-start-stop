@@ -13,7 +13,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const assignee = context.payload.issue.user.login;
   const userRole = await getUserRole(context, assignee);
   const { maxConcurrentTasks } = config.miscellaneous;
-  const maxTask = maxConcurrentTasks.find(({ role }) => role.toLowerCase() === userRole)?.limit as number;
+  const maxTask = maxConcurrentTasks.find(({ role }) => role.toLowerCase() === userRole.toLowerCase())?.limit as number;
 
   // is it a child issue?
   if (issue.body && isParentIssue(issue.body)) {
@@ -48,7 +48,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   // check for max and enforce max
 
-  if (assignedIssues.length - openedPullRequests.length >= maxTask) {
+  if (assignedIssues.length - openedPullRequests.length >= 3) {
     await addCommentToIssue(context, "```diff\n! Too many assigned issues, you have reached your max limit.\n```");
     throw new Error(`Too many assigned issues, you have reached your max limit of ${maxTask} issues.`);
   }

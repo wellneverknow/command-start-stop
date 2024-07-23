@@ -13,7 +13,7 @@ export interface PluginInputs<T extends SupportedEventsU = SupportedEventsU, TU 
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 
-const userRoleSchema = T.String();
+const userRoleSchema = T.Union([T.Literal("Admin"), T.Literal("Member"), T.Literal("Contributor"), T.String()]);
 
 export type UserRole = StaticDecode<typeof userRoleSchema>;
 
@@ -41,7 +41,7 @@ export const startStopSchema = T.Object({
         maxConcurrentTasks: [
           {
             role: "Admin",
-            limit: 100,
+            limit: 20,
           },
           {
             role: "Member",
