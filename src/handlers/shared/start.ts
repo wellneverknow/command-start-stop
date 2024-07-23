@@ -11,9 +11,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const { logger, config } = context;
   const { taskStaleTimeoutDuration } = config.timers;
   const assignee = context.payload.issue.user.login;
-  const userRole = await getUserRole(context, assignee);
-  const { maxConcurrentTasks } = config.miscellaneous;
-  const maxTask = maxConcurrentTasks.find(({ role }) => role.toLowerCase() === userRole.toLowerCase())?.limit as number;
+  const maxTask = await getUserRole(context, assignee);
 
   // is it a child issue?
   if (issue.body && isParentIssue(issue.body)) {
@@ -44,13 +42,13 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed: ${JSON.stringify(openedPullRequests)}`);
 
   const assignedIssues = await getAssignedIssues(context, sender.login);
-  logger.info("Max issue allowed is", { maxConcurrentTasks });
+  logger.info("Max issues allowed is", { limit: maxTask.limit });
 
   // check for max and enforce max
 
-  if (assignedIssues.length - openedPullRequests.length >= 3) {
+  if (assignedIssues.length - openedPullRequests.length >= maxTask.limit) {
     await addCommentToIssue(context, "```diff\n! Too many assigned issues, you have reached your max limit.\n```");
-    throw new Error(`Too many assigned issues, you have reached your max limit of ${maxTask} issues.`);
+    throw new Error(`Too many assigned issues, you have reached your max limit of ${maxTask.limit} issues.`);
   }
 
   // is it assignable?
