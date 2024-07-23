@@ -10,8 +10,8 @@ export async function userStartStop(context: Context): Promise<{ output: string 
   const { isEnabled } = config;
 
   if (!isEnabled) {
-    const backTicks = "```";
-    await addCommentToIssue(context, `${backTicks}diff\n! The /${slashCommand} command is disabled for this repository.\n${backTicks}`);
+    const log = context.logger.error(`The '/${slashCommand}' command is disabled for this repository`);
+    await addCommentToIssue(context, log?.logMessage.diff as string);
     throw new Error(`The '/${slashCommand}' command is disabled for this repository.`);
   }
 

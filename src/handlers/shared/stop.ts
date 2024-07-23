@@ -10,14 +10,14 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
   // should unassign?
   const userToUnassign = assignees.find((assignee) => assignee?.login.toLowerCase() === sender.login.toLowerCase());
 
-  if (!whoToUnassign) {
-    logger.error("You are not assigned to this task", { issueNumber, user: sender.login });
-    await addCommentToIssue(context, "```diff\n! You are not assigned to this task.\n```");
+  if (!userToUnassign) {
+    const log = logger.error("You are not assigned to this task", { issueNumber, user: sender.login });
+    await addCommentToIssue(context, log?.logMessage.diff as string);
     return { output: "You are not assigned to this task" };
   }
 
   // close PR
-  await closePullRequestForAnIssue(context, issueNumber, repo, whoToUnassign.login);
+  await closePullRequestForAnIssue(context, issueNumber, repo, userToUnassign.login);
 
   const {
     name,
@@ -33,11 +33,11 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
     assignees: [sender.login],
   });
 
-  logger.info("You have been unassigned from the task", {
+  const unassignedLog = logger.info("You have been unassigned from the task", {
     issueNumber,
     user: sender.login,
   });
 
-  addCommentToIssue(context, "```diff\n+ You have been unassigned from this task.\n```").catch(logger.error);
+  await addCommentToIssue(context, unassignedLog?.logMessage.diff as string);
   return { output: "Task unassigned successfully" };
 }
