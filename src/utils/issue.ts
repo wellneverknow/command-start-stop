@@ -209,7 +209,7 @@ export function issueLinkedViaPrBody(prBody: string | null, issueNumber: number)
   const regex = // eslint-disable-next-line no-useless-escape
     /(?:Resolves|Fixes|Closes|Depends on|Related to) #(\d+)|https:\/\/(?:www\.)?github.com\/([^\/]+)\/([^\/]+)\/(issue|issues)\/(\d+)|#(\d+)/gi;
 
-  const containsHtmlComment = /<!--[\s\S]*?-->/g;
+  const containsHtmlComment = /<!-*[\s\S]*?-*>/g;
   prBody = prBody?.replace(containsHtmlComment, ""); // Remove HTML comments
 
   const matches = prBody?.match(regex);
