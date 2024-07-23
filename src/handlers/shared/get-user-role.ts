@@ -27,5 +27,6 @@ export async function getUserRole(context: Context, user: string): Promise<Match
     }
   } catch (error) {
     logger.error("An error occured", { error: error as Error });
+    throw error;
   }
 }
