@@ -8,7 +8,7 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
   // is there an assignee?
   const assignees = issue.assignees ?? [];
   // should unassign?
-  const whoToUnassign = assignees.find((assignee) => assignee?.login.toLowerCase() === sender.login.toLowerCase());
+  const userToUnassign = assignees.find((assignee) => assignee?.login.toLowerCase() === sender.login.toLowerCase());
 
   if (!whoToUnassign) {
     logger.error("You are not assigned to this task", { issueNumber, user: sender.login });
