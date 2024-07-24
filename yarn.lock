@@ -2720,7 +2720,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:7.13.1, @typescript-eslint/eslint-plugin@npm:^7.0.1":
+"@typescript-eslint/eslint-plugin@npm:7.13.1":
   version: 7.13.1
   resolution: "@typescript-eslint/eslint-plugin@npm:7.13.1"
   dependencies:
@@ -2743,7 +2743,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:7.13.1, @typescript-eslint/parser@npm:^7.0.1":
+"@typescript-eslint/parser@npm:7.13.1":
   version: 7.13.1
   resolution: "@typescript-eslint/parser@npm:7.13.1"
   dependencies:
@@ -2859,15 +2859,12 @@ __metadata:
     "@types/jest": "npm:29.5.12"
     "@types/ms": "npm:^0.7.34"
     "@types/node": "npm:20.14.5"
-    "@typescript-eslint/eslint-plugin": "npm:^7.0.1"
-    "@typescript-eslint/parser": "npm:^7.0.1"
     "@ubiquity-dao/ubiquibot-logger": "npm:^1.3.0"
     cspell: "npm:8.9.0"
     dotenv: "npm:^16.4.4"
     eslint: "npm:9.5.0"
     eslint-config-prettier: "npm:9.1.0"
     eslint-plugin-check-file: "npm:2.8.0"
-    eslint-plugin-filename-rules: "npm:^1.3.1"
     eslint-plugin-prettier: "npm:5.1.3"
     eslint-plugin-sonarjs: "npm:1.0.3"
     husky: "npm:9.0.11"
@@ -4597,13 +4594,6 @@ __metadata:
   peerDependencies:
     eslint: ">=7.28.0"
   checksum: 10c0/5d69544a2b51ca5978b565b6a6f95802fd00b28c59399e3c21b5c9848d2dc8d6eda81026c4681014e4e6ce0483493d77a751113a3e45c57b0582f5d938ebe397
-  languageName: node
-  linkType: hard
-
-"eslint-plugin-filename-rules@npm:^1.3.1":
-  version: 1.3.1
-  resolution: "eslint-plugin-filename-rules@npm:1.3.1"
-  checksum: 10c0/2d881aa7afd7f34226b79cb1a07ecec9c6cb31815090d9198e56544f519ef470954a50eeb3aad463c4388eddef8b8f0e1aa52b4a44fcac7ce531c80417529d81
   languageName: node
   linkType: hard
 
