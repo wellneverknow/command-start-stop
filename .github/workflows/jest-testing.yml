@@ -5,6 +5,8 @@ on:
 
 env:
   NODE_ENV: "test"
+  SUPABASE_URL: "http://127.0.0.1:3000"
+  SUPABASE_KEY: "supabase-key"
 
 jobs:
   testing:
@@ -23,7 +25,7 @@ jobs:
         run: corepack enable
 
       - name: Jest With Coverage
-        run: yarn install --immutable --immutable-cache --check-cache && yarn test
+        run: yarn install && yarn test
 
       - name: Add Jest Report to Summary
         if: always()
