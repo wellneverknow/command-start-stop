@@ -1,4 +1,4 @@
-import { Context } from "../../types";
+import { Assignee, Context } from "../../types";
 import { addCommentToIssue, closePullRequestForAnIssue } from "../../utils/issue";
 
 export async function stop(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"], repo: Context["payload"]["repository"]) {
@@ -8,7 +8,7 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
   // is there an assignee?
   const assignees = issue.assignees ?? [];
   // should unassign?
-  const userToUnassign = assignees.find((assignee) => assignee?.login.toLowerCase() === sender.login.toLowerCase());
+  const userToUnassign = assignees.find((assignee: Assignee) => assignee?.login.toLowerCase() === sender.login.toLowerCase());
 
   if (!userToUnassign) {
     const log = logger.error("You are not assigned to this task", { issueNumber, user: sender.login });

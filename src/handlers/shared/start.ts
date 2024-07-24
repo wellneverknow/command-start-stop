@@ -1,4 +1,4 @@
-import { Context, ISSUE_TYPE, Label } from "../../types";
+import { Assignee, Context, ISSUE_TYPE, Label } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
@@ -89,7 +89,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const metadata = structuredMetadata.create("Assignment", logMessage);
 
   // add assignee
-  if (!assignees.map((i) => i?.login).includes(login)) {
+  if (!assignees.map((i: Assignee) => i?.login).includes(login)) {
     await addAssignees(context, issue.number, [login]);
   }
 

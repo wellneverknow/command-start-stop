@@ -1,4 +1,4 @@
-import { Issue } from "../types";
+import { Issue, TimelineEventResponse, TimelineEvents } from "../types";
 import { Context } from "../types/context";
 
 interface GetLinkedParams {
@@ -22,15 +22,15 @@ export async function getLinkedPullRequests(context: Context, { owner, repositor
     throw new Error("Issue is not defined");
   }
 
-  const { data: timeline } = await context.octokit.issues.listEventsForTimeline({
+  const { data: timeline } = (await context.octokit.issues.listEventsForTimeline({
     owner,
     repo: repository,
     issue_number: issue,
-  });
+  })) as TimelineEventResponse;
 
   const LINKED_PRS = timeline
-    .filter((event) => event.event === "cross-referenced" && "source" in event && !!event.source.issue && "pull_request" in event.source.issue)
-    .map((event) => (event as { source: { issue: Issue } }).source.issue);
+    .filter((event: TimelineEvents) => event.event === "cross-referenced" && "source" in event && !!event.source.issue && "pull_request" in event.source.issue)
+    .map((event: TimelineEvents) => (event as { source: { issue: Issue } }).source.issue) as Issue[];
 
   return LINKED_PRS.map((pr) => {
     return {

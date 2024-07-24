@@ -1,4 +1,3 @@
-// cSpell:disable
 import { factory, nullable, primaryKey } from "@mswjs/data";
 
 /**
