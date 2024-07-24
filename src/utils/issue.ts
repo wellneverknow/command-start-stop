@@ -198,14 +198,15 @@ async function getOpenedPullRequests(context: Context, username: string): Promis
 /**
  * Extracts the task id from the PR body. The format is:
  * `Resolves #123`
- * `Requires https://www.github.com/.../issue/123`
  * `Fixes https://github.com/.../issues/123`
  * `Closes #123`
  * `Depends on #123`
  * `Related to #123`
  */
 export function issueLinkedViaPrBody(prBody: string | null, issueNumber: number): boolean {
-  if (!prBody) { return false; }
+  if (!prBody) {
+    return false;
+  }
   const regex = // eslint-disable-next-line no-useless-escape
     /(?:Resolves|Fixes|Closes|Depends on|Related to) #(\d+)|https:\/\/(?:www\.)?github.com\/([^\/]+)\/([^\/]+)\/(issue|issues)\/(\d+)|#(\d+)/gi;
 

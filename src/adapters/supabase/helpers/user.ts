@@ -20,7 +20,7 @@ export class User extends Super {
         await addCommentToIssue(this.context, "```diff\n! Please set your wallet address with the /wallet command first and try again.\n```");
         throw new Error("No wallet address found");
       } else {
-        await addCommentToIssue(this.context, "```diff\n# Please set your wallet address with the /wallet command in order to receive a task reward.\n```");
+        await addCommentToIssue(this.context, "```diff\n# Please set your wallet address with the /wallet command in order to be eligible for rewards.\n```");
       }
     } else {
       this.context.logger.info("Successfully fetched wallet", { userId, address: data.wallets?.address });
