@@ -89,7 +89,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const metadata = structuredMetadata.create("Assignment", logMessage);
 
   // add assignee
-  if (!assignees.map((i: Assignee) => i?.login).includes(login)) {
+  if (!assignees.map((i: Partial<Assignee>) => i?.login).includes(login)) {
     await addAssignees(context, issue.number, [login]);
   }
 

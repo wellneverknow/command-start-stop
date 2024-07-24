@@ -1,5 +1,5 @@
 import { Context } from "../types/context";
-import { Issue, ISSUE_TYPE, Review } from "../types/payload";
+import { Issue, ISSUE_TYPE, PullRequest, Review } from "../types/payload";
 import { getLinkedPullRequests, GetLinkedResults } from "./get-linked-prs";
 
 export function isParentIssue(body: string) {
@@ -136,7 +136,7 @@ export async function getAllPullRequests(context: Context, state: "open" | "clos
       repo: payload.repository.name,
       state,
       per_page: 100,
-    })) as Issue[];
+    })) as PullRequest[];
   } catch (err: unknown) {
     context.logger.error("Fetching all pull requests failed!", { error: err as Error });
     return [];
