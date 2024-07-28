@@ -2,7 +2,7 @@ import { Assignee, Context, ISSUE_TYPE, Label } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
-import { wasPreviouslyUnassigned } from "./check-unassigns";
+import { checkPreviousAssignments } from "./check-assignments";
 import { generateAssignmentComment } from "./generate-assignment-comment";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
@@ -74,7 +74,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   const labels = issue.labels;
   const priceLabel = labels.find((label: Label) => label.name.startsWith("Price: "));
-  const isUnassigned = await wasPreviouslyUnassigned(context, sender, issue);
+  const hasBeenPreviouslyUnassigned = await checkPreviousAssignments(context, sender);
 
   if (!priceLabel) {
     const log = logger.error("No price label is set to calculate the duration", { issueNumber: issue.number });
@@ -82,8 +82,8 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     throw new Error("No price label is set to calculate the duration");
   }
 
-  if (isUnassigned) {
-    await addCommentToIssue(context, "```diff\n! You were previously unassigned from this task. You cannot reassign yourself\n```");
+  if (hasBeenPreviouslyUnassigned) {
+    await addCommentToIssue(context, "```diff\n! You were previously unassigned from this task. You cannot reassign yourself.\n```");
     throw new Error(`This user was unassigned from this task previously. Cannot auto assign`);
   }
 
