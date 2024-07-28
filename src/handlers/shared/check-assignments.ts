@@ -7,19 +7,19 @@ export async function checkPreviousAssignments(context: Context, sender: Context
     },
   } = context;
   const events = await getAssignmentEvents(context);
-  const userAssignments = events.filter((event) => event.assignee?.toLowerCase() === sender.login.toLowerCase());
+  const senderLogin = sender.login.toLowerCase();
+  const userAssignments = events.filter((event) => event.assignee?.toLowerCase() === senderLogin);
 
-  // no events for this user
   if (userAssignments.length === 0) {
     return false;
   }
 
-  const botUnassigned = userAssignments.filter((event) => event.event === "unassigned" && botUsernames.includes(event.actor?.toLowerCase() || ""));
-  const adminUnassigned = userAssignments.filter(
-    (event) =>
-      event.event === "unassigned" && !botUsernames.includes(event.actor?.toLowerCase() || "") && event.actor?.toLowerCase() !== sender.login.toLowerCase()
+  const unassignedEvents = userAssignments.filter((event) => event.event === "unassigned");
+  const botUnassigned = unassignedEvents.filter((event) => botUsernames.includes(event.actor?.toLowerCase() || ""));
+  const adminUnassigned = unassignedEvents.filter(
+    (event) => !botUsernames.includes(event.actor?.toLowerCase() || "") && event.actor?.toLowerCase() !== senderLogin
   );
-  const userSelfUnassignViaUi = userAssignments.filter((event) => event.event === "unassigned" && event.actor?.toLowerCase() === sender.login.toLowerCase());
+  const userSelfUnassignViaUi = unassignedEvents.filter((event) => event.actor?.toLowerCase() === senderLogin);
   return botUnassigned.length > 0 || adminUnassigned.length > 0 || userSelfUnassignViaUi.length > 0;
 }
 
