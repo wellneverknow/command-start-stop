@@ -25,9 +25,8 @@ export const startStopSchema = T.Object({
     {
       maxConcurrentTasks: T.Number(),
       startRequiresWallet: T.Boolean(),
-      botUsernames: T.Array(T.String()),
     },
-    { default: { maxConcurrentTasks: 3, startRequiresWallet: true, botUsernames: ["ubiquibot[bot]"] } }
+    { default: { maxConcurrentTasks: 3, startRequiresWallet: true } }
   ),
 });
 

@@ -66,7 +66,7 @@ describe("User start/stop", () => {
   });
 
   test("Stopping an issue should close the author's linked PR", async () => {
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => { });
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
     const context = createContext(issue, sender, "/stop");
@@ -276,6 +276,21 @@ describe("User start/stop", () => {
     } catch (error) {
       if (error instanceof Error) {
         expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 3 issues.");
+      }
+    }
+  });
+
+  test("User can't start an issue if they have previously been unassigned by an admin", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender, "/start");
+
+    try {
+      await userStartStop(context as unknown as Context);
+    } catch (error) {
+      if (error instanceof Error) {
+        expect(error.message).toEqual("This user was unassigned from this task previously. Cannot auto assign");
       }
     }
   });
@@ -522,9 +537,57 @@ async function setupTests() {
       },
     },
   });
+
+  db.event.create({
+    id: 3,
+    actor: {
+      id: 1,
+      login: "ubiquity",
+    },
+    assignee: {
+      login: "user2",
+    },
+    created_at: new Date().toISOString(),
+    event: "assigned",
+    issue_number: 2,
+    owner: "ubiquity",
+    repo: "test-repo",
+  });
+
+  db.event.create({
+    id: 4,
+    actor: {
+      id: 1,
+      login: "ubiquibot[bot]",
+    },
+    assignee: {
+      login: "user2",
+    },
+    created_at: new Date().toISOString(),
+    event: "assigned",
+    issue_number: 2,
+    owner: "ubiquity",
+    repo: "test-repo",
+  });
+
+  db.event.create({
+    id: 5,
+    actor: {
+      id: 1,
+      login: "ubiquity",
+    },
+    assignee: {
+      login: "user2",
+    },
+    created_at: new Date().toISOString(),
+    event: "unassigned",
+    issue_number: 2,
+    owner: "ubiquity",
+    repo: "test-repo",
+  });
 }
 
-function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start") {
+function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start"): Context {
   return {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
@@ -532,7 +595,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       sender: sender as unknown as Context["payload"]["sender"],
       repository: db.repo.findFirst({ where: { id: { equals: 1 } } }) as unknown as Context["payload"]["repository"],
       comment: { body } as unknown as Context["payload"]["comment"],
-      action: "created" as string,
+      action: "created",
       installation: { id: 1 } as unknown as Context["payload"]["installation"],
       organization: { login: "ubiquity" } as unknown as Context["payload"]["organization"],
     },
@@ -544,17 +607,14 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       },
       miscellaneous: {
         maxConcurrentTasks: 3,
-      },
-      labels: {
-        time: ["Time: 1h", "Time: <4 hours", "Time: <1 Day", "Time: <3 Days", "Time: <1 Week"],
-        priority: ["Priority: 1 (Normal)", "Priority: 2 (High)", "Priority: 3 (Critical)"],
+        startRequiresWallet: true,
       },
     },
     octokit: new octokit.Octokit(),
     eventName: "issue_comment.created" as SupportedEventsU,
     env: {
-      SUPABASE_KEY: key,
-      SUPABASE_URL: url,
+      SUPABASE_KEY: "key",
+      SUPABASE_URL: "url",
     },
   };
 }
@@ -566,17 +626,17 @@ function getSupabase(withData = true) {
         single: jest.fn().mockResolvedValue({
           data: withData
             ? {
-                id: 1,
-                wallets: {
-                  address: "0x123",
-                },
-              }
-            : {
-                id: 1,
-                wallets: {
-                  address: undefined,
-                },
+              id: 1,
+              wallets: {
+                address: "0x123",
               },
+            }
+            : {
+              id: 1,
+              wallets: {
+                address: undefined,
+              },
+            },
         }),
       }),
     }),

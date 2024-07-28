@@ -22,6 +22,12 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     throw new Error("Issue is a parent issue");
   }
 
+  const hasBeenPreviouslyUnassigned = await checkPreviousAssignments(context, sender);
+  if (hasBeenPreviouslyUnassigned) {
+    await addCommentToIssue(context, "```diff\n! You were previously unassigned from this task. You cannot reassign yourself.\n```");
+    throw new Error(`This user was unassigned from this task previously. Cannot auto assign`);
+  }
+
   let commitHash: string | null = null;
 
   try {
@@ -74,17 +80,11 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   const labels = issue.labels;
   const priceLabel = labels.find((label: Label) => label.name.startsWith("Price: "));
-  const hasBeenPreviouslyUnassigned = await checkPreviousAssignments(context, sender);
 
   if (!priceLabel) {
     const log = logger.error("No price label is set to calculate the duration", { issueNumber: issue.number });
     await addCommentToIssue(context, log?.logMessage.diff as string);
     throw new Error("No price label is set to calculate the duration");
-  }
-
-  if (hasBeenPreviouslyUnassigned) {
-    await addCommentToIssue(context, "```diff\n! You were previously unassigned from this task. You cannot reassign yourself.\n```");
-    throw new Error(`This user was unassigned from this task previously. Cannot auto assign`);
   }
 
   const duration: number = calculateDurations(labels).shift() ?? 0;

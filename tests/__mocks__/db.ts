@@ -140,6 +140,9 @@ export const db = factory({
     commit_id: nullable(String),
     commit_url: String,
     created_at: Date,
+    assignee: {
+      login: String,
+    },
     source: nullable({
       issue: {
         number: Number,
@@ -161,5 +164,6 @@ export const db = factory({
         },
       },
     }),
+
   },
 });
