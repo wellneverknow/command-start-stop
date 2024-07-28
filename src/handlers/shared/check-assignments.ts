@@ -2,6 +2,7 @@ import { Context, IssueEvent } from "../../types";
 
 
 export async function checkPreviousAssignments(context: Context, sender: Context["payload"]["sender"]): Promise<boolean> {
+  const { config: { miscellaneous: { botUsernames } } } = context;
   const events = await getAssignmentEvents(context);
   const userAssignments = events.filter((event) => event.assignee?.toLowerCase() === sender.login.toLowerCase());
 
@@ -10,12 +11,11 @@ export async function checkPreviousAssignments(context: Context, sender: Context
     return false;
   }
 
-  const botUnassigned = userAssignments.filter((event) => event.event === "unassigned" && event.actor === "ubiquibot[bot]");
+  const botUnassigned = userAssignments.filter((event) => event.event === "unassigned" && botUsernames.includes(event.actor?.toLowerCase() || ""));
   const adminUnassigned = userAssignments.filter(
-    (event) => event.event === "unassigned" && event.actor?.toLowerCase() !== "ubiquibot[bot]" && event.actor?.toLowerCase() !== sender.login.toLowerCase()
+    (event) => event.event === "unassigned" && !botUsernames.includes(event.actor?.toLowerCase() || "") && event.actor?.toLowerCase() !== sender.login.toLowerCase()
   );
   const userSelfUnassignViaUi = userAssignments.filter((event) => event.event === "unassigned" && event.actor?.toLowerCase() === sender.login.toLowerCase());
-
   return botUnassigned.length > 0 || adminUnassigned.length > 0 || userSelfUnassignViaUi.length > 0;
 }
 

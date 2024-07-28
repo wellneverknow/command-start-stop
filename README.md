@@ -42,6 +42,8 @@ To configure your Ubiquibot to run this plugin, add the following to the `.ubiqu
     miscellaneous:
       maxConcurrentTasks: 3
       startRequiresWallet: true # default is true
+      botUsernames:
+        - ubiquibot[bot]
 ```
 
 # Testing
