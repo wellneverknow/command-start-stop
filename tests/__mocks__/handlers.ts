@@ -16,6 +16,20 @@ export const handlers = [
     }
     return HttpResponse.json(item);
   }),
+  //get member
+  http.get("https://api.github.com/orgs/:org/memberships/:username", ({ params: { username } }) => {
+    switch (username) {
+      case "ubiquity":
+      case "gentlementlegen":
+        return HttpResponse.json({ role: "admin" });
+      case "billing":
+        return HttpResponse.json({ role: "billing_manager" });
+      case "collaborator":
+        return HttpResponse.json({role: "collaborator"})
+      default:
+        return HttpResponse.json({ role: "member" });
+    }
+  }),
   // get issue
   http.get("https://api.github.com/repos/:owner/:repo/issues", ({ params: { owner, repo } }: { params: { owner: string; repo: string } }) => {
     return HttpResponse.json(db.issue.findMany({ where: { owner: { equals: owner }, repo: { equals: repo } } }));

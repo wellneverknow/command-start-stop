@@ -17,8 +17,9 @@ type Sender = Context["payload"]["sender"];
 
 const octokit = jest.requireActual("@octokit/rest");
 
-const url = process.env.SUPABASE_URL;
-const key = process.env.SUPABASE_KEY;
+const url = "https://sbxscxthunnhozvgtshx.supabase.co";
+const key =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNieHNjeHRodW5uaG96dmd0c2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTE0Nzg2MDcsImV4cCI6MjAyNzA1NDYwN30.-DstUzIspsRlLQPHR1da6nY5GBBs5I4Wd0jlK5zFzyU";
 
 if (!url || !key) {
   throw new Error("Supabase URL and Key are required");
@@ -196,12 +197,6 @@ describe("User start/stop", () => {
   });
 
   test("should return the role with the smallest task limit if user role is not defined in config", async () => {
-    jest.mock("../src/handlers/shared/get-user-role.ts", () => ({
-      getUserRole: jest.fn().mockReturnValue({
-        role: "unknown-role",
-      }),
-    }));
-
     jest.mock("../src/utils/issue", () => ({
       getAvailableOpenedPullRequests: jest.fn().mockResolvedValue([
         {
@@ -248,13 +243,6 @@ describe("User start/stop", () => {
   });
 
   test("should set maxLimits to 5 if the user is a member", async () => {
-    jest.mock("../src/handlers/shared/get-user-role.ts", () => ({
-      getUserRole: jest.fn().mockReturnValue({
-        role: "Member",
-        limit: 5,
-      }),
-    }));
-
     jest.mock("../src/utils/issue", () => ({
       getAvailableOpenedPullRequests: jest.fn().mockResolvedValue([
         {
@@ -466,7 +454,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
         maxConcurrentTasks: [
           {
             role: "Admin",
-            limit: null,
+            limit: 10,
           },
           {
             role: "Member",
