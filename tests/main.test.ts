@@ -17,9 +17,8 @@ type Sender = Context["payload"]["sender"];
 
 const octokit = jest.requireActual("@octokit/rest");
 
-const url = "https://sbxscxthunnhozvgtshx.supabase.co";
-const key =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNieHNjeHRodW5uaG96dmd0c2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTE0Nzg2MDcsImV4cCI6MjAyNzA1NDYwN30.-DstUzIspsRlLQPHR1da6nY5GBBs5I4Wd0jlK5zFzyU";
+const url = process.env.SUPABASE_URL;
+const key = process.env.SUPABASE_KEY;
 
 if (!url || !key) {
   throw new Error("Supabase URL and Key are required");
@@ -197,44 +196,16 @@ describe("User start/stop", () => {
   });
 
   test("should return the role with the smallest task limit if user role is not defined in config", async () => {
-    jest.mock("../src/utils/issue", () => ({
-      getAvailableOpenedPullRequests: jest.fn().mockResolvedValue([
-        {
-          number: 1,
-          reviews: [
-            {
-              state: "APPROVED",
-            },
-          ],
-        },
-        {
-          number: 2,
-          reviews: [
-            {
-              state: "APPROVED",
-            },
-          ],
-        },
-        {
-          number: 3,
-          reviews: [
-            {
-              state: "APPROVED",
-            },
-          ],
-        },
-      ]),
-    }));
 
-    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const issue = db.issue.findFirst({ where: { id: { equals: 8 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context);
 
     try {
-      await userStartStop(context as unknown as Context);
+      await userStartStop(context);
     } catch (error) {
       if (error instanceof Error) {
         expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 3 issues.");
@@ -243,44 +214,16 @@ describe("User start/stop", () => {
   });
 
   test("should set maxLimits to 5 if the user is a member", async () => {
-    jest.mock("../src/utils/issue", () => ({
-      getAvailableOpenedPullRequests: jest.fn().mockResolvedValue([
-        {
-          number: 1,
-          reviews: [
-            {
-              state: "APPROVED",
-            },
-          ],
-        },
-        {
-          number: 2,
-          reviews: [
-            {
-              state: "APPROVED",
-            },
-          ],
-        },
-        {
-          number: 3,
-          reviews: [
-            {
-              state: "APPROVED",
-            },
-          ],
-        },
-      ]),
-    }));
 
-    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const issue = db.issue.findFirst({ where: { id: { equals: 7 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context);
 
     try {
-      await userStartStop(context as unknown as Context);
+      await userStartStop(context);
     } catch (error) {
       if (error instanceof Error) {
         expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 5 issues.");
@@ -428,6 +371,24 @@ async function setupTests() {
     issue_number: 2,
     owner: "ubiquity",
     repo: "test-repo",
+  });
+
+  db.issue.create({
+    ...issueTemplate,
+    id: 7,
+    assignee: {
+      login: "User7",
+      role: "Member"
+    }
+  });
+
+  db.issue.create({
+    ...issueTemplate,
+    id: 8,
+    assignee: {
+      login: "User8",
+      role: "Noob"
+    }
   });
 }
 
