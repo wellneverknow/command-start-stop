@@ -242,10 +242,10 @@ describe("User start/stop", () => {
     createIssuesForMaxAssignment(adminLimit + 4, sender.id);
     const context = createContext(issue, sender) as unknown as Context;
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context);
 
     try {
-      await userStartStop(context as unknown as Context);
+      await userStartStop(context);
     } catch (error) {
       if (error instanceof Error) {
         expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 3 issues.");
@@ -502,23 +502,6 @@ async function setupTests() {
     issue_number: 2,
     owner: "ubiquity",
     repo: "test-repo",
-    source: {
-      issue: {
-        number: 3,
-        state: "open",
-        body: `Resolves #2`,
-        html_url: "http://github.com/ubiquity/test-repo/pull/3",
-        repository: {
-          full_name: TEST_REPO,
-        },
-        user: {
-          login: "user2",
-        },
-        pull_request: {
-          html_url: "http://github.com/ubiquity/test-repo/pull/3",
-        },
-      },
-    },
   });
 }
 
