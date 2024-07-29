@@ -1,11 +1,6 @@
 import { Context, IssueEvent } from "../../types";
 
 export async function checkPreviousAssignments(context: Context, sender: Context["payload"]["sender"]): Promise<boolean> {
-  const {
-    config: {
-      miscellaneous: { botUsernames },
-    },
-  } = context;
   const events = await getAssignmentEvents(context);
   const senderLogin = sender.login.toLowerCase();
   const userAssignments = events.filter((event) => event.assignee?.toLowerCase() === senderLogin);
@@ -15,9 +10,9 @@ export async function checkPreviousAssignments(context: Context, sender: Context
   }
 
   const unassignedEvents = userAssignments.filter((event) => event.event === "unassigned");
-  const botUnassigned = unassignedEvents.filter((event) => botUsernames.includes(event.actor?.toLowerCase() || ""));
+  const botUnassigned = unassignedEvents.filter((event) => event.actorType === "Bot");
   const adminUnassigned = unassignedEvents.filter(
-    (event) => !botUsernames.includes(event.actor?.toLowerCase() || "") && event.actor?.toLowerCase() !== senderLogin
+    (event) => event.actor?.toLowerCase() !== senderLogin && event.actorType === "User"
   );
   const userSelfUnassignViaUi = unassignedEvents.filter((event) => event.actor?.toLowerCase() === senderLogin);
   return botUnassigned.length > 0 || adminUnassigned.length > 0 || userSelfUnassignViaUi.length > 0;
@@ -35,7 +30,7 @@ async function getAssignmentEvents(context: Context) {
     const events = data
       .filter((event) => event.event === "assigned" || event.event === "unassigned")
       .map((event) => {
-        let actor, assignee, createdAt;
+        let actor, assignee, createdAt, actorType;
 
         switch (event.event) {
           case "unassigned":
@@ -44,6 +39,7 @@ async function getAssignmentEvents(context: Context) {
               actor = event.actor.login;
               assignee = event.assignee.login;
               createdAt = event.created_at;
+              actorType = event.actor.type;
             }
             break;
           default:
@@ -53,6 +49,7 @@ async function getAssignmentEvents(context: Context) {
         return {
           event: event.event,
           actor,
+          actorType,
           assignee,
           createdAt,
         };

@@ -132,7 +132,12 @@ export const db = factory({
   },
   event: {
     id: primaryKey(Number),
-    actor: Object,
+    actor: {
+      id: Number,
+      type: String,
+      login: String,
+      name: nullable(String),
+    },
     owner: String,
     repo: String,
     issue_number: Number,

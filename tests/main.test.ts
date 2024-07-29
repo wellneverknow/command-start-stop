@@ -457,6 +457,12 @@ async function setupTests() {
   db.event.create({
     id: 1,
     created_at: new Date().toISOString(),
+    actor: {
+      id: 2,
+      name: "user2",
+      login: "user2",
+      type: "User",
+    },
     commit_id: "123",
     commit_url: "",
     event: CROSS_REFERENCED,
@@ -484,6 +490,12 @@ async function setupTests() {
 
   db.event.create({
     id: 2,
+    actor: {
+      id: 1,
+      name: "ubiquity",
+      login: "ubiquity",
+      type: "User",
+    },
     commit_id: "123",
     commit_url: "",
     created_at: new Date().toISOString(),
@@ -543,6 +555,7 @@ async function setupTests() {
     actor: {
       id: 1,
       login: "ubiquity",
+      type: "User",
     },
     assignee: {
       login: "user2",
@@ -559,6 +572,7 @@ async function setupTests() {
     actor: {
       id: 1,
       login: "ubiquibot[bot]",
+      type: "Bot",
     },
     assignee: {
       login: "user2",
@@ -575,6 +589,7 @@ async function setupTests() {
     actor: {
       id: 1,
       login: "ubiquity",
+      type: "User",
     },
     assignee: {
       login: "user2",
