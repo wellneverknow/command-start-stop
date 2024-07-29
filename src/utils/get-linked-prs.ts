@@ -42,6 +42,5 @@ export async function getLinkedPullRequests(context: Context, { owner, repositor
       state: pr.state,
       body: pr.body,
     };
-  })
-    .filter((pr) => pr !== null && pr.state === "open") as GetLinkedResults[];
+  }).filter((pr) => pr !== null && pr.state === "open") as GetLinkedResults[];
 }
