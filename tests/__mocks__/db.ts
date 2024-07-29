@@ -169,6 +169,5 @@ export const db = factory({
         },
       },
     }),
-
   },
 });

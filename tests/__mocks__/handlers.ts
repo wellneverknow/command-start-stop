@@ -56,10 +56,10 @@ export const handlers = [
     )
   ),
   // list events for an issue timeline
-  http.get("https://api.github.com/repos/:owner/:repo/issues/:issue_number/timeline", ({ params: { owner, repo, issue_number } }) => {
+  http.get("https://api.github.com/repos/:owner/:repo/issues/:issue_number/timeline", ({ params: { owner, repo, issue_number: issueNumber } }) => {
     return HttpResponse.json(
       db.event.findMany({
-        where: { owner: { equals: owner as string }, repo: { equals: repo as string }, issue_number: { equals: Number(issue_number) } },
+        where: { owner: { equals: owner as string }, repo: { equals: repo as string }, issue_number: { equals: Number(issueNumber) } },
       })
     );
   }),

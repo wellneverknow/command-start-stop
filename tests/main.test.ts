@@ -18,13 +18,6 @@ type Sender = Context["payload"]["sender"];
 const octokit = jest.requireActual("@octokit/rest");
 const TEST_REPO = "ubiquity/test-repo";
 
-const url = process.env.SUPABASE_URL;
-const key = process.env.SUPABASE_KEY;
-
-if (!url || !key) {
-  throw new Error("Supabase URL and Key are required");
-}
-
 beforeAll(() => {
   server.listen();
 });
@@ -66,7 +59,7 @@ describe("User start/stop", () => {
   });
 
   test("Stopping an issue should close the author's linked PR", async () => {
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => { });
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
     const context = createContext(issue, sender, "/stop");
@@ -551,7 +544,7 @@ async function setupTests() {
   });
 
   db.event.create({
-    id: 3,
+    id: 4,
     actor: {
       id: 1,
       login: "ubiquity",
@@ -568,7 +561,7 @@ async function setupTests() {
   });
 
   db.event.create({
-    id: 4,
+    id: 5,
     actor: {
       id: 1,
       login: "ubiquibot[bot]",
@@ -585,7 +578,7 @@ async function setupTests() {
   });
 
   db.event.create({
-    id: 5,
+    id: 6,
     actor: {
       id: 1,
       login: "ubiquity",
@@ -641,17 +634,17 @@ function getSupabase(withData = true) {
         single: jest.fn().mockResolvedValue({
           data: withData
             ? {
-              id: 1,
-              wallets: {
-                address: "0x123",
-              },
-            }
+                id: 1,
+                wallets: {
+                  address: "0x123",
+                },
+              }
             : {
-              id: 1,
-              wallets: {
-                address: undefined,
+                id: 1,
+                wallets: {
+                  address: undefined,
+                },
               },
-            },
         }),
       }),
     }),

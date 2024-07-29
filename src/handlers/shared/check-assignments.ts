@@ -11,9 +11,7 @@ export async function checkPreviousAssignments(context: Context, sender: Context
 
   const unassignedEvents = userAssignments.filter((event) => event.event === "unassigned");
   const botUnassigned = unassignedEvents.filter((event) => event.actorType === "Bot");
-  const adminUnassigned = unassignedEvents.filter(
-    (event) => event.actor?.toLowerCase() !== senderLogin && event.actorType === "User"
-  );
+  const adminUnassigned = unassignedEvents.filter((event) => event.actor?.toLowerCase() !== senderLogin && event.actorType === "User");
   const userSelfUnassignViaUi = unassignedEvents.filter((event) => event.actor?.toLowerCase() === senderLogin);
   return botUnassigned.length > 0 || adminUnassigned.length > 0 || userSelfUnassignViaUi.length > 0;
 }
