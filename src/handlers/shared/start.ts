@@ -64,8 +64,12 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   if (assignees.length !== 0) {
     const isCurrentUserAssigned = !!assignees.find((assignee) => assignee?.login === sender.login);
-    const log = logger.error(isCurrentUserAssigned ? "You are already assigned to this task." : "The issue is already assigned. Please choose another unassigned task.", { issueNumber: issue.number });
-    return await addCommentToIssue(context, log?.logMessage.diff as string);
+    const log = logger.error(
+      isCurrentUserAssigned ? "You are already assigned to this task." : "This issue is already assigned. Please choose another unassigned task.",
+      { issueNumber: issue.number }
+    );
+    await addCommentToIssue(context, log?.logMessage.diff as string);
+    throw new Error(log?.logMessage.diff);
   }
 
   teammates.push(sender.login);
@@ -93,7 +97,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     duration,
     priceLabel,
     revision: commitHash?.substring(0, 7),
-    teammate: teammates,
+    teammates: teammates,
     assignee: login,
     issue: issue.number,
   });
@@ -101,10 +105,16 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, id, duration);
   const metadata = structuredMetadata.create("Assignment", logMessage);
 
-  // add assignee
-  if (!assignees.map((i: Partial<Assignee>) => i?.login).includes(login)) {
-    await addAssignees(context, issue.number, [login]);
+  const toAssign = [];
+
+  for (const teammate of teammates) {
+    if (!assignees.find((assignee: Partial<Assignee>) => assignee?.login?.toLowerCase() === teammate.toLowerCase())) {
+      toAssign.push(teammate);
+    }
   }
+
+  // assign the issue
+  await addAssignees(context, issue.number, toAssign);
 
   const isTaskStale = checkTaskStale(getTimeValue(taskStaleTimeoutDuration), issue.created_at);
 
@@ -127,16 +137,16 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
 async function handleTaskLimitChecks(username: string, context: Context, maxConcurrentTasks: number, logger: Context["logger"], sender: string) {
   const openedPullRequests = await getAvailableOpenedPullRequests(context, username);
-  logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed: `, { openedPullRequests });
-
   const assignedIssues = await getAssignedIssues(context, username);
-  logger.info("Max issue allowed is", { maxConcurrentTasks, assignedIssues: assignedIssues.map((issue) => `${issue.url}`) });
 
   // check for max and enforce max
   if (assignedIssues.length - openedPullRequests.length >= maxConcurrentTasks) {
-    const isSender = username === sender;
-    const comment = (isSender ? "You have" : `${username} has`) + ` reached the max limit of ${maxConcurrentTasks} assigned issues.`;
-    await addCommentToIssue(context, `\`\`\`diff\n! ${comment}\n\`\`\``);
-    throw new Error(`Too many assigned issues, you have reached your max limit of ${maxConcurrentTasks} issues.`);
+    const log = logger.error(username === sender ? "You have reached your max task limit" : `${username} has reached their max task limit`, {
+      assignedIssues: assignedIssues.length,
+      openedPullRequests: openedPullRequests.length,
+      maxConcurrentTasks,
+    });
+    await addCommentToIssue(context, log?.logMessage.diff as string);
+    throw new Error(log?.logMessage.diff);
   }
 }

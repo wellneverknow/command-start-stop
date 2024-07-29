@@ -80,7 +80,7 @@ export const handlers = [
         db.issue.update({
           where: { id: { equals: issue.id } },
           data: {
-            assignees,
+            assignees: [...issue.assignees, ...assignees],
           },
         });
       }
