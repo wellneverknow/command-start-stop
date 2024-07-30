@@ -9,6 +9,7 @@ export async function getUserRole(context: Context, user: string): Promise<Match
   const orgLogin = context.payload.organization?.login;
   const { config, logger } = context;
   const { maxConcurrentTasks } = config.miscellaneous;
+  const smallestTask = maxConcurrentTasks.reduce((minTask, currentTask) => (currentTask.limit < minTask.limit ? currentTask : minTask));
 
   try {
     const response = await context.octokit.orgs.getMembershipForUser({
@@ -16,17 +17,9 @@ export async function getUserRole(context: Context, user: string): Promise<Match
       username: user,
     });
 
-    const matchingUser = maxConcurrentTasks.find(({ role }) => role.toLowerCase() === response.data.role);
-
-    if (matchingUser) {
-      //chech if the current user role matches any of those defined in the config
-      return matchingUser;
-    } else {
-      //return the role with the smallest task limit
-      return maxConcurrentTasks.reduce((minTask, currentTask) => (currentTask.limit < minTask.limit ? currentTask : minTask));
-    }
+    return maxConcurrentTasks.find(({ role }) => role.toLowerCase() === response.data.role) ?? smallestTask
   } catch (error) {
     logger.error("An error occured", { error: error as Error });
-    throw error;
+    return smallestTask
   }
 }
