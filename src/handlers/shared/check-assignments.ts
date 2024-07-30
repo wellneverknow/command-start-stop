@@ -1,5 +1,7 @@
 import { Context, IssueEvent } from "../../types";
 
+const UBIQUIBOT_ID = 113181824;
+
 export async function hasUserBeenUnassigned(context: Context): Promise<boolean> {
   const events = await getAssignmentEvents(context);
   const senderLogin = context.payload.comment.user?.login.toLowerCase() || context.payload.sender.login.toLowerCase();
@@ -10,8 +12,8 @@ export async function hasUserBeenUnassigned(context: Context): Promise<boolean> 
   }
 
   const unassignedEvents = userAssignments.filter((event) => event.event === "unassigned");
-  const botUnassigned = unassignedEvents.filter((event) => event.actorType === "Bot");
-  const adminUnassigned = unassignedEvents.filter((event) => event.actor?.toLowerCase() !== senderLogin && event.actorType === "User");
+  const botUnassigned = unassignedEvents.filter((event) => event.actorId === UBIQUIBOT_ID);
+  const adminUnassigned = unassignedEvents.filter((event) => event.actor?.toLowerCase() !== senderLogin && event.actorId !== UBIQUIBOT_ID);
   return botUnassigned.length > 0 || adminUnassigned.length > 0;
 }
 
@@ -27,19 +29,19 @@ async function getAssignmentEvents(context: Context) {
     const events = data
       .filter((event) => event.event === "assigned" || event.event === "unassigned")
       .map((event) => {
-        let actor, assignee, createdAt, actorType;
+        let actor, assignee, createdAt, actorId;
 
         if ((event.event === "unassigned" || event.event === "assigned") && "actor" in event && event.actor && "assignee" in event && event.assignee) {
           actor = event.actor.login;
           assignee = event.assignee.login;
           createdAt = event.created_at;
-          actorType = event.actor.type;
+          actorId = event.actor.id;
         }
 
         return {
           event: event.event,
           actor,
-          actorType,
+          actorId,
           assignee,
           createdAt,
         };
