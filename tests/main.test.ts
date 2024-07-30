@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import { drop } from "@mswjs/data";
 import { Context, SupportedEventsU } from "../src/types";
 import { db } from "./__mocks__/db";
@@ -248,7 +249,7 @@ describe("User start/stop", () => {
       await userStartStop(context);
     } catch (error) {
       if (error instanceof Error) {
-        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 3 issues.");
+        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 2 issues.");
       }
     }
   });
