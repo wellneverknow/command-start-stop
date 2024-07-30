@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import { drop } from "@mswjs/data";
 import { Context, SupportedEventsU } from "../src/types";
 import { db } from "./__mocks__/db";
@@ -208,12 +209,12 @@ describe("User start/stop", () => {
       await userStartStop(context);
     } catch (error) {
       if (error instanceof Error) {
-        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 3 issues.");
+        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 2 issues.");
       }
     }
   });
 
-  test("should set maxLimits to 5 if the user is a member", async () => {
+  test("should set maxLimits to 4 if the user is a member", async () => {
 
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 3 } } }) as unknown as Sender;
@@ -226,7 +227,7 @@ describe("User start/stop", () => {
       await userStartStop(context);
     } catch (error) {
       if (error instanceof Error) {
-        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 5 issues.");
+        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 4 issues.");
       }
     }
   });
@@ -376,28 +377,103 @@ async function setupTests() {
   db.users.create({
     id: 3,
     login: "member",
-    role: "Member"
+    role: "member"
   })
 
   db.users.create({
     id: 4,
     login: "noob",
-    role: "Noob"
+    role: "noob"
   })
+
+  //test issue for unknown user roles
+  db.issue.create({
+    ...issueTemplate,
+    id: 10,
+    assignee: {
+      id: 4,
+      login: "noob",
+    },
+  });
+
+  db.issue.create({
+    ...issueTemplate,
+    id: 11,
+    assignee: {
+      id: 4,
+      login: "noob",
+    },
+  });
+
+  db.issue.create({
+    ...issueTemplate,
+    id: 12,
+    assignee: {
+      id: 4,
+      login: "noob",
+    },
+  });
+
+  //test issues for members
+
+  db.issue.create({
+    ...issueTemplate,
+    id: 13,
+    assignee: {
+      id: 3,
+      login: "member",
+    },
+  });
+
+  db.issue.create({
+    ...issueTemplate,
+    id: 14,
+    assignee: {
+      id: 3,
+      login: "member",
+    }
+  });
+
+  db.issue.create({
+    ...issueTemplate,
+    id: 15,
+    assignee: {
+      id: 3,
+      login: "member",
+    }
+  });
+
+  db.issue.create({
+    ...issueTemplate,
+    id: 16,
+    assignee: {
+      id: 3,
+      login: "member",
+    },
+  });
+
+  db.issue.create({
+    ...issueTemplate,
+    id: 17,
+    assignee: {
+      id: 3,
+      login: "member",
+    }
+  });
 }
 
 const maxConcurrentTasksDefaults = [
   {
     role: "Admin",
-    limit: 10,
+    limit: 6,
   },
   {
     role: "Member",
-    limit: 5,
+    limit: 4,
   },
   {
     role: "Collaborator",
-    limit: 3,
+    limit: 2,
   },
 ];
 
