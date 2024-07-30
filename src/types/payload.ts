@@ -9,6 +9,8 @@ export type TimelineEvents = RestEndpointMethodTypes["issues"]["listEventsForTim
 export type Assignee = Issue["assignee"];
 export type IssueEvent = RestEndpointMethodTypes["issues"]["listEventsForTimeline"]["response"];
 
+export type Sender = { login: string, id: number };
+
 export const ISSUE_TYPE = {
   OPEN: "open",
   CLOSED: "closed",

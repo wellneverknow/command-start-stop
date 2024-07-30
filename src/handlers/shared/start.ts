@@ -1,13 +1,13 @@
-import { Assignee, Context, ISSUE_TYPE, Label } from "../../types";
+import { Assignee, Context, ISSUE_TYPE, Label, Sender } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
-import { checkPreviousAssignments } from "./check-assignments";
+import { hasUserBeenUnassigned } from "./check-assignments";
 import { generateAssignmentComment } from "./generate-assignment-comment";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
-export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"]) {
+export async function start(context: Context, issue: Context["payload"]["issue"], sender: Sender) {
   const { logger, config } = context;
   const { maxConcurrentTasks } = config.miscellaneous;
   const { taskStaleTimeoutDuration } = config.timers;
@@ -22,10 +22,12 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     throw new Error("Issue is a parent issue");
   }
 
-  const hasBeenPreviouslyUnassigned = await checkPreviousAssignments(context, sender);
+  const hasBeenPreviouslyUnassigned = await hasUserBeenUnassigned(context);
+
   if (hasBeenPreviouslyUnassigned) {
-    await addCommentToIssue(context, "```diff\n! You were previously unassigned from this task. You cannot reassign yourself.\n```");
-    throw new Error(`This user was unassigned from this task previously. Cannot auto assign`);
+    const log = logger.error("You were previously unassigned from this task. You cannot reassign yourself.", { sender });
+    await addCommentToIssue(context, log?.logMessage.diff as string);
+    throw new Error("User was previously unassigned from this task");
   }
 
   let commitHash: string | null = null;
@@ -89,15 +91,14 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   const duration: number = calculateDurations(labels).shift() ?? 0;
 
-  const { id, login } = sender;
   const logMessage = logger.info("Task assigned successfully", { duration, priceLabel, revision: commitHash?.substring(0, 7) });
 
-  const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, id, duration);
+  const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, sender.id, duration);
   const metadata = structuredMetadata.create("Assignment", logMessage);
 
   // add assignee
-  if (!assignees.map((i: Partial<Assignee>) => i?.login).includes(login)) {
-    await addAssignees(context, issue.number, [login]);
+  if (!assignees.map((i: Partial<Assignee>) => i?.login).includes(sender.login)) {
+    await addAssignees(context, issue.number, [sender.login]);
   }
 
   const isTaskStale = checkTaskStale(taskStaleTimeoutDuration, issue.created_at);
