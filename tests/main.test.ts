@@ -197,8 +197,8 @@ describe("User start/stop", () => {
 
   test("should return the role with the smallest task limit if user role is not defined in config", async () => {
 
-    const issue = db.issue.findFirst({ where: { id: { equals: 8 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 4 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender);
 
@@ -215,8 +215,8 @@ describe("User start/stop", () => {
 
   test("should set maxLimits to 5 if the user is a member", async () => {
 
-    const issue = db.issue.findFirst({ where: { id: { equals: 7 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 3 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender);
 
@@ -373,24 +373,33 @@ async function setupTests() {
     repo: "test-repo",
   });
 
-  db.issue.create({
-    ...issueTemplate,
-    id: 7,
-    assignee: {
-      login: "User7",
-      role: "Member"
-    }
-  });
+  db.users.create({
+    id: 3,
+    login: "member",
+    role: "Member"
+  })
 
-  db.issue.create({
-    ...issueTemplate,
-    id: 8,
-    assignee: {
-      login: "User8",
-      role: "Noob"
-    }
-  });
+  db.users.create({
+    id: 4,
+    login: "noob",
+    role: "Noob"
+  })
 }
+
+const maxConcurrentTasksDefaults = [
+  {
+    role: "Admin",
+    limit: 10,
+  },
+  {
+    role: "Member",
+    limit: 5,
+  },
+  {
+    role: "Collaborator",
+    limit: 3,
+  },
+];
 
 function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start", isEnabled = true, withData = true) {
   const ctx = {
@@ -412,20 +421,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
         taskStaleTimeoutDuration: 2580000,
       },
       miscellaneous: {
-        maxConcurrentTasks: [
-          {
-            role: "Admin",
-            limit: 10,
-          },
-          {
-            role: "Member",
-            limit: 5,
-          },
-          {
-            role: "Collaborator",
-            limit: 3,
-          },
-        ],
+        maxConcurrentTasks: maxConcurrentTasksDefaults,
         startRequiresWallet: true,
       },
     },

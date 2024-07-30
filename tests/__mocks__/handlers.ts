@@ -18,16 +18,11 @@ export const handlers = [
   }),
   //get member
   http.get("https://api.github.com/orgs/:org/memberships/:username", ({ params: { username } }) => {
-    switch (username) {
-      case "ubiquity":
-      case "gentlementlegen":
-        return HttpResponse.json({ role: "admin" });
-      case "billing":
-        return HttpResponse.json({ role: "billing_manager" });
-      case "collaborator":
-        return HttpResponse.json({role: "collaborator"})
-      default:
-        return HttpResponse.json({ role: "member" });
+    const user = db.users.findFirst({ where: { login: { equals: username as string } } });
+    if (user) {
+      return HttpResponse.json({ role: user.role });
+    } else {
+      return HttpResponse.json({ role: "collaborator" });
     }
   }),
   // get issue
