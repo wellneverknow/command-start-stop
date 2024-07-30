@@ -16,7 +16,6 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const userRoleSchema = T.Union([T.Literal("Admin"), T.Literal("Member"), T.Literal("Contributor"), T.String()]);
 
 export const startStopSchema = T.Object({
-  isEnabled: T.Boolean({ default: true }),
   timers: T.Object(
     {
       reviewDelayTolerance: T.Number(),
