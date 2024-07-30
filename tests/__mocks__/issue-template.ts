@@ -22,7 +22,6 @@ export default {
     subscriptions_url: "",
     type: "",
     url: "",
-    role: ""
   },
   author_association: "NONE",
   closed_at: null,
