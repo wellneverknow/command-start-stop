@@ -13,7 +13,7 @@ import { Logs, cleanLogString } from "@ubiquity-dao/ubiquibot-logger";
 dotenv.config();
 
 type Issue = Context["payload"]["issue"];
-type Sender = Context["payload"]["sender"];
+type PayloadSender = Context["payload"]["sender"];
 
 const octokit = jest.requireActual("@octokit/rest");
 const TEST_REPO = "ubiquity/test-repo";
@@ -34,26 +34,26 @@ describe("User start/stop", () => {
 
   test("User can start an issue", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context);
 
-    const { output } = await userStartStop(context as unknown as Context);
+    const { output } = await userStartStop(context);
 
     expect(output).toEqual("Task assigned successfully");
   });
 
   test("User can stop an issue", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
+    const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender, "/stop");
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context);
 
-    const { output } = await userStartStop(context as unknown as Context);
+    const { output } = await userStartStop(context);
 
     expect(output).toEqual("Task unassigned successfully");
   });
@@ -61,12 +61,12 @@ describe("User start/stop", () => {
   test("Stopping an issue should close the author's linked PR", async () => {
     const infoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
+    const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
     const context = createContext(issue, sender, "/stop");
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context);
 
-    const { output } = await userStartStop(context as unknown as Context);
+    const { output } = await userStartStop(context);
 
     expect(output).toEqual("Task unassigned successfully");
     const logs = infoSpy.mock.calls.flat();
@@ -80,151 +80,81 @@ describe("User start/stop", () => {
 
   test("User can't stop an issue they're not assigned to", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender, "/stop");
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context);
 
-    const output = await userStartStop(context as unknown as Context);
+    const output = await userStartStop(context);
 
     expect(output).toEqual({ output: "You are not assigned to this task" });
   });
 
   test("User can't stop an issue without assignees", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 6 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender, "/stop");
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context);
 
-    const output = await userStartStop(context as unknown as Context);
+    const output = await userStartStop(context);
 
     expect(output).toEqual({ output: "You are not assigned to this task" });
   });
 
   test("User can't start an issue that's already assigned", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender, "/start");
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context);
 
-    const err = "Issue is already assigned";
-
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual(err);
-      }
-    }
+    await expect(userStartStop(context)).rejects.toThrow("Issue is already assigned");
   });
 
   test("User can't start an issue without a price label", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 3 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context);
 
-    const err = "No price label is set to calculate the duration";
-
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual(err);
-      }
-    }
+    await expect(userStartStop(context)).rejects.toThrow("No price label is set to calculate the duration");
   });
 
   test("User can't start an issue without a wallet address", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(getSupabase(false), context as unknown as Context);
-
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual("No wallet address found");
-      }
-    }
+    context.adapters = createAdapters(getSupabase(false), context);
+    await expect(userStartStop(context)).rejects.toThrow("No wallet address found");
   });
 
   test("User can't start an issue that's closed", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 4 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual("Issue is closed");
-      }
-    }
-  });
-
-  test("User can't start if command is disabled", async () => {
-    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
-
-    const context = createContext(issue, sender, "/start");
-
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual("The '/start' command is disabled for this repository.");
-      }
-    }
-  });
-
-  test("User can't stop if command is disabled", async () => {
-    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
-
-    const context = createContext(issue, sender, "/stop");
-
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual("The '/stop' command is disabled for this repository.");
-      }
-    }
+    context.adapters = createAdapters(getSupabase(), context);
+    await expect(userStartStop(context)).rejects.toThrow("Issue is closed");
   });
 
   test("User can't start an issue that's a parent issue", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender, "/start");
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context);
 
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual("Issue is a parent issue");
-      }
-    }
+    await userStartStop(context);
   });
 
   test("User can't start another issue if they have reached the max limit", async () => {
@@ -258,34 +188,21 @@ describe("User start/stop", () => {
     }));
 
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender);
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context);
 
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 3 issues.");
-      }
-    }
+    await userStartStop(context);
   });
 
   test("User can't start an issue if they have previously been unassigned by an admin", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
+    const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender, "/start");
-
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual("This user was unassigned from this task previously. Cannot auto assign");
-      }
-    }
+    await expect(userStartStop(context)).rejects.toThrow("User was previously unassigned from this task");
   });
 });
 

@@ -12,7 +12,7 @@ export async function hasUserBeenUnassigned(context: Context): Promise<boolean> 
   const unassignedEvents = userAssignments.filter((event) => event.event === "unassigned");
   const botUnassigned = unassignedEvents.filter((event) => event.actorType === "Bot");
   const adminUnassigned = unassignedEvents.filter((event) => event.actor?.toLowerCase() !== senderLogin && event.actorType === "User");
-  return botUnassigned.length > 0 || adminUnassigned.length > 0
+  return botUnassigned.length > 0 || adminUnassigned.length > 0;
 }
 
 async function getAssignmentEvents(context: Context) {
@@ -29,10 +29,7 @@ async function getAssignmentEvents(context: Context) {
       .map((event) => {
         let actor, assignee, createdAt, actorType;
 
-        if (
-          (event.event === "unassigned" || event.event === "assigned")
-          && "actor" in event && event.actor && "assignee" in event && event.assignee
-        ) {
+        if ((event.event === "unassigned" || event.event === "assigned") && "actor" in event && event.actor && "assignee" in event && event.assignee) {
           actor = event.actor.login;
           assignee = event.assignee.login;
           createdAt = event.created_at;
