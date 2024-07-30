@@ -56,7 +56,6 @@ export const db = factory({
       subscriptions_url: String,
       type: String,
       url: String,
-      role: String
     }),
   },
   repo: {
