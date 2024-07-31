@@ -17,9 +17,9 @@ export async function getUserRole(context: Context, user: string): Promise<Match
       username: user,
     });
 
-    return maxConcurrentTasks.find(({ role }) => role.toLowerCase() === response.data.role) ?? smallestTask
-  } catch (error) {
-    logger.error("An error occured", { error: error as Error });
-    return smallestTask
+    return maxConcurrentTasks.find(({ role }) => role.toLowerCase() === response.data.role) ?? smallestTask;
+  } catch (err) {
+    logger.error("Could not get user role", { err });
+    return smallestTask;
   }
 }
