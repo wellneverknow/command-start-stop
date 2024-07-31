@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import { drop } from "@mswjs/data";
 import { Context, SupportedEventsU } from "../src/types";
 import { db } from "./__mocks__/db";
@@ -18,13 +17,6 @@ type Sender = Context["payload"]["sender"];
 
 const octokit = jest.requireActual("@octokit/rest");
 const TEST_REPO = "ubiquity/test-repo";
-
-const url = process.env.SUPABASE_URL;
-const key = process.env.SUPABASE_KEY;
-
-if (!url || !key) {
-  throw new Error("Supabase URL and Key are required");
-}
 
 beforeAll(() => {
   server.listen();
@@ -67,7 +59,7 @@ describe("User start/stop", () => {
   });
 
   test("Stopping an issue should close the author's linked PR", async () => {
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => { });
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
     const context = createContext(issue, sender, "/stop");
@@ -236,26 +228,50 @@ describe("User start/stop", () => {
   });
 
   test("should return the role with the smallest task limit if user role is not defined in config", async () => {
-
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    // role: new-start
     const sender = db.users.findFirst({ where: { id: { equals: 4 } } }) as unknown as Sender;
 
+    const contributorLimit = maxConcurrentDefaults.contributor;
+    createIssuesForMaxAssignment(contributorLimit, sender.id);
     const context = createContext(issue, sender);
-    const minLimit = context.config.miscellaneous.maxConcurrentTasks[2].limit
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
-    await expect(userStartStop(context as unknown as Context)).rejects.toThrow(`Too many assigned issues, you have reached your max limit of ${minLimit} issues.`);
+    await expect(userStartStop(context as unknown as Context)).rejects.toThrow(
+      `Too many assigned issues, you have reached your max limit of ${contributorLimit} issues.`
+    );
+
+    expect(contributorLimit).toEqual(2)
   });
 
   test("should set maxLimits to 4 if the user is a member", async () => {
-
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 3 } } }) as unknown as Sender;
+    const sender = db.users.findFirst({ where: { id: { equals: 5 } } }) as unknown as Sender;
 
-    
+    const memberLimit = maxConcurrentDefaults.member;
+    // (+ 4) because we have 4 open pull requests being pulled too
+    // ``Math.abs(assignedIssues.length - openedPullRequests.length) >= maxTask.limit)``
+    createIssuesForMaxAssignment(memberLimit + 4, sender.id);
     const context = createContext(issue, sender) as unknown as Context;
-    const memberLimit = context.config.miscellaneous.maxConcurrentTasks[1].limit
-
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
     await expect(userStartStop(context)).rejects.toThrow(`Too many assigned issues, you have reached your max limit of ${memberLimit} issues.`);
+
+    expect(memberLimit).toEqual(4);
+  });
+
+  test("should set maxLimits to 6 if the user is an admin", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const adminLimit = maxConcurrentDefaults.admin;
+    // (+ 4) because we have 4 open pull requests being pulled too
+    // ``Math.abs(assignedIssues.length - openedPullRequests.length) >= maxTask.limit)``
+    createIssuesForMaxAssignment(adminLimit + 4, sender.id);
+    const context = createContext(issue, sender) as unknown as Context;
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    await expect(userStartStop(context)).rejects.toThrow(`Too many assigned issues, you have reached your max limit of ${adminLimit} issues.`);
+
+    expect(adminLimit).toEqual(6);
   });
 });
 
@@ -344,7 +360,7 @@ async function setupTests() {
 
   db.pull.create({
     id: 1,
-    html_url: "",
+    html_url: "https://github.com/ubiquity/test-repo/pull/1",
     number: 1,
     author: {
       id: 2,
@@ -358,12 +374,13 @@ async function setupTests() {
     owner: "ubiquity",
     repo: "test-repo",
     state: "open",
+    pull_request: {},
     closed_at: null,
   });
 
   db.pull.create({
     id: 2,
-    html_url: "",
+    html_url: "https://github.com/ubiquity/test-repo/pull/2",
     number: 2,
     author: {
       id: 2,
@@ -376,13 +393,14 @@ async function setupTests() {
     body: "Pull request",
     owner: "ubiquity",
     repo: "test-repo",
+    pull_request: {},
     state: "open",
     closed_at: null,
   });
 
   db.pull.create({
     id: 3,
-    html_url: "",
+    html_url: "https://github.com/ubiquity/test-repo/pull/3",
     number: 3,
     author: {
       id: 1,
@@ -394,7 +412,28 @@ async function setupTests() {
     },
     body: "Pull request body",
     owner: "ubiquity",
+    pull_request: {},
+    repo: "test-repo",
+    state: "open",
+    closed_at: null,
+  });
 
+  db.pull.create({
+    id: 4,
+    html_url: "https://github.com/ubiquity/test-repo/pull/4",
+    number: 3,
+    author: {
+      id: 1,
+      name: "ubiquity",
+    },
+    user: {
+      id: 1,
+      login: "ubiquity",
+    },
+    body: "Pull request body",
+    owner: "ubiquity",
+    draft: true,
+    pull_request: {},
     repo: "test-repo",
     state: "open",
     closed_at: null,
@@ -403,6 +442,8 @@ async function setupTests() {
   db.review.create({
     id: 1,
     body: "Review body",
+    owner: "ubiquity",
+    repo: "test-repo",
     commit_id: "123",
     html_url: "",
     pull_request_url: "",
@@ -482,97 +523,44 @@ async function setupTests() {
     issue_number: 2,
     owner: "ubiquity",
     repo: "test-repo",
-  });
-
-  db.users.create({
-    id: 3,
-    login: "member",
-    role: "member"
-  })
-
-  db.users.create({
-    id: 4,
-    login: "noob",
-    role: "noob"
-  })
-
-  //test issue for unknown user roles
-  db.issue.create({
-    ...issueTemplate,
-    id: 10,
-    assignee: {
-      id: 4,
-      login: "noob",
+    source: {
+      issue: {
+        number: 3,
+        state: "open",
+        body: `Resolves #2`,
+        html_url: "http://github.com/ubiquity/test-repo/pull/3",
+        repository: {
+          full_name: TEST_REPO,
+        },
+        user: {
+          login: "user2",
+        },
+        pull_request: {
+          html_url: "http://github.com/ubiquity/test-repo/pull/3",
+        },
+      },
     },
-  });
-
-  db.issue.create({
-    ...issueTemplate,
-    id: 11,
-    assignee: {
-      id: 4,
-      login: "noob",
-    },
-  });
-
-  db.issue.create({
-    ...issueTemplate,
-    id: 12,
-    assignee: {
-      id: 4,
-      login: "noob",
-    },
-  });
-
-  //test issues for members
-
-  db.issue.create({
-    ...issueTemplate,
-    id: 13,
-    assignee: {
-      id: 3,
-      login: "member",
-    },
-  });
-
-  db.issue.create({
-    ...issueTemplate,
-    id: 14,
-    assignee: {
-      id: 3,
-      login: "member",
-    }
-  });
-
-  db.issue.create({
-    ...issueTemplate,
-    id: 15,
-    assignee: {
-      id: 3,
-      login: "member",
-    }
-  });
-
-  db.issue.create({
-    ...issueTemplate,
-    id: 16,
-    assignee: {
-      id: 3,
-      login: "member",
-    },
-  });
-
-  db.issue.create({
-    ...issueTemplate,
-    id: 17,
-    assignee: {
-      id: 3,
-      login: "member",
-    }
   });
 }
 
-const maxConcurrentTasksDefaults = [
+function createIssuesForMaxAssignment(n: number, userId: number) {
+  const user = db.users.findFirst({ where: { id: { equals: userId } } });
+  for (let i = 0; i < n; i++) {
+    db.issue.create({
+      ...issueTemplate,
+      id: i + 7,
+      assignee: user,
+    });
+  }
+}
+
+const maxConcurrentDefaults = {
+  admin: 6,
+  member: 4,
+  contributor: 2,
+};
+
+const maxConcurrentTasks = [
   {
     role: "Admin",
     limit: 6,
@@ -587,7 +575,7 @@ const maxConcurrentTasksDefaults = [
   },
 ];
 
-function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start") {
+function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start"): Context {
   return {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
@@ -595,7 +583,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       sender: sender as unknown as Context["payload"]["sender"],
       repository: db.repo.findFirst({ where: { id: { equals: 1 } } }) as unknown as Context["payload"]["repository"],
       comment: { body } as unknown as Context["payload"]["comment"],
-      action: "created" as string,
+      action: "created",
       installation: { id: 1 } as unknown as Context["payload"]["installation"],
       organization: { login: "ubiquity" } as unknown as Context["payload"]["organization"],
     },
@@ -606,18 +594,15 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
         taskStaleTimeoutDuration: 2580000,
       },
       miscellaneous: {
-        maxConcurrentTasks: maxConcurrentTasksDefaults,
-      },
-      labels: {
-        time: ["Time: 1h", "Time: <4 hours", "Time: <1 Day", "Time: <3 Days", "Time: <1 Week"],
-        priority: ["Priority: 1 (Normal)", "Priority: 2 (High)", "Priority: 3 (Critical)"],
+        maxConcurrentTasks: maxConcurrentTasks,
+        startRequiresWallet: true,
       },
     },
     octokit: new octokit.Octokit(),
     eventName: "issue_comment.created" as SupportedEventsU,
     env: {
-      SUPABASE_KEY: key,
-      SUPABASE_URL: url,
+      SUPABASE_KEY: "key",
+      SUPABASE_URL: "url",
     },
   };
 }
@@ -629,17 +614,17 @@ function getSupabase(withData = true) {
         single: jest.fn().mockResolvedValue({
           data: withData
             ? {
-                id: 1,
-                wallets: {
-                  address: "0x123",
-                },
-              }
-            : {
-                id: 1,
-                wallets: {
-                  address: undefined,
-                },
+              id: 1,
+              wallets: {
+                address: "0x123",
               },
+            }
+            : {
+              id: 1,
+              wallets: {
+                address: undefined,
+              },
+            },
         }),
       }),
     }),
