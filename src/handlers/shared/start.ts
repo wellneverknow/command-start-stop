@@ -38,10 +38,12 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   // check max assigned issues
 
   const openedPullRequests = await getAvailableOpenedPullRequests(context, sender.login);
-  logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed: ${JSON.stringify(openedPullRequests)}`);
+  logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed`, {
+    openedPullRequests: openedPullRequests.map((i) => i.html_url),
+  });
 
   const assignedIssues = await getAssignedIssues(context, sender.login);
-  logger.info("Max issues allowed is", { limit: maxTask.limit });
+  logger.info("Max issues allowed is", { limit: maxTask.limit, assigned: assignedIssues.length });
 
   // check for max and enforce max
 
