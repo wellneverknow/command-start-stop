@@ -22,9 +22,9 @@ const TEST_REPO = "ubiquity/test-repo";
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_KEY;
 
-if (!url || !key) {
-  throw new Error("Supabase URL and Key are required");
-}
+// if (!url || !key) {
+//   throw new Error("Supabase URL and Key are required");
+// }
 
 beforeAll(() => {
   server.listen();
@@ -482,6 +482,23 @@ async function setupTests() {
     issue_number: 2,
     owner: "ubiquity",
     repo: "test-repo",
+    source: {
+      issue: {
+        number: 3,
+        state: "open",
+        body: `Resolves #2`,
+        html_url: "http://github.com/ubiquity/test-repo/pull/3",
+        repository: {
+          full_name: TEST_REPO,
+        },
+        user: {
+          login: "user2",
+        },
+        pull_request: {
+          html_url: "http://github.com/ubiquity/test-repo/pull/3",
+        },
+      },
+    },
   });
 
   db.users.create({
