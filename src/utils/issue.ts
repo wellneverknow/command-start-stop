@@ -187,7 +187,7 @@ export async function getAllPullRequests(
 
 export async function getAllPullRequestReviews(context: Context, pullNumber: number, owner: string, repo: string) {
   try {
-    return (await context.octokit.paginate(context.octokit.rest.pulls.listReviews, {
+    return (await context.octokit.paginate(context.octokit.pulls.listReviews, {
       owner,
       repo,
       pull_number: pullNumber,
