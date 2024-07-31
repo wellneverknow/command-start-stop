@@ -202,7 +202,31 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender, "/start");
+    context.adapters = createAdapters(getSupabase(), context);
+
     await expect(userStartStop(context)).rejects.toThrow("User was previously unassigned from this task");
+  });
+
+  test("Should throw if no APP_ID is set", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
+
+    const context = createContext(issue, sender, "/start", null);
+
+    context.env.APP_ID = null as unknown as string;
+    context.adapters = createAdapters(getSupabase(), context);
+
+    await expect(userStartStop(context)).rejects.toThrow("Invalid APP_ID");
+  });
+
+  test("Should throw if APP_ID is not a number", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
+
+    const context = createContext(issue, sender, "/start", "testing-one");
+    context.adapters = createAdapters(getSupabase(), context);
+
+    await expect(userStartStop(context)).rejects.toThrow("Invalid APP_ID");
   });
 });
 
@@ -512,7 +536,7 @@ async function setupTests() {
   });
 }
 
-function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start"): Context {
+function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start", appId: string | null = "1"): Context {
   return {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
@@ -540,6 +564,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
     env: {
       SUPABASE_KEY: "key",
       SUPABASE_URL: "url",
+      APP_ID: appId as string,
     },
   };
 }

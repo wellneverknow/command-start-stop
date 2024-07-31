@@ -1,8 +1,28 @@
 import { Context, IssueEvent } from "../../types";
 
-const UBIQUIBOT_ID = 113181824;
+function getAppId(context: Context): number {
+  const { env } = context;
+  let appId = 0;
+
+  try {
+    appId = JSON.parse(env.APP_ID || "0");
+  } catch {
+    throw new Error("Invalid APP_ID");
+  }
+
+  if (typeof appId === "string") {
+    appId = parseInt(appId, 10);
+  }
+
+  if (!isNaN(appId) && appId > 0) {
+    return appId;
+  }
+
+  throw new Error("Invalid APP_ID");
+}
 
 export async function hasUserBeenUnassigned(context: Context): Promise<boolean> {
+  const APP_ID = getAppId(context);
   const events = await getAssignmentEvents(context);
   const senderLogin = context.payload.comment.user?.login.toLowerCase() || context.payload.sender.login.toLowerCase();
   const userAssignments = events.filter((event) => event.assignee?.toLowerCase() === senderLogin);
@@ -12,8 +32,8 @@ export async function hasUserBeenUnassigned(context: Context): Promise<boolean> 
   }
 
   const unassignedEvents = userAssignments.filter((event) => event.event === "unassigned");
-  const botUnassigned = unassignedEvents.filter((event) => event.actorId === UBIQUIBOT_ID);
-  const adminUnassigned = unassignedEvents.filter((event) => event.actor?.toLowerCase() !== senderLogin && event.actorId !== UBIQUIBOT_ID);
+  const botUnassigned = unassignedEvents.filter((event) => event.actorId === APP_ID);
+  const adminUnassigned = unassignedEvents.filter((event) => event.actor?.toLowerCase() !== senderLogin && event.actorId !== APP_ID);
   return botUnassigned.length > 0 || adminUnassigned.length > 0;
 }
 
