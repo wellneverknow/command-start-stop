@@ -241,16 +241,9 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 4 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender);
+    const minLimit = context.config.miscellaneous.maxConcurrentTasks[2].limit
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 2 issues.");
-      }
-    }
+    await expect(userStartStop(context as unknown as Context)).rejects.toThrow(`Too many assigned issues, you have reached your max limit of ${minLimit} issues.`);
   });
 
   test("should set maxLimits to 4 if the user is a member", async () => {
@@ -258,17 +251,11 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 3 } } }) as unknown as Sender;
 
-    const context = createContext(issue, sender);
+    
+    const context = createContext(issue, sender) as unknown as Context;
+    const memberLimit = context.config.miscellaneous.maxConcurrentTasks[1].limit
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 4 issues.");
-      }
-    }
+    await expect(userStartStop(context)).rejects.toThrow(`Too many assigned issues, you have reached your max limit of ${memberLimit} issues.`);
   });
 });
 
