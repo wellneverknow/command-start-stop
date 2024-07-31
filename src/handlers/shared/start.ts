@@ -47,7 +47,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   // check for max and enforce max
 
-  if (assignedIssues.length - openedPullRequests.length >= maxTask.limit) {
+  if (Math.abs(assignedIssues.length - openedPullRequests.length) >= maxTask.limit) {
     await addCommentToIssue(context, "```diff\n! Too many assigned issues, you have reached your max limit.\n```");
     throw new Error(`Too many assigned issues, you have reached your max limit of ${maxTask.limit} issues.`);
   }

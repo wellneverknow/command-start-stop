@@ -20,9 +20,11 @@ export async function getAssignedIssues(context: Context, username: string): Pro
       })
       .then((issues) =>
         issues.filter((issue) => {
-          return issue.state === "open" && !issue.pull_request && issue.assignees
-            ? issue.assignees.some((assignee) => assignee.login === username)
-            : issue.assignee?.login === username;
+          return (
+            issue.state === "open" &&
+            !issue.pull_request &&
+            (issue.assignee?.login === username || issue.assignees?.some((assignee) => assignee.login === username))
+          );
         })
       );
   } catch (err: unknown) {
