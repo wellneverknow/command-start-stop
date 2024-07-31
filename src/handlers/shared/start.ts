@@ -46,7 +46,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   // check max assigned issues
 
   const openedPullRequests = await getAvailableOpenedPullRequests(context, sender.login);
-  logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed: ${JSON.stringify(openedPullRequests)}`);
+  logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed: `, { openedPullRequests });
 
   const assignedIssues = await getAssignedIssues(context, sender.login);
   logger.info("Max issue allowed is", { maxConcurrentTasks });
@@ -91,9 +91,13 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   const duration: number = calculateDurations(labels).shift() ?? 0;
 
-  const logMessage = logger.info("Task assigned successfully", { duration, priceLabel, revision: commitHash?.substring(0, 7) });
-
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, sender.id, duration);
+  const logMessage = logger.info("Task assigned successfully", {
+    taskDeadline: assignmentComment.deadline,
+    taskAssignees: [...assignees.map((a) => a?.login), sender.id],
+    priceLabel,
+    revision: commitHash?.substring(0, 7),
+  });
   const metadata = structuredMetadata.create("Assignment", logMessage);
 
   // add assignee
