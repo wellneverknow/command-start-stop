@@ -77,6 +77,7 @@ export const db = factory({
     body: nullable(String),
     repo: String,
     owner: String,
+    pull_request: Object,
     author: nullable({
       avatar_url: String,
       email: nullable(String),

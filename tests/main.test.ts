@@ -29,6 +29,8 @@ afterAll(() => server.close());
 
 describe("User start/stop", () => {
   beforeEach(async () => {
+    jest.clearAllMocks();
+    jest.resetModules();
     await setupTests();
   });
 
@@ -147,54 +149,26 @@ describe("User start/stop", () => {
   });
 
   test("User can't start an issue that's a parent issue", async () => {
-    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const issue = db.issue.findFirst({ where: { id: { equals: 5 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender, "/start");
 
     context.adapters = createAdapters(getSupabase(), context);
 
-    await userStartStop(context);
+    await expect(userStartStop(context)).rejects.toThrow("Issue is a parent issue");
   });
 
   test("User can't start another issue if they have reached the max limit", async () => {
-    jest.mock("../src/utils/issue", () => ({
-      getAvailableOpenedPullRequests: jest.fn().mockResolvedValue([
-        {
-          number: 1,
-          reviews: [
-            {
-              state: "APPROVED",
-            },
-          ],
-        },
-        {
-          number: 2,
-          reviews: [
-            {
-              state: "APPROVED",
-            },
-          ],
-        },
-        {
-          number: 3,
-          reviews: [
-            {
-              state: "APPROVED",
-            },
-          ],
-        },
-      ]),
-    }));
-
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
+    const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender);
+    context.config.miscellaneous.maxConcurrentTasks = 2;
 
     context.adapters = createAdapters(getSupabase(), context);
 
-    await userStartStop(context);
+    await expect(userStartStop(context)).rejects.toThrow("Too many assigned issues, you have reached your max limit of 2 issues.");
   });
 
   test("User can't start an issue if they have previously been unassigned by an admin", async () => {
@@ -315,7 +289,7 @@ async function setupTests() {
 
   db.pull.create({
     id: 1,
-    html_url: "",
+    html_url: "https://github.com/ubiquity/test-repo/pull/1",
     number: 1,
     author: {
       id: 2,
@@ -334,7 +308,7 @@ async function setupTests() {
 
   db.pull.create({
     id: 2,
-    html_url: "",
+    html_url: "https://github.com/ubiquity/test-repo/pull/2",
     number: 2,
     author: {
       id: 2,
@@ -353,7 +327,7 @@ async function setupTests() {
 
   db.pull.create({
     id: 3,
-    html_url: "",
+    html_url: "https://github.com/ubiquity/test-repo/pull/3",
     number: 3,
     author: {
       id: 1,
@@ -365,7 +339,6 @@ async function setupTests() {
     },
     body: "Pull request body",
     owner: "ubiquity",
-
     repo: "test-repo",
     state: "open",
     closed_at: null,
@@ -536,7 +509,7 @@ async function setupTests() {
   });
 }
 
-function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start", appId: string | null = "1"): Context {
+function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start", appId: string | number | null = "1"): Context {
   return {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
@@ -555,7 +528,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
         taskStaleTimeoutDuration: 2580000,
       },
       miscellaneous: {
-        maxConcurrentTasks: 3,
+        maxConcurrentTasks: 10,
         startRequiresWallet: true,
       },
     },

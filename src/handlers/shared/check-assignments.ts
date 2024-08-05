@@ -1,26 +1,5 @@
-import { Type } from "@sinclair/typebox";
-import { Context, IssueEvent, envSchema } from "../../types";
-import { Value } from "@sinclair/typebox/value";
-
-function getAppId(context: Context): number {
-  const { env: { APP_ID } } = context;
-  const APP_ID_TYPE = Type.Union([Type.String(), Type.Number()], { default: APP_ID });
-
-  const val = Type.Transform(APP_ID_TYPE)
-    .Decode((val) => {
-      if (isNaN(Number(val))) {
-        throw new Error("Invalid APP_ID");
-      }
-      return Number(val);
-    })
-    .Encode(encoded => encoded.toString())
-
-  try {
-    return Value.Decode(val, APP_ID);
-  } catch (e) {
-    throw new Error("Invalid APP_ID");
-  }
-}
+import { Context, IssueEvent } from "../../types";
+import { getAppId } from "../../utils/shared";
 
 export async function hasUserBeenUnassigned(context: Context): Promise<boolean> {
   const APP_ID = getAppId(context);

@@ -1,5 +1,5 @@
 import { Context } from "../types/context";
-import { GitHubIssueSearch, Issue, ISSUE_TYPE, PullRequest, Review } from "../types/payload";
+import { GitHubIssueSearch, Review } from "../types/payload";
 import { getLinkedPullRequests, GetLinkedResults } from "./get-linked-prs";
 
 export function isParentIssue(body: string) {
