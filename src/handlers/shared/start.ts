@@ -1,4 +1,4 @@
-import { Assignee, Context, ISSUE_TYPE, Label } from "../../types";
+import { Context, ISSUE_TYPE, Label } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
@@ -34,25 +34,6 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     logger.error("Error while getting commit hash", { error: e as Error });
   }
 
-  // check max assigned issues
-  const openedPullRequests = await getAvailableOpenedPullRequests(context, sender.login);
-  logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed: `, { openedPullRequests });
-
-  const assignedIssues = await getAssignedIssues(context, sender.login);
-  logger.info("Max issue allowed is", { maxConcurrentTasks, assignedIssues: assignedIssues?.map((issue) => `${issue.url}`) });
-
-  // check for max and enforce max
-
-  if (assignedIssues.length - openedPullRequests.length >= maxConcurrentTasks) {
-    const log = logger.error("Too many assigned issues, you have reached your max limit", {
-      assignedIssues: assignedIssues.length,
-      openedPullRequests: openedPullRequests.length,
-      maxConcurrentTasks,
-    });
-    await addCommentToIssue(context, log?.logMessage.diff as string);
-    throw new Error(`Too many assigned issues, you have reached your max limit of ${maxConcurrentTasks} issues.`);
-  }
-
   // is it assignable?
 
   if (issue.state === ISSUE_TYPE.CLOSED) {
@@ -63,6 +44,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   const assignees = issue?.assignees ?? [];
 
+  // find out if the issue is already assigned
   if (assignees.length !== 0) {
     const isCurrentUserAssigned = !!assignees.find((assignee) => assignee?.login === sender.login);
     const log = logger.error(
@@ -77,7 +59,6 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   // check max assigned issues
   for (const user of teammates) {
-    if (!user) continue;
     await handleTaskLimitChecks(user, context, maxConcurrentTasks, logger, sender.login);
   }
 
@@ -106,16 +87,8 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, id, duration);
   const metadata = structuredMetadata.create("Assignment", logMessage);
 
-  const toAssign = [];
-
-  for (const teammate of teammates) {
-    if (!assignees.find((assignee: Partial<Assignee>) => assignee?.login?.toLowerCase() === teammate.toLowerCase())) {
-      toAssign.push(teammate);
-    }
-  }
-
   // assign the issue
-  await addAssignees(context, issue.number, toAssign);
+  await addAssignees(context, issue.number, teammates);
 
   const isTaskStale = checkTaskStale(taskStaleTimeoutDuration, issue.created_at);
 
