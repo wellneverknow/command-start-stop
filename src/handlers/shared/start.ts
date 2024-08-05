@@ -3,7 +3,7 @@ import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAs
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
 import { generateAssignmentComment } from "./generate-assignment-comment";
-import { getUserRole } from "./get-user-role";
+import { getUserRole } from "./get-user-task-limit-by-role";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
