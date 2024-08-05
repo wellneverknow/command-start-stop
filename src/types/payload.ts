@@ -8,7 +8,7 @@ export type TimelineEventResponse = RestEndpointMethodTypes["issues"]["listEvent
 export type TimelineEvents = RestEndpointMethodTypes["issues"]["listEventsForTimeline"]["response"]["data"][0];
 export type Assignee = Issue["assignee"];
 export type IssueEvent = RestEndpointMethodTypes["issues"]["listEventsForTimeline"]["response"];
-
+export type GitHubIssueSearch = RestEndpointMethodTypes["search"]["issuesAndPullRequests"]["response"]["data"];
 export type Sender = { login: string; id: number };
 
 export const ISSUE_TYPE = {
