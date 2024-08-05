@@ -62,6 +62,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   const assignees = issue?.assignees ?? [];
 
+  // find out if the issue is already assigned
   if (assignees.length !== 0) {
     const isCurrentUserAssigned = !!assignees.find((assignee) => assignee?.login === sender.login);
     const log = logger.error(
@@ -76,7 +77,6 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   // check max assigned issues
   for (const user of teammates) {
-    if (!user) continue;
     await handleTaskLimitChecks(user, context, maxConcurrentTasks, logger, sender.login);
   }
 
@@ -105,16 +105,8 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, id, duration);
   const metadata = structuredMetadata.create("Assignment", logMessage);
 
-  const toAssign = [];
-
-  for (const teammate of teammates) {
-    if (!assignees.find((assignee: Partial<Assignee>) => assignee?.login?.toLowerCase() === teammate.toLowerCase())) {
-      toAssign.push(teammate);
-    }
-  }
-
   // assign the issue
-  await addAssignees(context, issue.number, toAssign);
+  await addAssignees(context, issue.number, teammates);
 
   const isTaskStale = checkTaskStale(getTimeValue(taskStaleTimeoutDuration), issue.created_at);
 
