@@ -104,6 +104,37 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
   return logger.info(comment);
 }
 
+async function confirmMultiAssignment(context: Context, issueNumber: number, usernames: string[]) {
+  const { logger, payload, octokit } = context;
+
+  if (usernames.length < 2) {
+    return;
+  }
+
+  const { private: isPrivate } = payload.repository;
+
+  const {
+    data: { assignees },
+  } = await octokit.issues.get({
+    owner: payload.repository.owner.login,
+    repo: payload.repository.name,
+    issue_number: issueNumber,
+  });
+
+  if (!assignees?.length) {
+    const log = logger.error("We detected that this task was not assigned to anyone. Please report this to the maintainers.", { issueNumber, usernames });
+    await addCommentToIssue(context, log?.logMessage.diff as string);
+    throw new Error(log?.logMessage.raw);
+  }
+
+  if (isPrivate && assignees?.length <= 1) {
+    const log = logger.error("This task belongs to a private repo and can only be assigned to one user without an official paid GitHub subscription.", {
+      issueNumber,
+    });
+    await addCommentToIssue(context, log?.logMessage.diff as string);
+  }
+}
+
 export async function addAssignees(context: Context, issueNo: number, assignees: string[]) {
   const payload = context.payload;
 
@@ -117,6 +148,8 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
   } catch (e: unknown) {
     throw context.logger.error("Adding the assignee failed", { assignee: assignees, issueNo, error: e as Error });
   }
+
+  await confirmMultiAssignment(context, issueNo, assignees);
 }
 
 export async function getAllPullRequests(context: Context, state: "open" | "closed" | "all" = "open") {
