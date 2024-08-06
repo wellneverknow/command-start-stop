@@ -1,4 +1,4 @@
-import { Context, IssueEvent } from "../../types";
+import { Context } from "../../types";
 import { getAppId } from "../../utils/shared";
 
 export async function hasUserBeenUnassigned(context: Context): Promise<boolean> {
@@ -20,11 +20,11 @@ export async function hasUserBeenUnassigned(context: Context): Promise<boolean> 
 async function getAssignmentEvents(context: Context) {
   const { repository, issue } = context.payload;
   try {
-    const { data } = (await context.octokit.issues.listEventsForTimeline({
+    const data = await context.octokit.paginate(context.octokit.issues.listEventsForTimeline, {
       owner: repository.owner.login,
       repo: repository.name,
       issue_number: issue.number,
-    })) as IssueEvent;
+    });
 
     const events = data
       .filter((event) => event.event === "assigned" || event.event === "unassigned")
@@ -53,7 +53,6 @@ async function getAssignmentEvents(context: Context) {
         return new Date(a.createdAt || "").getTime() - new Date(b.createdAt || "").getTime();
       });
   } catch (error) {
-    const log = context.logger.error("Error while getting assignment events", { error: error as Error });
-    throw new Error(log?.logMessage.diff as string);
+    throw context.logger.error("Error while getting assignment events", { error: error as Error });
   }
 }
