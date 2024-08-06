@@ -11,14 +11,11 @@ export async function getAssignedIssues(context: Context, username: string): Pro
   const { payload } = context;
 
   try {
-    return (await context.octokit.search
-      .issuesAndPullRequests({
-        q: `is:open assignee:${username} org:${payload.repository.owner.login}`,
-      })
-      .then((response) => response.data.items)) as Issue[];
+    return (await context.octokit.paginate(context.octokit.search.issuesAndPullRequests, {
+      q: `is:issue is:open assignee:${username} org:${payload.repository.owner.login}`,
+    })) as Issue[];
   } catch (err: unknown) {
-    context.logger.error("Fetching assigned issues failed!", { error: err as Error });
-    return [];
+    throw context.logger.error("Fetching assigned issues failed!", { error: err as Error });
   }
 }
 
@@ -36,7 +33,7 @@ export async function addCommentToIssue(context: Context, message: string | null
       body: comment,
     });
   } catch (err: unknown) {
-    context.logger.error("Adding a comment failed!", { error: err as Error });
+    throw context.logger.error("Adding a comment failed!", { error: err as Error });
   }
 }
 
@@ -52,7 +49,7 @@ export async function closePullRequest(context: Context, results: GetLinkedResul
       state: "closed",
     });
   } catch (err: unknown) {
-    context.logger.error("Closing pull requests failed!", { error: err as Error });
+    throw context.logger.error("Closing pull requests failed!", { error: err as Error });
   }
 }
 
@@ -111,7 +108,7 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
   const payload = context.payload;
 
   try {
-    await context.octokit.rest.issues.addAssignees({
+    await context.octokit.issues.addAssignees({
       owner: payload.repository.owner.login,
       repo: payload.repository.name,
       issue_number: issueNo,
@@ -133,8 +130,7 @@ export async function getAllPullRequests(context: Context, state: "open" | "clos
       per_page: 100,
     })) as PullRequest[];
   } catch (err: unknown) {
-    context.logger.error("Fetching all pull requests failed!", { error: err as Error });
-    return [];
+    throw context.logger.error("Fetching all pull requests failed!", { error: err as Error });
   }
 }
 
@@ -155,8 +151,7 @@ export async function getAllPullRequestReviews(context: Context, pullNumber: num
       },
     })) as Review[];
   } catch (err: unknown) {
-    context.logger.error("Fetching all pull request reviews failed!", { error: err as Error });
-    return [];
+    throw context.logger.error("Fetching all pull request reviews failed!", { error: err as Error });
   }
 }
 
