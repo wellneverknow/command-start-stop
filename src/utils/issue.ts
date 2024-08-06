@@ -28,8 +28,7 @@ export async function getAssignedIssues(context: Context, username: string): Pro
         })
       );
   } catch (err: unknown) {
-    context.logger.error("Fetching assigned issues failed!", { error: err as Error });
-    return [];
+    throw context.logger.error("Fetching assigned issues failed!", { error: err as Error });
   }
 }
 
@@ -48,7 +47,7 @@ export async function addCommentToIssue(context: Context, message: string | null
       body: comment,
     });
   } catch (err: unknown) {
-    context.logger.error("Adding a comment failed!", { error: err as Error });
+    throw context.logger.error("Adding a comment failed!", { error: err as Error });
   }
 }
 
@@ -64,7 +63,7 @@ export async function closePullRequest(context: Context, results: GetLinkedResul
       state: "closed",
     });
   } catch (err: unknown) {
-    context.logger.error("Closing pull requests failed!", { error: err as Error });
+    throw context.logger.error("Closing pull requests failed!", { error: err as Error });
   }
 }
 
@@ -123,7 +122,7 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
   const payload = context.payload;
 
   try {
-    await context.octokit.rest.issues.addAssignees({
+    await context.octokit.issues.addAssignees({
       owner: payload.repository.owner.login,
       repo: payload.repository.name,
       issue_number: issueNo,
@@ -149,8 +148,7 @@ export async function getAllPullRequests(
       sort: "created",
     })) as GitHubIssueSearch["items"];
   } catch (err: unknown) {
-    context.logger.error("Fetching all pull requests failed!", { error: err as Error });
-    return [];
+    throw context.logger.error("Fetching all pull requests failed!", { error: err as Error });
   }
 }
 
@@ -162,8 +160,7 @@ export async function getAllPullRequestReviews(context: Context, pullNumber: num
       pull_number: pullNumber,
     })) as Review[];
   } catch (err: unknown) {
-    context.logger.error("Fetching all pull request reviews failed!", { error: err as Error });
-    return [];
+    throw context.logger.error("Fetching all pull request reviews failed!", { error: err as Error });
   }
 }
 

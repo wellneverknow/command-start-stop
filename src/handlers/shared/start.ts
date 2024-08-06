@@ -92,13 +92,12 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   const duration: number = calculateDurations(labels).shift() ?? 0;
 
-  const { id, login } = sender;
+  const { id } = sender;
   const logMessage = logger.info("Task assigned successfully", {
     duration,
     priceLabel,
     revision: commitHash?.substring(0, 7),
-    teammates: teammates,
-    assignee: login,
+    assignees: teammates,
     issue: issue.number,
   });
 
