@@ -22,7 +22,7 @@ export async function getLinkedPullRequests(context: Context, { owner, repositor
     throw new Error("Issue is not defined");
   }
 
-  const { data: timeline } = (await context.octokit.issues.listEventsForTimeline({
+  const { data: timeline } = (await context.octokit.rest.issues.listEventsForTimeline({
     owner,
     repo: repository,
     issue_number: issue,
