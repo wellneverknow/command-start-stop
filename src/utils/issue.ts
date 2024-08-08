@@ -11,7 +11,7 @@ export async function getAssignedIssues(context: Context, username: string): Pro
   const { payload } = context;
 
   try {
-    return (await context.octokit.paginate(context.octokit.search.issuesAndPullRequests, {
+    return (await context.octokit.paginate(context.octokit.rest.search.issuesAndPullRequests, {
       q: `is:issue is:open assignee:${username} org:${payload.repository.owner.login}`,
     })) as Issue[];
   } catch (err: unknown) {
@@ -26,7 +26,7 @@ export async function addCommentToIssue(context: Context, message: string | null
 
   const issueNumber = payload.issue.number;
   try {
-    await context.octokit.issues.createComment({
+    await context.octokit.rest.issues.createComment({
       owner: payload.repository.owner.login,
       repo: payload.repository.name,
       issue_number: issueNumber,
@@ -115,7 +115,7 @@ async function confirmMultiAssignment(context: Context, issueNumber: number, use
 
   const {
     data: { assignees },
-  } = await octokit.issues.get({
+  } = await octokit.rest.issues.get({
     owner: payload.repository.owner.login,
     repo: payload.repository.name,
     issue_number: issueNumber,
@@ -139,7 +139,7 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
   const payload = context.payload;
 
   try {
-    await context.octokit.issues.addAssignees({
+    await context.octokit.rest.issues.addAssignees({
       owner: payload.repository.owner.login,
       repo: payload.repository.name,
       issue_number: issueNo,

@@ -24,7 +24,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   let commitHash: string | null = null;
 
   try {
-    const hashResponse = await context.octokit.repos.getCommit({
+    const hashResponse = await context.octokit.rest.repos.getCommit({
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name,
       ref: context.payload.repository.default_branch,
