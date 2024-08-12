@@ -26,10 +26,13 @@ export async function startStopTask(inputs: PluginInputs, env: Env) {
     try {
       return await userStartStop(context);
     } catch (err) {
+      let errorMessage;
       if (err instanceof LogReturn) {
-        const errorMessage = context.logger.error(`Failed to run comment evaluation. ${err.logMessage?.raw || err}`, { err });
-        await addCommentToIssue(context, `${errorMessage?.logMessage.diff}\n<!--\n${JSON.stringify(errorMessage?.metadata, null, 2)}\n-->`);
+        errorMessage = context.logger.error(`Failed to run comment evaluation. ${err.logMessage?.raw || err}`, { err });
+      } else {
+        errorMessage = context.logger.error(`Failed to run comment evaluation. ${err}`, { err });
       }
+      await addCommentToIssue(context, `${errorMessage?.logMessage.diff}\n<!--\n${JSON.stringify(errorMessage?.metadata, null, 2)}\n-->`);
     }
   } else {
     context.logger.error(`Unsupported event: ${context.eventName}`);
