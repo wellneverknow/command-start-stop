@@ -19,7 +19,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
       "```diff\n# Please select a child issue from the specification checklist to work on. The '/start' command is disabled on parent issues.\n```"
     );
     logger.error(`Skipping '/start' since the issue is a parent issue`);
-    throw new Error("Issue is a parent issue");
+    return { output: "Parent issue detected" };
   }
 
   let commitHash: string | null = null;
@@ -55,9 +55,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   // is it assignable?
 
   if (issue.state === ISSUE_TYPE.CLOSED) {
-    const log = logger.error("This issue is closed, please choose another.", { issueNumber: issue.number });
-    await addCommentToIssue(context, log?.logMessage.diff as string);
-    throw new Error("Issue is closed");
+    throw logger.error("This issue is closed, please choose another.", { issueNumber: issue.number });
   }
 
   const assignees = issue?.assignees ?? [];
@@ -65,12 +63,10 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   // find out if the issue is already assigned
   if (assignees.length !== 0) {
     const isCurrentUserAssigned = !!assignees.find((assignee) => assignee?.login === sender.login);
-    const log = logger.error(
+    throw logger.error(
       isCurrentUserAssigned ? "You are already assigned to this task." : "This issue is already assigned. Please choose another unassigned task.",
       { issueNumber: issue.number }
     );
-    await addCommentToIssue(context, log?.logMessage.diff as string);
-    throw new Error(log?.logMessage.diff);
   }
 
   teammates.push(sender.login);
@@ -85,9 +81,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const priceLabel = labels.find((label: Label) => label.name.startsWith("Price: "));
 
   if (!priceLabel) {
-    const log = logger.error("No price label is set to calculate the duration", { issueNumber: issue.number });
-    await addCommentToIssue(context, log?.logMessage.diff as string);
-    throw new Error("No price label is set to calculate the duration");
+    throw logger.error("No price label is set to calculate the duration", { issueNumber: issue.number });
   }
 
   const duration: number = calculateDurations(labels).shift() ?? 0;
@@ -132,12 +126,10 @@ async function handleTaskLimitChecks(username: string, context: Context, maxConc
 
   // check for max and enforce max
   if (assignedIssues.length - openedPullRequests.length >= maxConcurrentTasks) {
-    const log = logger.error(username === sender ? "You have reached your max task limit" : `${username} has reached their max task limit`, {
+    throw logger.error(username === sender ? "You have reached your max task limit" : `${username} has reached their max task limit`, {
       assignedIssues: assignedIssues.length,
       openedPullRequests: openedPullRequests.length,
       maxConcurrentTasks,
     });
-    await addCommentToIssue(context, log?.logMessage.diff as string);
-    throw new Error(log?.logMessage.diff);
   }
 }
