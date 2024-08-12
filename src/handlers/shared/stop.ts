@@ -11,9 +11,7 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
   const userToUnassign = assignees.find((assignee: Partial<Assignee>) => assignee?.login?.toLowerCase() === sender.login.toLowerCase());
 
   if (!userToUnassign) {
-    const log = logger.error("You are not assigned to this task", { issueNumber, user: sender.login });
-    await addCommentToIssue(context, log?.logMessage.diff as string);
-    return { output: "You are not assigned to this task" };
+    throw logger.error("You are not assigned to this task", { issueNumber, user: sender.login });
   }
 
   // close PR
@@ -34,7 +32,11 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
       assignees: [userToUnassign.login],
     });
   } catch (err) {
-    throw new Error(`Error while removing ${userToUnassign.login} from the issue: ${err}`);
+    throw logger.error(`Error while removing ${userToUnassign.login} from the issue: `, {
+      err,
+      issueNumber,
+      user: userToUnassign.login,
+    });
   }
 
   const unassignedLog = logger.info("You have been unassigned from the task", {

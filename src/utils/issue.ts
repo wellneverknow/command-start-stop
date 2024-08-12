@@ -56,8 +56,10 @@ export async function closePullRequest(context: Context, results: GetLinkedResul
 export async function closePullRequestForAnIssue(context: Context, issueNumber: number, repository: Context["payload"]["repository"], author: string) {
   const { logger } = context;
   if (!issueNumber) {
-    logger.error("Issue is not defined");
-    return;
+    throw logger.error("Issue is not defined", {
+      issueNumber,
+      repository: repository.name,
+    });
   }
 
   const linkedPullRequests = await getLinkedPullRequests(context, {
@@ -122,13 +124,11 @@ async function confirmMultiAssignment(context: Context, issueNumber: number, use
   });
 
   if (!assignees?.length) {
-    const log = logger.error("We detected that this task was not assigned to anyone. Please report this to the maintainers.", { issueNumber, usernames });
-    await addCommentToIssue(context, log?.logMessage.diff as string);
-    throw new Error(log?.logMessage.raw);
+    throw logger.error("We detected that this task was not assigned to anyone. Please report this to the maintainers.", { issueNumber, usernames });
   }
 
   if (isPrivate && assignees?.length <= 1) {
-    const log = logger.error("This task belongs to a private repo and can only be assigned to one user without an official paid GitHub subscription.", {
+    const log = logger.info("This task belongs to a private repo and can only be assigned to one user without an official paid GitHub subscription.", {
       issueNumber,
     });
     await addCommentToIssue(context, log?.logMessage.diff as string);
