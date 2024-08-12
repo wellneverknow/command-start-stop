@@ -5,7 +5,7 @@ interface MatchingUserProps {
   limit: number;
 }
 
-export async function getUserRole(context: Context, user: string): Promise<MatchingUserProps> {
+export async function getUserRoleAndTaskLimit(context: Context, user: string): Promise<MatchingUserProps> {
   const orgLogin = context.payload.organization?.login;
   const { config, logger } = context;
   const { maxConcurrentTasks } = config.miscellaneous;

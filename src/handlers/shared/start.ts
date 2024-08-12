@@ -3,14 +3,14 @@ import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAs
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
 import { generateAssignmentComment } from "./generate-assignment-comment";
-import { getUserRole } from "./get-user-task-limit-by-role";
+import { getUserRoleAndTaskLimit } from "./get-user-task-limit-and-role";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
 export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"]) {
   const { logger, config } = context;
   const { taskStaleTimeoutDuration } = config.timers;
-  const maxTask = await getUserRole(context, sender.login);
+  const maxTask = await getUserRoleAndTaskLimit(context, sender.login);
 
   // is it a child issue?
   if (issue.body && isParentIssue(issue.body)) {
