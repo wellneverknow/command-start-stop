@@ -152,7 +152,7 @@ export async function getAllPullRequests(context: Context, state: "open" | "clos
 
 export async function getAllPullRequestReviews(context: Context, pullNumber: number, owner: string, repo: string) {
   try {
-    return (await context.octokit.paginate(context.octokit.pulls.listReviews, {
+    return (await context.octokit.paginate(context.octokit.rest.pulls.listReviews, {
       owner,
       repo,
       pull_number: pullNumber,
@@ -173,8 +173,7 @@ export async function getAvailableOpenedPullRequests(context: Context, username:
 
   for (let i = 0; i < openedPullRequests.length; i++) {
     const openedPullRequest = openedPullRequests[i];
-    const owner = openedPullRequest.html_url.split("/")[3];
-    const repo = openedPullRequest.html_url.split("/")[4];
+    const [owner, repo] = openedPullRequest.html_url.split("/").slice(3, 4);
     const reviews = await getAllPullRequestReviews(context, openedPullRequest.number, owner, repo);
 
     if (reviews.length > 0) {
