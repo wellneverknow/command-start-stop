@@ -9,7 +9,7 @@ import issueTemplate from "./__mocks__/issue-template";
 import { createAdapters } from "../src/adapters";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import { Logs, cleanLogString } from "@ubiquity-dao/ubiquibot-logger";
+import { LogReturn, Logs, cleanLogString } from "@ubiquity-dao/ubiquibot-logger";
 dotenv.config();
 
 type Issue = Context["payload"]["issue"];
@@ -112,7 +112,6 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender, "/stop");
-
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
     const output = await userStartStop(context as unknown as Context);
 
