@@ -9,7 +9,7 @@ import issueTemplate from "./__mocks__/issue-template";
 import { createAdapters } from "../src/adapters";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import { Logs, cleanLogString } from "@ubiquity-dao/ubiquibot-logger";
+import { LogReturn, Logs, cleanLogString } from "@ubiquity-dao/ubiquibot-logger";
 dotenv.config();
 
 type Issue = Context["payload"]["issue"];
@@ -110,9 +110,25 @@ describe("User start/stop", () => {
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
-    const output = await userStartStop(context as unknown as Context);
+    const logReturn: LogReturn = {
+      logMessage: {
+        diff: "```diff\n! You are not assigned to this task\n```",
+        level: "error",
+        raw: "You are not assigned to this task",
+        type: "error",
+      },
+      metadata: {
+        caller: "error",
+        issueNumber: 2,
+        user: "ubiquity",
+      },
+    };
 
-    expect(output).toEqual({ output: "You are not assigned to this task" });
+    try {
+      expect(await userStartStop(context as unknown as Context)).toThrow(logReturn);
+    } catch (error) {
+      expect(error).toEqual(logReturn);
+    }
   });
 
   test("User can't stop an issue without assignees", async () => {
@@ -120,12 +136,27 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender, "/stop");
-
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
-    const output = await userStartStop(context as unknown as Context);
+    const logReturn: LogReturn = {
+      logMessage: {
+        diff: "```diff\n! You are not assigned to this task\n```",
+        level: "error",
+        raw: "You are not assigned to this task",
+        type: "error",
+      },
+      metadata: {
+        caller: "error",
+        issueNumber: 5,
+        user: "ubiquity",
+      },
+    };
 
-    expect(output).toEqual({ output: "You are not assigned to this task" });
+    try {
+      expect(await userStartStop(context as unknown as Context)).toThrow(logReturn);
+    } catch (error) {
+      expect(error).toEqual(logReturn);
+    }
   });
 
   test("User can't start an issue that's already assigned", async () => {
