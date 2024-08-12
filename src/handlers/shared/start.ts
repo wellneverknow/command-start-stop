@@ -39,7 +39,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 
   const openedPullRequests = await getAvailableOpenedPullRequests(context, sender.login);
   logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed`, {
-    openedPullRequests: openedPullRequests.map((i) => i.html_url),
+    openedPullRequests: openedPullRequests.map((pr) => pr.html_url),
   });
 
   const assignedIssues = await getAssignedIssues(context, sender.login);
