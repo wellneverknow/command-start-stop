@@ -16,14 +16,14 @@ export const startStopSchema = T.Object(
     reviewDelayTolerance: T.String({ default: "5 Days" }),
     taskStaleTimeoutDuration: T.String({ default: "30 Days" }),
     maxConcurrentTasks: T.Number({ default: 3 }),
-    startRequiresWallet: T.Boolean({ default: false }),
+    startRequiresWallet: T.Boolean({ default: true }),
   },
   {
     default: {
       reviewDelayTolerance: "5 Days",
       taskStaleTimeoutDuration: "30 Days",
       maxConcurrentTasks: 3,
-      startRequiresWallet: false,
+      startRequiresWallet: true,
     },
   }
 );
