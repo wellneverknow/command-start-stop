@@ -11,23 +11,18 @@ export interface PluginInputs<T extends SupportedEventsU = SupportedEventsU, TU 
   ref: string;
 }
 
-const ONE_DAY = 24 * 60 * 60 * 1000;
-
 export const startStopSchema = T.Object({
-  timers: T.Object(
-    {
-      reviewDelayTolerance: T.Number(),
-      taskStaleTimeoutDuration: T.Number(),
-    },
-    { default: { reviewDelayTolerance: ONE_DAY * 5, taskStaleTimeoutDuration: ONE_DAY * 30 } }
-  ),
-  miscellaneous: T.Object(
-    {
-      maxConcurrentTasks: T.Number(),
-      startRequiresWallet: T.Boolean(),
-    },
-    { default: { maxConcurrentTasks: 3, startRequiresWallet: true } }
-  ),
+  reviewDelayTolerance: T.String({ default: "5 Days" }),
+  taskStaleTimeoutDuration: T.String({ default: "30 Days" }),
+  maxConcurrentTasks: T.Number({ default: 3 }),
+  startRequiresWallet: T.Boolean({ default: false }),
+}, {
+  default: {
+    reviewDelayTolerance: "5 Days",
+    taskStaleTimeoutDuration: "30 Days",
+    maxConcurrentTasks: 3,
+    startRequiresWallet: false,
+  },
 });
 
 export type StartStopSettings = StaticDecode<typeof startStopSchema>;
