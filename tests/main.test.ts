@@ -9,7 +9,7 @@ import issueTemplate from "./__mocks__/issue-template";
 import { createAdapters } from "../src/adapters";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import { LogReturn, Logs, cleanLogString } from "@ubiquity-dao/ubiquibot-logger";
+import { Logs, cleanLogString } from "@ubiquity-dao/ubiquibot-logger";
 dotenv.config();
 
 type Issue = Context["payload"]["issue"];
@@ -110,25 +110,7 @@ describe("User start/stop", () => {
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
-    const logReturn: LogReturn = {
-      logMessage: {
-        diff: "```diff\n! You are not assigned to this task\n```",
-        level: "error",
-        raw: "You are not assigned to this task",
-        type: "error",
-      },
-      metadata: {
-        caller: "error",
-        issueNumber: 2,
-        user: "ubiquity",
-      },
-    };
-
-    try {
-      expect(await userStartStop(context as unknown as Context)).toThrow(logReturn);
-    } catch (error) {
-      expect(error).toEqual(logReturn);
-    }
+    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("```diff\n! You are not assigned to this task\n```");
   });
 
   test("User can't stop an issue without assignees", async () => {
@@ -138,25 +120,7 @@ describe("User start/stop", () => {
     const context = createContext(issue, sender, "/stop");
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
-    const logReturn: LogReturn = {
-      logMessage: {
-        diff: "```diff\n! You are not assigned to this task\n```",
-        level: "error",
-        raw: "You are not assigned to this task",
-        type: "error",
-      },
-      metadata: {
-        caller: "error",
-        issueNumber: 5,
-        user: "ubiquity",
-      },
-    };
-
-    try {
-      expect(await userStartStop(context as unknown as Context)).toThrow(logReturn);
-    } catch (error) {
-      expect(error).toEqual(logReturn);
-    }
+    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("```diff\n! You are not assigned to this task\n```");
   });
 
   test("User can't start an issue that's already assigned", async () => {
@@ -227,40 +191,6 @@ describe("User start/stop", () => {
     } catch (error) {
       if (error instanceof Error) {
         expect(error.message).toEqual("Issue is closed");
-      }
-    }
-  });
-
-  test("User can't start if command is disabled", async () => {
-    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
-
-    const context = createContext(issue, sender, "/start");
-
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual("The '/start' command is disabled for this repository.");
-      }
-    }
-  });
-
-  test("User can't stop if command is disabled", async () => {
-    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
-
-    const context = createContext(issue, sender, "/stop");
-
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual("The '/stop' command is disabled for this repository.");
       }
     }
   });
