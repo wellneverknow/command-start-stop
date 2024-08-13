@@ -19,12 +19,7 @@ export const startStopSchema = T.Object(
     startRequiresWallet: T.Boolean({ default: true }),
   },
   {
-    default: {
-      reviewDelayTolerance: "5 Days",
-      taskStaleTimeoutDuration: "30 Days",
-      maxConcurrentTasks: 3,
-      startRequiresWallet: true,
-    },
+    default: {},
   }
 );
 

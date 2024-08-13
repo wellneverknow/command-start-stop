@@ -184,10 +184,7 @@ export async function getAvailableOpenedPullRequests(context: Context, username:
       }
     }
 
-    if (
-      reviews.length === 0 &&
-      (new Date().getTime() - new Date(openedPullRequest.created_at).getTime()) / (1000 * 60 * 60) >= getTimeValue(reviewDelayTolerance)
-    ) {
+    if (reviews.length === 0 && (new Date().getTime() - new Date(openedPullRequest.created_at).getTime()) / ms("1h") >= getTimeValue(reviewDelayTolerance)) {
       result.push(openedPullRequest);
     }
   }
@@ -197,8 +194,8 @@ export async function getAvailableOpenedPullRequests(context: Context, username:
 export function getTimeValue(timeString: string): number {
   const timeValue = ms(timeString);
 
-  if (timeValue === undefined) {
-    throw new Error("Invalid offset format");
+  if (!timeValue || timeValue <= 0 || isNaN(timeValue)) {
+    throw new Error("Invalid config time value");
   }
 
   return timeValue;
