@@ -1,5 +1,5 @@
 import { Assignee, Context, ISSUE_TYPE, Label } from "../../types";
-import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
+import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue, getTimeValue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
 import { generateAssignmentComment } from "./generate-assignment-comment";
@@ -8,8 +8,7 @@ import { assignTableComment } from "./table";
 
 export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"]) {
   const { logger, config } = context;
-  const { maxConcurrentTasks } = config.miscellaneous;
-  const { taskStaleTimeoutDuration } = config.timers;
+  const { maxConcurrentTasks, taskStaleTimeoutDuration } = config;
 
   // is it a child issue?
   if (issue.body && isParentIssue(issue.body)) {
@@ -93,7 +92,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     await addAssignees(context, issue.number, [login]);
   }
 
-  const isTaskStale = checkTaskStale(taskStaleTimeoutDuration, issue.created_at);
+  const isTaskStale = checkTaskStale(getTimeValue(taskStaleTimeoutDuration), issue.created_at);
 
   await addCommentToIssue(
     context,

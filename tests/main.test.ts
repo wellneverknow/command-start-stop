@@ -18,13 +18,6 @@ type Sender = Context["payload"]["sender"];
 const octokit = jest.requireActual("@octokit/rest");
 const TEST_REPO = "ubiquity/test-repo";
 
-const url = process.env.SUPABASE_URL;
-const key = process.env.SUPABASE_KEY;
-
-if (!url || !key) {
-  throw new Error("Supabase URL and Key are required");
-}
-
 beforeAll(() => {
   server.listen();
 });
@@ -66,7 +59,7 @@ describe("User start/stop", () => {
   });
 
   test("Stopping an issue should close the author's linked PR", async () => {
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => { });
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
     const context = createContext(issue, sender, "/stop");
@@ -524,7 +517,7 @@ async function setupTests() {
   });
 }
 
-function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start") {
+function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start"): Context {
   return {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
@@ -532,29 +525,22 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       sender: sender as unknown as Context["payload"]["sender"],
       repository: db.repo.findFirst({ where: { id: { equals: 1 } } }) as unknown as Context["payload"]["repository"],
       comment: { body } as unknown as Context["payload"]["comment"],
-      action: "created" as string,
+      action: "created",
       installation: { id: 1 } as unknown as Context["payload"]["installation"],
       organization: { login: "ubiquity" } as unknown as Context["payload"]["organization"],
     },
     logger: new Logs("debug"),
     config: {
-      timers: {
-        reviewDelayTolerance: 86000,
-        taskStaleTimeoutDuration: 2580000,
-      },
-      miscellaneous: {
-        maxConcurrentTasks: 3,
-      },
-      labels: {
-        time: ["Time: 1h", "Time: <4 hours", "Time: <1 Day", "Time: <3 Days", "Time: <1 Week"],
-        priority: ["Priority: 1 (Normal)", "Priority: 2 (High)", "Priority: 3 (Critical)"],
-      },
+      reviewDelayTolerance: "3 Days",
+      taskStaleTimeoutDuration: "30 Days",
+      maxConcurrentTasks: 3,
+      startRequiresWallet: false,
     },
     octokit: new octokit.Octokit(),
     eventName: "issue_comment.created" as SupportedEventsU,
     env: {
-      SUPABASE_KEY: key,
-      SUPABASE_URL: url,
+      SUPABASE_KEY: "key",
+      SUPABASE_URL: "url",
     },
   };
 }
@@ -566,17 +552,17 @@ function getSupabase(withData = true) {
         single: jest.fn().mockResolvedValue({
           data: withData
             ? {
-                id: 1,
-                wallets: {
-                  address: "0x123",
-                },
-              }
-            : {
-                id: 1,
-                wallets: {
-                  address: undefined,
-                },
+              id: 1,
+              wallets: {
+                address: "0x123",
               },
+            }
+            : {
+              id: 1,
+              wallets: {
+                address: undefined,
+              },
+            },
         }),
       }),
     }),

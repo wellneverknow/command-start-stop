@@ -1,3 +1,4 @@
+import ms from "ms";
 import { Context } from "../types/context";
 import { Issue, ISSUE_TYPE, PullRequest, Review } from "../types/payload";
 import { getLinkedPullRequests, GetLinkedResults } from "./get-linked-prs";
@@ -166,7 +167,7 @@ export async function getAllPullRequestReviews(context: Context, pullNumber: num
 }
 
 export async function getAvailableOpenedPullRequests(context: Context, username: string) {
-  const { reviewDelayTolerance } = context.config.timers;
+  const { reviewDelayTolerance } = context.config;
   if (!reviewDelayTolerance) return [];
 
   const openedPullRequests = await getOpenedPullRequests(context, username);
@@ -183,11 +184,24 @@ export async function getAvailableOpenedPullRequests(context: Context, username:
       }
     }
 
-    if (reviews.length === 0 && (new Date().getTime() - new Date(openedPullRequest.created_at).getTime()) / (1000 * 60 * 60) >= reviewDelayTolerance) {
+    if (
+      reviews.length === 0 &&
+      (new Date().getTime() - new Date(openedPullRequest.created_at).getTime()) / (1000 * 60 * 60) >= getTimeValue(reviewDelayTolerance)
+    ) {
       result.push(openedPullRequest);
     }
   }
   return result;
+}
+
+export function getTimeValue(timeString: string): number {
+  const timeValue = ms(timeString);
+
+  if (timeValue === undefined) {
+    throw new Error("Invalid offset format");
+  }
+
+  return timeValue;
 }
 
 async function getOpenedPullRequests(context: Context, username: string): Promise<ReturnType<typeof getAllPullRequests>> {
