@@ -44,20 +44,34 @@ function sanitizeDiff(diff?: LogReturn["logMessage"]["diff"]): string {
   if (!diff) return "";
   // eslint-disable-next-line no-useless-escape
   const backticks = diff.match(/\`\`\`/g);
-  if (!backticks) return diff;
+  if (!backticks) return "```\n" + diff + "\n```";
+
+  const endsWith = diff.endsWith("```") || diff.endsWith("```\n") || diff.endsWith("``` ")
 
   // we need two sets at least and one must be at the end
 
-  if (backticks.length < 2 || backticks.length % 2 !== 0) {
+  if ((backticks.length === 2 || backticks.length % 2 === 0) && endsWith) {
     return diff;
   }
 
   // does it end with a set of backticks?
-  if (diff.endsWith("```") || diff.endsWith("```\n")) {
-    return diff;
+  if (diff.startsWith("```") && !endsWith) {
+    return diff + "\n```";
   }
 
-  return diff + "```";
+  // does it start with a set of backticks?
+
+  if (!diff.startsWith("```") && endsWith) {
+    return "```\n" + diff;
+  }
+
+  // does it have a set of backticks in the middle?
+
+  if (!diff.startsWith("```") && !endsWith) {
+    return "```\n" + diff + "\n```";
+  }
+
+  return diff;
 }
 
 function sanitizeMetadata(obj: LogReturn["metadata"]): string {
