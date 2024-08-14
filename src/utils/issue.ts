@@ -13,7 +13,7 @@ export async function getAssignedIssues(context: Context, username: string): Pro
   try {
     return await context.octokit
       .paginate(context.octokit.search.issuesAndPullRequests, {
-        q: `org:${payload.repository.owner.login} assignee:${username} is:open`,
+        q: `org:${payload.repository.owner.login} assignee:${username} is:open is:issue`,
         per_page: 100,
         order: "desc",
         sort: "created",
@@ -22,7 +22,6 @@ export async function getAssignedIssues(context: Context, username: string): Pro
         issues.filter((issue) => {
           return (
             issue.state === "open" &&
-            !issue.pull_request &&
             (issue.assignee?.login === username || issue.assignees?.some((assignee) => assignee.login === username))
           );
         })
@@ -32,6 +31,7 @@ export async function getAssignedIssues(context: Context, username: string): Pro
     return [];
   }
 }
+
 
 export async function addCommentToIssue(context: Context, message: string | null) {
   const { payload, logger } = context;
@@ -134,12 +134,16 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
   }
 }
 
-export async function getAllPullRequests(context: Context, state: "open" | "closed" | "all" = "open", username: string) {
+export async function getAllPullRequests(
+  context: Context, 
+  state: "open" | "closed" | "all" = "open", 
+  username: string
+) {
   const { payload } = context;
 
   try {
     return (await context.octokit.paginate(context.octokit.search.issuesAndPullRequests, {
-      q: `org:${payload.repository.owner.login} author:${username} state:${state}`,
+      q: `org:${payload.repository.owner.login} author:${username} state:${state} is:pr`,
       per_page: 100,
       order: "desc",
       sort: "created",
