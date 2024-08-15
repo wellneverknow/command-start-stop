@@ -580,9 +580,9 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       },
       miscellaneous: {
         maxConcurrentTasks: {
-          Admin: { limit: 6 },
-          Member: { limit: 4 },
-          Collaborator: { limit: 2 },
+          Admin: 6,
+          Member: 4,
+          Collaborator: 2,
         },
         startRequiresWallet: true,
       },

@@ -41,12 +41,9 @@ To configure your Ubiquibot to run this plugin, add the following to the `.ubiqu
       taskStaleTimeoutDuration: 2580000
     miscellaneous:
       maxConcurrentTasks: # Default concurrent task limits per role.
-        Admin:
-          limit: 10
-        Member:
-          limit: 5
-        Contributor:
-          limit: 3
+        Admin: 10
+        Member: 5
+        Contributor: 3
       startRequiresWallet: true  # default is true
 ```
 

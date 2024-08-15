@@ -11,7 +11,7 @@ export async function getUserRoleAndTaskLimit(context: Context, user: string): P
   const { maxConcurrentTasks } = config.miscellaneous;
 
   const smallestTask = Object.entries(maxConcurrentTasks).reduce(
-    (minTask, [role, { limit }]) => (limit < minTask.limit ? { role, limit } : minTask),
+    (minTask, [role, limit]) => (limit < minTask.limit ? { role, limit } : minTask),
     { role: "", limit: Infinity } as MatchingUserProps
   );
 
@@ -21,11 +21,10 @@ export async function getUserRoleAndTaskLimit(context: Context, user: string): P
       username: user,
     });
 
-    const matchedTask = Object.entries(maxConcurrentTasks).find(
-      ([role]) => role.toLowerCase() === response.data.role.toLowerCase()
-    );
+    const role = response.data.role.toLowerCase();
+    const limit = maxConcurrentTasks[role.charAt(0).toUpperCase() + role.slice(1)];
 
-    return matchedTask ? { role: matchedTask[0], limit: matchedTask[1].limit } : smallestTask;
+   return limit ? { role, limit } : smallestTask;
     
   } catch (err) {
     logger.error("Could not get user role", { err });
