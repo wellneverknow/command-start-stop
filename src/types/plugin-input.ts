@@ -1,7 +1,6 @@
 import { SupportedEvents, SupportedEventsU } from "./context";
 import { Static, Type as T } from "@sinclair/typebox";
 import { StandardValidator } from "typebox-validators";
-import { validateSchemaForDuplicateRoles } from "../utils/validate-schema-for-duplicate-roles";
 
 export interface PluginInputs<T extends SupportedEventsU = SupportedEventsU, TU extends SupportedEvents[T] = SupportedEvents[T]> {
   stateId: string;
