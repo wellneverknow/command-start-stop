@@ -560,21 +560,6 @@ const maxConcurrentDefaults = {
   contributor: 2,
 };
 
-const maxConcurrentTasks = [
-  {
-    role: "Admin",
-    limit: 6,
-  },
-  {
-    role: "Member",
-    limit: 4,
-  },
-  {
-    role: "Collaborator",
-    limit: 2,
-  },
-];
-
 function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start"): Context {
   return {
     adapters: {} as ReturnType<typeof createAdapters>,
@@ -594,7 +579,11 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
         taskStaleTimeoutDuration: 2580000,
       },
       miscellaneous: {
-        maxConcurrentTasks: maxConcurrentTasks,
+        maxConcurrentTasks: {
+          Admin: { limit: 6 },
+          Member: { limit: 4 },
+          Collaborator: { limit: 2 },
+        },
         startRequiresWallet: true,
       },
     },

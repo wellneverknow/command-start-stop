@@ -1,7 +1,6 @@
 import { SupportedEvents, SupportedEventsU } from "./context";
 import { Static, Type as T } from "@sinclair/typebox";
 import { StandardValidator } from "typebox-validators";
-import { validateSchemaForDuplicateRoles } from "../utils/validate-schema-for-duplicate-roles";
 
 export interface PluginInputs<T extends SupportedEventsU = SupportedEventsU, TU extends SupportedEvents[T] = SupportedEvents[T]> {
   stateId: string;
@@ -27,37 +26,25 @@ export const startStopSchema = T.Object({
   miscellaneous: T.Object(
     {
       startRequiresWallet: T.Boolean(),
-      maxConcurrentTasks: T.Array(
+      maxConcurrentTasks: T.Record(
+        T.String(),
         T.Object({
-          role: userRoleSchema,
           limit: T.Integer(),
         })
       ),
     },
     {
       default: {
-        maxConcurrentTasks: [
-          {
-            role: "Admin",
-            limit: 20,
-          },
-          {
-            role: "Member",
-            limit: 10,
-          },
-          {
-            role: "Contributor",
-            limit: 2,
-          },
-        ],
+        maxConcurrentTasks: {
+          Admin: { limit: 20 },
+          Member: { limit: 20 },
+          Contributor: { limit: 2 },
+        },
         startRequiresWallet: true,
       },
     }
   ),
 });
 
-
-export const validatedStartStopSchema = validateSchemaForDuplicateRoles(startStopSchema);
-
-export type StartStopSettings = Static<typeof validatedStartStopSchema>;
-export const startStopSettingsValidator = new StandardValidator(validatedStartStopSchema);
+export type StartStopSettings = Static<typeof startStopSchema>;
+export const startStopSettingsValidator = new StandardValidator(startStopSchema);
