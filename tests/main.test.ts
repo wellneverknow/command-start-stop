@@ -579,11 +579,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
         taskStaleTimeoutDuration: 2580000,
       },
       miscellaneous: {
-        maxConcurrentTasks: {
-          Admin: 6,
-          Member: 4,
-          Collaborator: 2,
-        },
+        maxConcurrentTasks: maxConcurrentDefaults,
         startRequiresWallet: true,
       },
     },
