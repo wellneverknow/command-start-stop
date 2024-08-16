@@ -13,7 +13,7 @@ export interface PluginInputs<T extends SupportedEventsU = SupportedEventsU, TU 
 
 export const startStopSchema = T.Object(
   {
-    reviewDelayTolerance: T.String({ default: "5 Days" }),
+    reviewDelayTolerance: T.String({ default: "1 Day" }),
     taskStaleTimeoutDuration: T.String({ default: "30 Days" }),
     maxConcurrentTasks: T.Number({ default: 3 }),
     startRequiresWallet: T.Boolean({ default: true }),
