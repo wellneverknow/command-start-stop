@@ -21,7 +21,7 @@ export async function getUserRoleAndTaskLimit(context: Context, user: string): P
       username: user,
     });
 
-    const role = response.data.role
+    const role = response.data.role.toLowerCase()
     const limit = maxConcurrentTasks[role];
 
    return limit ? { role, limit } : smallestTask;

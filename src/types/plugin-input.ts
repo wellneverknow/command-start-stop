@@ -31,9 +31,9 @@ export const startStopSchema = T.Object({
     {
       default: {
         maxConcurrentTasks: {
-          Admin: 20,
-          Member: 10,
-          Contributor: 2,
+          admin: 20,
+          member: 10,
+          contributor: 2,
         },
         startRequiresWallet: true,
       },
