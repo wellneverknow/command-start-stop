@@ -7,5 +7,5 @@ export function checkTaskStale(staleTaskMilliseconds: number, createdAt: string)
   const createdDate = new Date(createdAt);
   const millisecondsSinceCreation = currentDate.getTime() - createdDate.getTime();
 
-  return millisecondsSinceCreation >= staleTaskMilliseconds && staleTaskMilliseconds > 0;
+  return millisecondsSinceCreation >= staleTaskMilliseconds
 }
