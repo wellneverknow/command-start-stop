@@ -33,55 +33,16 @@ export async function startStopTask(inputs: PluginInputs, env: Env) {
         errorMessage = context.logger.error(`Failed to run comment evaluation. ${err}`, { err });
       }
 
-      await addCommentToIssue(context, `${sanitizeDiff(errorMessage?.logMessage.diff)}\n<!--\n${sanitizeMetadata(errorMessage?.metadata)}\n-->`);
+      await addCommentToIssue(context, `${errorMessage?.logMessage.diff}\n<!--\n${sanitizeMetadata(errorMessage?.metadata)}\n-->`);
     }
   } else {
     context.logger.error(`Unsupported event: ${context.eventName}`);
   }
 }
 
-function sanitizeDiff(diff?: LogReturn["logMessage"]["diff"]): string {
-  if (!diff) return "";
-  // eslint-disable-next-line no-useless-escape
-  const backticks = diff.match(/\`\`\`/g);
-  if (!backticks) return "```\n" + diff + "\n```";
-
-  const endsWith = diff.endsWith("```") || diff.endsWith("```\n") || diff.endsWith("``` ")
-
-  // we need two sets at least and one must be at the end
-
-  if ((backticks.length === 2 || backticks.length % 2 === 0) && endsWith) {
-    return diff;
-  }
-
-  // does it end with a set of backticks?
-  if (diff.startsWith("```") && !endsWith) {
-    return diff + "\n```";
-  }
-
-  // does it start with a set of backticks?
-
-  if (!diff.startsWith("```") && endsWith) {
-    return "```\n" + diff;
-  }
-
-  // does it have a set of backticks in the middle?
-
-  if (!diff.startsWith("```") && !endsWith) {
-    return "```\n" + diff + "\n```";
-  }
-
-  return diff;
-}
-
 function sanitizeMetadata(obj: LogReturn["metadata"]): string {
   return JSON.stringify(obj, null, 2)
-    .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/--/g, "&#45;&#45;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;")
-    .replace(/\\/g, "&#92;")
-    .replace(/\//g, "&#47;");
 }
