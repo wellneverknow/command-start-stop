@@ -2,7 +2,7 @@ import { Octokit } from "@octokit/rest";
 import { createClient } from "@supabase/supabase-js";
 import { Logs } from "@ubiquity-dao/ubiquibot-logger";
 import { createAdapters } from "./adapters";
-import { userStartStop } from "./handlers/user-start-stop";
+import { proxyCallbacks } from "./handlers/proxy";
 import { Context, Env, PluginInputs } from "./types";
 
 export async function startStopTask(inputs: PluginInputs, env: Env) {
@@ -21,9 +21,5 @@ export async function startStopTask(inputs: PluginInputs, env: Env) {
 
   context.adapters = createAdapters(supabase, context);
 
-  if (context.eventName === "issue_comment.created") {
-    await userStartStop(context);
-  } else {
-    context.logger.error(`Unsupported event: ${context.eventName}`);
-  }
+  return proxyCallbacks(context)[inputs.eventName](context, env);
 }

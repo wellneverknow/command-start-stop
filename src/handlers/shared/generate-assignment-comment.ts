@@ -1,6 +1,6 @@
 import { Context } from "../../types/context";
 
-const options: Intl.DateTimeFormatOptions = {
+export const options: Intl.DateTimeFormatOptions = {
   weekday: "short",
   month: "short",
   day: "numeric",

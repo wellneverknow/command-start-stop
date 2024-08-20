@@ -1,4 +1,3 @@
-// cSpell:disable
 import { factory, nullable, primaryKey } from "@mswjs/data";
 
 /**
@@ -78,7 +77,30 @@ export const db = factory({
     body: nullable(String),
     repo: String,
     owner: String,
-    author: Object,
+    pull_request: Object,
+    author: nullable({
+      avatar_url: String,
+      email: nullable(String),
+      events_url: String,
+      followers_url: String,
+      following_url: String,
+      gists_url: String,
+      gravatar_id: nullable(String),
+      html_url: String,
+      id: Number,
+      login: String,
+      name: nullable(String),
+      node_id: String,
+      organizations_url: String,
+      received_events_url: String,
+      repos_url: String,
+      site_admin: Boolean,
+      starred_at: String,
+      starred_url: String,
+      subscriptions_url: String,
+      type: String,
+      url: String,
+    }),
     assignees: Array,
     requested_reviewers: Array,
     requested_teams: Array,
@@ -111,7 +133,12 @@ export const db = factory({
   },
   event: {
     id: primaryKey(Number),
-    actor: Object,
+    actor: {
+      id: Number,
+      type: String,
+      login: String,
+      name: nullable(String),
+    },
     owner: String,
     repo: String,
     issue_number: Number,
@@ -119,5 +146,29 @@ export const db = factory({
     commit_id: nullable(String),
     commit_url: String,
     created_at: Date,
+    assignee: {
+      login: String,
+    },
+    source: nullable({
+      issue: {
+        number: Number,
+        html_url: String,
+        state: String,
+        body: nullable(String),
+        repository: {
+          full_name: String,
+        },
+        user: {
+          login: String,
+        },
+        pull_request: {
+          url: String,
+          html_url: String,
+          diff_url: String,
+          patch_url: String,
+          merged_at: Date,
+        },
+      },
+    }),
   },
 });

@@ -1,12 +1,14 @@
-import { Context, ISSUE_TYPE, Label } from "../../types";
+import { Assignee, Context, ISSUE_TYPE, Label, Sender } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
+import { Result } from "../proxy";
 import { checkTaskStale } from "./check-task-stale";
+import { hasUserBeenUnassigned } from "./check-assignments";
 import { generateAssignmentComment } from "./generate-assignment-comment";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
-export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"]) {
+export async function start(context: Context, issue: Context["payload"]["issue"], sender: Sender): Promise<Result> {
   const { logger, config } = context;
   const { maxConcurrentTasks } = config.miscellaneous;
   const { taskStaleTimeoutDuration } = config.timers;
@@ -19,6 +21,14 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     );
     logger.error(`Skipping '/start' since the issue is a parent issue`);
     throw new Error("Issue is a parent issue");
+  }
+
+  const hasBeenPreviouslyUnassigned = await hasUserBeenUnassigned(context);
+
+  if (hasBeenPreviouslyUnassigned) {
+    const log = logger.error("You were previously unassigned from this task. You cannot reassign yourself.", { sender });
+    await addCommentToIssue(context, log?.logMessage.diff as string);
+    throw new Error("User was previously unassigned from this task");
   }
 
   let commitHash: string | null = null;
@@ -37,28 +47,37 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   // check max assigned issues
 
   const openedPullRequests = await getAvailableOpenedPullRequests(context, sender.login);
-  logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed: ${JSON.stringify(openedPullRequests)}`);
+  logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed: `, {
+    openedPullRequests: openedPullRequests.map((p) => p.html_url),
+  });
 
   const assignedIssues = await getAssignedIssues(context, sender.login);
-  logger.info("Max issue allowed is", { maxConcurrentTasks });
+  logger.info("Max issue allowed is", { maxConcurrentTasks, assignedIssues: assignedIssues.map((i) => i.html_url) });
 
   // check for max and enforce max
 
-  if (assignedIssues.length - openedPullRequests.length >= maxConcurrentTasks) {
-    await addCommentToIssue(context, "```diff\n! Too many assigned issues, you have reached your max limit.\n```");
+  if (Math.abs(assignedIssues.length - openedPullRequests.length) >= maxConcurrentTasks) {
+    const log = logger.error("Too many assigned issues, you have reached your max limit", {
+      assignedIssues: assignedIssues.length,
+      openedPullRequests: openedPullRequests.length,
+      maxConcurrentTasks,
+    });
+    await addCommentToIssue(context, log?.logMessage.diff as string);
     throw new Error(`Too many assigned issues, you have reached your max limit of ${maxConcurrentTasks} issues.`);
   }
 
   // is it assignable?
 
   if (issue.state === ISSUE_TYPE.CLOSED) {
-    await addCommentToIssue(context, "```diff\n! The issue is closed. Please choose another unassigned task.\n```");
+    const log = logger.error("This issue is closed, please choose another.", { issueNumber: issue.number });
+    await addCommentToIssue(context, log?.logMessage.diff as string);
     throw new Error("Issue is closed");
   }
 
   const assignees = (issue?.assignees ?? []).filter(Boolean);
   if (assignees.length !== 0) {
-    await addCommentToIssue(context, "```diff\n! The issue is already assigned. Please choose another unassigned task.\n```");
+    const log = logger.error("The issue is already assigned. Please choose another unassigned task.", { issueNumber: issue.number });
+    await addCommentToIssue(context, log?.logMessage.diff as string);
     throw new Error("Issue is already assigned");
   }
 
@@ -68,21 +87,25 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const priceLabel = labels.find((label: Label) => label.name.startsWith("Price: "));
 
   if (!priceLabel) {
-    await addCommentToIssue(context, "```diff\n! No price label is set to calculate the duration.\n```");
+    const log = logger.error("No price label is set to calculate the duration", { issueNumber: issue.number });
+    await addCommentToIssue(context, log?.logMessage.diff as string);
     throw new Error("No price label is set to calculate the duration");
   }
 
   const duration: number = calculateDurations(labels).shift() ?? 0;
 
-  const { id, login } = sender;
-  const logMessage = logger.info("Task assigned successfully", { duration, priceLabel, revision: commitHash?.substring(0, 7) });
-
-  const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, id, duration);
+  const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, sender.id, duration);
+  const logMessage = logger.info("Task assigned successfully", {
+    taskDeadline: assignmentComment.deadline,
+    taskAssignees: [...assignees.map((a) => a?.login), sender.id],
+    priceLabel,
+    revision: commitHash?.substring(0, 7),
+  });
   const metadata = structuredMetadata.create("Assignment", logMessage);
 
   // add assignee
-  if (!assignees.map((i) => i?.login).includes(login)) {
-    await addAssignees(context, issue.number, [login]);
+  if (!assignees.map((i: Partial<Assignee>) => i?.login).includes(sender.login)) {
+    await addAssignees(context, issue.number, [sender.login]);
   }
 
   const isTaskStale = checkTaskStale(taskStaleTimeoutDuration, issue.created_at);
@@ -101,5 +124,5 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     ].join("\n") as string
   );
 
-  return { output: "Task assigned successfully" };
+  return { content: "Task assigned successfully", status: "ok" };
 }
