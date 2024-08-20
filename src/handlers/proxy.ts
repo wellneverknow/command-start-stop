@@ -8,7 +8,7 @@ export interface Result {
 }
 
 const callbacks: { [k in SupportedEventsU]: (context: Context, env: Env) => Result | Promise<Result> } = {
-  "issue.assigned": userSelfAssign,
+  "issues.assigned": userSelfAssign,
   "issue_comment.created": userStartStop,
 };
 
