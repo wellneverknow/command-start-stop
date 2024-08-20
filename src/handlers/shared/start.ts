@@ -1,13 +1,14 @@
 import { Assignee, Context, ISSUE_TYPE, Label, Sender } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
+import { Result } from "../proxy";
 import { checkTaskStale } from "./check-task-stale";
 import { hasUserBeenUnassigned } from "./check-assignments";
 import { generateAssignmentComment } from "./generate-assignment-comment";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
-export async function start(context: Context, issue: Context["payload"]["issue"], sender: Sender) {
+export async function start(context: Context, issue: Context["payload"]["issue"], sender: Sender): Promise<Result> {
   const { logger, config } = context;
   const { maxConcurrentTasks } = config.miscellaneous;
   const { taskStaleTimeoutDuration } = config.timers;
@@ -123,5 +124,5 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     ].join("\n") as string
   );
 
-  return { output: "Task assigned successfully" };
+  return { content: "Task assigned successfully", status: "ok" };
 }
