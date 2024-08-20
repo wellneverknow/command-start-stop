@@ -1,4 +1,5 @@
 import { Context } from "../../types/context";
+import { calculateDurations } from "../../utils/shared";
 
 export const options: Intl.DateTimeFormatOptions = {
   weekday: "short",
@@ -10,12 +11,18 @@ export const options: Intl.DateTimeFormatOptions = {
   timeZoneName: "short",
 };
 
-export async function generateAssignmentComment(context: Context, issueCreatedAt: string, issueNumber: number, senderId: number, duration: number) {
+export function getDeadline(issue: Context["payload"]["issue"]) {
+  if (!issue?.labels) {
+    throw new Error("No labels are set.");
+  }
   const startTime = new Date().getTime();
-  let endTime: null | Date = null;
-  let deadline: null | string = null;
-  endTime = new Date(startTime + duration * 1000);
-  deadline = endTime.toLocaleString("en-US", options);
+  const duration: number = calculateDurations(issue.labels).shift() ?? 0;
+  const endTime = new Date(startTime + duration * 1000);
+  return endTime.toLocaleString("en-US", options);
+}
+
+export async function generateAssignmentComment(context: Context, issueCreatedAt: string, issueNumber: number, senderId: number, deadline: string) {
+  const startTime = new Date().getTime();
 
   return {
     daysElapsedSinceTaskCreation: Math.floor((startTime - new Date(issueCreatedAt).getTime()) / 1000 / 60 / 60 / 24),

@@ -1,10 +1,9 @@
 import { Assignee, Context, ISSUE_TYPE, Label, Sender } from "../../types";
-import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue } from "../../utils/issue";
-import { calculateDurations } from "../../utils/shared";
+import { addAssignees, addCommentToIssue, getAssignedIssues, getAvailableOpenedPullRequests, isParentIssue } from "../../utils/issue";
 import { Result } from "../proxy";
-import { checkTaskStale } from "./check-task-stale";
 import { hasUserBeenUnassigned } from "./check-assignments";
-import { generateAssignmentComment } from "./generate-assignment-comment";
+import { checkTaskStale } from "./check-task-stale";
+import { generateAssignmentComment, getDeadline } from "./generate-assignment-comment";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
@@ -92,9 +91,9 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     throw new Error("No price label is set to calculate the duration");
   }
 
-  const duration: number = calculateDurations(labels).shift() ?? 0;
+  const deadline = getDeadline(issue);
 
-  const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, sender.id, duration);
+  const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, sender.id, deadline);
   const logMessage = logger.info("Task assigned successfully", {
     taskDeadline: assignmentComment.deadline,
     taskAssignees: [...assignees.map((a) => a?.login), sender.id],

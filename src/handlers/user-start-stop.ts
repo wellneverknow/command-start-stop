@@ -1,8 +1,7 @@
 import { Context } from "../types";
 import { addCommentToIssue } from "../utils/issue";
-import { calculateDurations } from "../utils/shared";
 import { Result } from "./proxy";
-import { options } from "./shared/generate-assignment-comment";
+import { getDeadline } from "./shared/generate-assignment-comment";
 import { start } from "./shared/start";
 import { stop } from "./shared/stop";
 
@@ -30,10 +29,7 @@ export async function userStartStop(context: Context): Promise<Result> {
 export async function userSelfAssign(context: Context): Promise<Result> {
   const { payload } = context;
   const { issue } = payload;
-  const startTime = new Date().getTime();
-  const duration: number = calculateDurations(issue.labels).shift() ?? 0;
-  const endTime = new Date(startTime + duration * 1000);
-  const deadline = endTime.toLocaleString("en-US", options);
+  const deadline = getDeadline(issue);
 
   const users = issue.assignees.map((user) => `@${user?.login}`).join(", ");
 
