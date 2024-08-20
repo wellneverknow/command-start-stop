@@ -14,6 +14,15 @@ export const handlers = [
     }
     return HttpResponse.json(item);
   }),
+  //get member
+  http.get("https://api.github.com/orgs/:org/memberships/:username", ({ params: { username } }) => {
+    const user = db.users.findFirst({ where: { login: { equals: username as string } } });
+    if (user) {
+      return HttpResponse.json({ role: user.role });
+    } else {
+      return HttpResponse.json({ role: "collaborator" });
+    }
+  }),
   // get issue
   http.get("https://api.github.com/repos/:owner/:repo/issues", ({ params: { owner, repo } }: { params: { owner: string; repo: string } }) =>
     HttpResponse.json(db.issue.findMany({ where: { owner: { equals: owner }, repo: { equals: repo } } }))
@@ -34,15 +43,13 @@ export const handlers = [
     HttpResponse.json({ owner, repo, issueNumber })
   ),
   // get commit
-  http.get("https://api.github.com/repos/:owner/:repo/commits/:ref", () => {
-    const res = {
+  http.get("https://api.github.com/repos/:owner/:repo/commits/:ref", () =>
+    HttpResponse.json({
       data: {
         sha: "commitHash",
       },
-    };
-
-    return HttpResponse.json(res);
-  }),
+    })
+  ),
   // list pull requests
   http.get("https://api.github.com/repos/:owner/:repo/pulls", ({ params: { owner, repo } }: { params: { owner: string; repo: string } }) =>
     HttpResponse.json(db.pull.findMany({ where: { owner: { equals: owner }, repo: { equals: repo } } }))
