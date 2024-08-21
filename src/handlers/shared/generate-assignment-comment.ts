@@ -15,11 +15,11 @@ export async function generateAssignmentComment(context: Context, issueCreatedAt
   let endTime: null | Date = null;
   let deadline: null | string = null;
   endTime = new Date(startTime + duration * 1000);
-  deadline = endTime.toLocaleString("en-US", options);
+  deadline = endTime.toLocaleString("en-US", options)
 
   return {
     daysElapsedSinceTaskCreation: Math.floor((startTime - new Date(issueCreatedAt).getTime()) / 1000 / 60 / 60 / 24),
-    deadline,
+    deadline: duration > 0 ? deadline : null,
     registeredWallet:
       (await context.adapters.supabase.user.getWalletByUserId(senderId, issueNumber)) ||
       "Register your wallet address using the following slash command: `/wallet 0x0000...0000`",
