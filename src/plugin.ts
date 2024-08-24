@@ -28,11 +28,12 @@ export async function startStopTask(inputs: PluginInputs, env: Env) {
     } catch (err) {
       let errorMessage;
       if (err instanceof LogReturn) {
-        errorMessage = context.logger.error(`Failed to run comment evaluation. ${err.logMessage?.raw || err}`, { err });
+        errorMessage = err;
+      } else if (err instanceof Error) {
+        errorMessage = context.logger.error(err.message, { error: err });
       } else {
-        errorMessage = context.logger.error(`Failed to run comment evaluation. ${err}`, { err });
+        errorMessage = context.logger.error("An error occurred", { err });
       }
-
       await addCommentToIssue(context, `${errorMessage?.logMessage.diff}\n<!--\n${sanitizeMetadata(errorMessage?.metadata)}\n-->`);
     }
   } else {
@@ -41,8 +42,5 @@ export async function startStopTask(inputs: PluginInputs, env: Env) {
 }
 
 function sanitizeMetadata(obj: LogReturn["metadata"]): string {
-  return JSON.stringify(obj, null, 2)
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/--/g, "&#45;&#45;")
+  return JSON.stringify(obj, null, 2).replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/--/g, "&#45;&#45;");
 }
