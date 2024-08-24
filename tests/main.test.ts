@@ -51,7 +51,7 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
-    const context = createContext(issue, sender, "/start @user2");
+    const context = createContext(issue, sender, "/start @user3");
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
@@ -61,7 +61,7 @@ describe("User start/stop", () => {
 
     const issue2 = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     expect(issue2.assignees).toHaveLength(2);
-    expect(issue2.assignees).toEqual(expect.arrayContaining(["ubiquity", "user2"]));
+    expect(issue2.assignees).toEqual(expect.arrayContaining(["ubiquity", "user3"]));
   });
 
   test("User can stop an issue", async () => {
@@ -185,13 +185,13 @@ describe("User start/stop", () => {
   });
 
   test("User can't start an issue if they have previously been unassigned by an admin", async () => {
-    const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
+    const issue = db.issue.findFirst({ where: { id: { equals: 6 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender, "/start");
     context.adapters = createAdapters(getSupabase(), context);
 
-    await expect(userStartStop(context)).rejects.toThrow("You were previously unassigned from this task. You cannot reassign yourself.");
+    await expect(userStartStop(context)).rejects.toThrow("user2 you were previously unassigned from this task. You cannot be reassigned.");
   });
 
   test("Should throw if no APP_ID is set", async () => {
@@ -520,9 +520,22 @@ async function setupTests() {
     owner: "ubiquity",
     repo: "test-repo",
   });
+
+  db.comments.create({
+    id: 1,
+    body: "/start",
+    owner: "ubiquity",
+    repo: "test-repo",
+  });
 }
 
-function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start", appId: string | null = "1", startRequiresWallet = false): Context {
+function createContext(
+  issue: Record<string, unknown>,
+  sender: Record<string, unknown>,
+  body = "/start",
+  appId: string | null = "1",
+  startRequiresWallet = false
+): Context {
   return {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
@@ -539,7 +552,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       reviewDelayTolerance: "3 Days",
       taskStaleTimeoutDuration: "30 Days",
       maxConcurrentTasks: 3,
-      startRequiresWallet
+      startRequiresWallet,
     },
     octokit: new octokit.Octokit(),
     eventName: "issue_comment.created" as SupportedEventsU,

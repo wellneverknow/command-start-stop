@@ -48,13 +48,7 @@ export const handlers = [
     HttpResponse.json(db.pull.findMany({ where: { owner: { equals: owner }, repo: { equals: repo } } }))
   ),
   // list events for an issue timeline
-  http.get("https://api.github.com/repos/:owner/:repo/issues/:issue_number/timeline", ({ params: { owner, repo, issue_number: issueNumber } }) => {
-    return HttpResponse.json(
-      db.event.findMany({
-        where: { owner: { equals: owner as string }, repo: { equals: repo as string }, issue_number: { equals: Number(issueNumber) } },
-      })
-    );
-  }),
+  http.get("https://api.github.com/repos/:owner/:repo/issues/:issue_number/timeline", () => HttpResponse.json(db.event.getAll())),
   // update a pull request
   http.patch("https://api.github.com/repos/:owner/:repo/pulls/:pull_number", ({ params: { owner, repo, pull_number: pullNumber } }) =>
     HttpResponse.json({ owner, repo, pullNumber })
@@ -120,4 +114,6 @@ export const handlers = [
     }
     return HttpResponse.json(user);
   }),
+  // get comments for an issue
+  http.get("https://api.github.com/repos/:owner/:repo/issues/:issue_number/comments", () => HttpResponse.json(db.comments.getAll())),
 ];

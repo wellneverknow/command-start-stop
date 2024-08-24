@@ -61,6 +61,7 @@ export const db = factory({
     id: primaryKey(Number),
     html_url: String,
     name: String,
+    full_name: String,
     owner: {
       login: String,
       id: Number,
@@ -170,5 +171,19 @@ export const db = factory({
         },
       },
     }),
+  },
+  comments: {
+    id: primaryKey(Number),
+    body: String,
+    user: Object,
+    created_at: Date,
+    updated_at: Date,
+    author_association: String,
+    html_url: String,
+    issue_url: String,
+    owner: String,
+    repo: String,
+    issue_number: Number,
+    pull_request_url: String,
   },
 });
