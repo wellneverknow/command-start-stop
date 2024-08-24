@@ -26,7 +26,7 @@ export const startStopSchema = T.Object({
   miscellaneous: T.Object(
     {
       startRequiresWallet: T.Boolean(),
-      maxConcurrentTasks: T.Record(T.String(), T.Integer()),
+      maxConcurrentTasks: T.Record(T.String(), T.Integer(), { default: { admin: 20, member: 10, contributor: 2 } }),
     },
     {
       default: {
