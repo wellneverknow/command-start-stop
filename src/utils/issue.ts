@@ -207,7 +207,7 @@ export async function getAvailableOpenedPullRequests(context: Context, username:
       }
     }
 
-    if (reviews.length === 0 && (new Date().getTime() - new Date(openedPullRequest.created_at).getTime()) >= getTimeValue(reviewDelayTolerance)) {
+    if (reviews.length === 0 && new Date().getTime() - new Date(openedPullRequest.created_at).getTime() >= getTimeValue(reviewDelayTolerance)) {
       result.push(openedPullRequest);
     }
   }
