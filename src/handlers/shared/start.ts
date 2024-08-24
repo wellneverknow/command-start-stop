@@ -1,4 +1,4 @@
-import { Assignee, Context, ISSUE_TYPE, Label, Sender } from "../../types";
+import { Context, ISSUE_TYPE, Label } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue, getTimeValue } from "../../utils/issue";
 import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
@@ -18,14 +18,6 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
       "```diff\n# Please select a child issue from the specification checklist to work on. The '/start' command is disabled on parent issues.\n```"
     );
     throw new Error(logger.error(`Skipping '/start' since the issue is a parent issue`).logMessage.raw);
-  }
-
-  const hasBeenPreviouslyUnassigned = await hasUserBeenUnassigned(context);
-
-  if (hasBeenPreviouslyUnassigned) {
-    const log = logger.error("You were previously unassigned from this task. You cannot reassign yourself.", { sender });
-    await addCommentToIssue(context, log?.logMessage.diff as string);
-    throw new Error(log.logMessage.raw);
   }
 
   let commitHash: string | null = null;
@@ -52,10 +44,12 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   // find out if the issue is already assigned
   if (assignees.length !== 0) {
     const isCurrentUserAssigned = !!assignees.find((assignee) => assignee?.login === sender.login);
-    throw new Error(logger.error(
-      isCurrentUserAssigned ? "You are already assigned to this task." : "This issue is already assigned. Please choose another unassigned task.",
-      { issueNumber: issue.number }
-    ).logMessage.raw);
+    throw new Error(
+      logger.error(
+        isCurrentUserAssigned ? "You are already assigned to this task." : "This issue is already assigned. Please choose another unassigned task.",
+        { issueNumber: issue.number }
+      ).logMessage.raw
+    );
   }
 
   teammates.push(sender.login);
@@ -63,20 +57,20 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const toAssign = [];
   // check max assigned issues
   for (const user of teammates) {
-    if(await handleTaskLimitChecks(user, context, maxConcurrentTasks, logger, sender.login)){
+    if (await handleTaskLimitChecks(user, context, maxConcurrentTasks, logger, sender.login)) {
       toAssign.push(user);
     }
   }
 
   let error: string | null = null;
 
-  if(toAssign.length === 0 && teammates.length > 1){
+  if (toAssign.length === 0 && teammates.length > 1) {
     error = "All teammates have reached their max task limit. Please close out some tasks before assigning new ones.";
-  }else if(toAssign.length === 0){
+  } else if (toAssign.length === 0) {
     error = "You have reached your max task limit. Please close out some tasks before assigning new ones.";
   }
 
-  if(error){
+  if (error) {
     throw new Error(logger.error(error, { issueNumber: issue.number }).logMessage.raw);
   }
 
@@ -84,9 +78,8 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const labels = issue.labels;
   const priceLabel = labels.find((label: Label) => label.name.startsWith("Price: "));
 
-
   if (!priceLabel) {
-     throw new Error(logger.error("No price label is set to calculate the duration", { issueNumber: issue.number }).logMessage.raw);
+    throw new Error(logger.error("No price label is set to calculate the duration", { issueNumber: issue.number }).logMessage.raw);
   }
 
   const duration: number = calculateDurations(labels).shift() ?? 0;
@@ -124,11 +117,11 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
 }
 
 async function fetchUserId(context: Context, username: string) {
-  try{
+  try {
     const user = await context.octokit.rest.users.getByUsername({ username });
     return user.data.id;
-  }catch(e){
-    return null
+  } catch (e) {
+    return null;
   }
 }
 
@@ -143,9 +136,14 @@ async function handleTaskLimitChecks(username: string, context: Context, maxConc
       assignedIssues: assignedIssues.length,
       openedPullRequests: openedPullRequests.length,
       maxConcurrentTasks,
-    })
+    });
     await addCommentToIssue(context, log?.logMessage.diff as string);
-    return false
+    return false;
   }
-  return true
+
+  if (await hasUserBeenUnassigned(context, username)) {
+    throw new Error(logger.error(`${username} you were previously unassigned from this task. You cannot be reassigned.`, { username }).logMessage.raw);
+  }
+
+  return true;
 }
