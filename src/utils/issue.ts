@@ -1,5 +1,6 @@
+import ms from "ms";
 import { Context } from "../types/context";
-import { GitHubIssueSearch, Review } from "../types/payload";
+import { Issue, GitHubIssueSearch, Review } from "../types/payload";
 import { getLinkedPullRequests, GetLinkedResults } from "./get-linked-prs";
 
 export function isParentIssue(body: string) {
@@ -7,29 +8,15 @@ export function isParentIssue(body: string) {
   return body.match(parentPattern);
 }
 
-export async function getAssignedIssues(context: Context, username: string): Promise<GitHubIssueSearch["items"]> {
-  const payload = context.payload;
+export async function getAssignedIssues(context: Context, username: string): Promise<Issue[]> {
+  const { payload } = context;
 
   try {
-    return await context.octokit
-      .paginate(context.octokit.search.issuesAndPullRequests, {
-        q: `org:${payload.repository.owner.login} assignee:${username} is:open`,
-        per_page: 100,
-        order: "desc",
-        sort: "created",
-      })
-      .then((issues) =>
-        issues.filter((issue) => {
-          return (
-            issue.state === "open" &&
-            !issue.pull_request &&
-            (issue.assignee?.login === username || issue.assignees?.some((assignee) => assignee.login === username))
-          );
-        })
-      );
+    return (await context.octokit.paginate(context.octokit.rest.search.issuesAndPullRequests, {
+      q: `is:issue is:open assignee:${username} org:${payload.repository.owner.login}`,
+    })) as Issue[];
   } catch (err: unknown) {
-    context.logger.error("Fetching assigned issues failed!", { error: err as Error });
-    return [];
+    throw new Error(context.logger.error("Fetching assigned issues failed!", { error: err as Error }).logMessage.raw);
   }
 }
 
@@ -41,14 +28,14 @@ export async function addCommentToIssue(context: Context, message: string | null
   }
 
   try {
-    await context.octokit.issues.createComment({
+    await context.octokit.rest.issues.createComment({
       owner: payload.repository.owner.login,
       repo: payload.repository.name,
       issue_number: payload.issue.number,
       body: message,
     });
   } catch (err: unknown) {
-    context.logger.error("Adding a comment failed!", { error: err as Error });
+    throw new Error(context.logger.error("Adding a comment failed!", { error: err as Error }).logMessage.raw);
   }
 }
 
@@ -64,15 +51,17 @@ export async function closePullRequest(context: Context, results: GetLinkedResul
       state: "closed",
     });
   } catch (err: unknown) {
-    context.logger.error("Closing pull requests failed!", { error: err as Error });
+    throw new Error(context.logger.error("Closing pull requests failed!", { error: err as Error }).logMessage.raw);
   }
 }
 
 export async function closePullRequestForAnIssue(context: Context, issueNumber: number, repository: Context["payload"]["repository"], author: string) {
   const { logger } = context;
   if (!issueNumber) {
-    logger.error("Issue is not defined");
-    return;
+    throw new Error(logger.error("Issue is not defined", {
+      issueNumber,
+      repository: repository.name,
+    }).logMessage.raw);
   }
 
   const linkedPullRequests = await getLinkedPullRequests(context, {
@@ -119,6 +108,35 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
   return logger.info(comment);
 }
 
+async function confirmMultiAssignment(context: Context, issueNumber: number, usernames: string[]) {
+  const { logger, payload, octokit } = context;
+
+  if (usernames.length < 2) {
+    return;
+  }
+
+  const { private: isPrivate } = payload.repository;
+
+  const {
+    data: { assignees },
+  } = await octokit.rest.issues.get({
+    owner: payload.repository.owner.login,
+    repo: payload.repository.name,
+    issue_number: issueNumber,
+  });
+
+  if (!assignees?.length) {
+    throw new Error(logger.error("We detected that this task was not assigned to anyone. Please report this to the maintainers.", { issueNumber, usernames }).logMessage.raw);
+  }
+
+  if (isPrivate && assignees?.length <= 1) {
+    const log = logger.info("This task belongs to a private repo and can only be assigned to one user without an official paid GitHub subscription.", {
+      issueNumber,
+    });
+    await addCommentToIssue(context, log?.logMessage.diff as string);
+  }
+}
+
 export async function addAssignees(context: Context, issueNo: number, assignees: string[]) {
   const payload = context.payload;
 
@@ -130,8 +148,10 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
       assignees,
     });
   } catch (e: unknown) {
-    throw context.logger.error("Adding the assignee failed", { assignee: assignees, issueNo, error: e as Error });
+    throw new Error(context.logger.error("Adding the assignee failed", { assignee: assignees, issueNo, error: e as Error }).logMessage.raw);
   }
+
+  await confirmMultiAssignment(context, issueNo, assignees);
 }
 
 export async function getAllPullRequests(context: Context, state: "open" | "closed" | "all" = "open", username: string) {
@@ -145,8 +165,7 @@ export async function getAllPullRequests(context: Context, state: "open" | "clos
       sort: "created",
     })) as GitHubIssueSearch["items"];
   } catch (err: unknown) {
-    context.logger.error("Fetching all pull requests failed!", { error: err as Error });
-    return [];
+    throw new Error(context.logger.error("Fetching all pull requests failed!", { error: err as Error }).logMessage.raw);
   }
 }
 
@@ -159,13 +178,12 @@ export async function getAllPullRequestReviews(context: Context, pullNumber: num
       per_page: 100,
     })) as Review[];
   } catch (err: unknown) {
-    context.logger.error("Fetching all pull request reviews failed!", { error: err as Error });
-    return [];
+    throw new Error(context.logger.error("Fetching all pull request reviews failed!", { error: err as Error }).logMessage.raw);
   }
 }
 
 export async function getAvailableOpenedPullRequests(context: Context, username: string) {
-  const { reviewDelayTolerance } = context.config.timers;
+  const { reviewDelayTolerance } = context.config;
   if (!reviewDelayTolerance) return [];
 
   const openedPullRequests = await getOpenedPullRequests(context, username);
@@ -184,11 +202,21 @@ export async function getAvailableOpenedPullRequests(context: Context, username:
       }
     }
 
-    if (reviews.length === 0 && (new Date().getTime() - new Date(openedPullRequest.created_at).getTime()) / (1000 * 60 * 60) >= reviewDelayTolerance) {
+    if (reviews.length === 0 && new Date().getTime() - new Date(openedPullRequest.created_at).getTime() >= getTimeValue(reviewDelayTolerance)) {
       result.push(openedPullRequest);
     }
   }
   return result;
+}
+
+export function getTimeValue(timeString: string): number {
+  const timeValue = ms(timeString);
+
+  if (!timeValue || timeValue <= 0 || isNaN(timeValue)) {
+    throw new Error("Invalid config time value");
+  }
+
+  return timeValue;
 }
 
 async function getOpenedPullRequests(context: Context, username: string): Promise<ReturnType<typeof getAllPullRequests>> {

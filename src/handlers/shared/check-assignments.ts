@@ -53,6 +53,6 @@ async function getAssignmentEvents(context: Context) {
         return new Date(a.createdAt || "").getTime() - new Date(b.createdAt || "").getTime();
       });
   } catch (error) {
-    throw context.logger.error("Error while getting assignment events", { error: error as Error });
+    throw new Error(context.logger.error("Error while getting assignment events", { error: error as Error }).logMessage.raw);
   }
 }
