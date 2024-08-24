@@ -32,11 +32,13 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
       assignees: [userToUnassign.login],
     });
   } catch (err) {
-    throw new Error(logger.error(`Error while removing ${userToUnassign.login} from the issue: `, {
-      err,
-      issueNumber,
-      user: userToUnassign.login,
-    }).logMessage.raw);
+    throw new Error(
+      logger.error(`Error while removing ${userToUnassign.login} from the issue: `, {
+        err,
+        issueNumber,
+        user: userToUnassign.login,
+      }).logMessage.raw
+    );
   }
 
   const unassignedLog = logger.info("You have been unassigned from the task", {

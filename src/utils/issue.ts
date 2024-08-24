@@ -58,10 +58,12 @@ export async function closePullRequest(context: Context, results: GetLinkedResul
 export async function closePullRequestForAnIssue(context: Context, issueNumber: number, repository: Context["payload"]["repository"], author: string) {
   const { logger } = context;
   if (!issueNumber) {
-    throw new Error(logger.error("Issue is not defined", {
-      issueNumber,
-      repository: repository.name,
-    }).logMessage.raw);
+    throw new Error(
+      logger.error("Issue is not defined", {
+        issueNumber,
+        repository: repository.name,
+      }).logMessage.raw
+    );
   }
 
   const linkedPullRequests = await getLinkedPullRequests(context, {
@@ -126,7 +128,9 @@ async function confirmMultiAssignment(context: Context, issueNumber: number, use
   });
 
   if (!assignees?.length) {
-    throw new Error(logger.error("We detected that this task was not assigned to anyone. Please report this to the maintainers.", { issueNumber, usernames }).logMessage.raw);
+    throw new Error(
+      logger.error("We detected that this task was not assigned to anyone. Please report this to the maintainers.", { issueNumber, usernames }).logMessage.raw
+    );
   }
 
   if (isPrivate && assignees?.length <= 1) {
