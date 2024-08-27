@@ -83,7 +83,17 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   }
 
   const duration: number = calculateDurations(labels).shift() ?? 0;
-  const toAssignIds = toAssign.map(async (u) => await fetchUserId(context, u));
+  const toAssignIds = toAssign.map(async (u) => {
+    const userId = await fetchUserId(context, u);
+
+    if (!userId) {
+      throw new Error(logger.error("User not found", { user: u }).logMessage.raw);
+    }
+
+    return userId;
+  });
+
+
 
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, sender.id, duration);
   const logMessage = logger.info("Task assigned successfully", {
