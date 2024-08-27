@@ -29,7 +29,7 @@ export const startStopSchema = T.Object({
       maxConcurrentTasks: T.Record(T.String(), T.Integer(), { default: { admin: 20, member: 10, contributor: 2 } }),
     },
     {
-      default: {
+      default: {}
         maxConcurrentTasks: {
           admin: 20,
           member: 10,
