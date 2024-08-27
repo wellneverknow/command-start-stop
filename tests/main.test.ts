@@ -512,6 +512,7 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       taskStaleTimeoutDuration: "30 Days",
       maxConcurrentTasks: 3,
       startRequiresWallet: false,
+      emptyWalletText: true,
     },
     octokit: new octokit.Octokit(),
     eventName: "issue_comment.created" as SupportedEventsU,

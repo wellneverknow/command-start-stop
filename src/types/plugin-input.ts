@@ -17,6 +17,7 @@ export const startStopSchema = T.Object(
     taskStaleTimeoutDuration: T.String({ default: "30 Days" }),
     maxConcurrentTasks: T.Number({ default: 3 }),
     startRequiresWallet: T.Boolean({ default: true }),
+    emptyWalletText: T.Boolean({ default: false }),
   },
   {
     default: {},
