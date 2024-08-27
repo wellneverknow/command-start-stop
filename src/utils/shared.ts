@@ -19,25 +19,3 @@ export function calculateDurations(labels: Label[]): number[] {
 
   return durations.sort((a, b) => a - b);
 }
-
-export function getAppId(context: Context): number {
-  const {
-    env: { APP_ID },
-  } = context;
-  const APP_ID_TYPE = Type.Union([Type.String(), Type.Number()], { default: APP_ID });
-
-  const val = Type.Transform(APP_ID_TYPE)
-    .Decode((val) => {
-      if (isNaN(Number(val))) {
-        throw new Error("Invalid APP_ID");
-      }
-      return Number(val);
-    })
-    .Encode((encoded) => encoded.toString());
-
-  try {
-    return Value.Decode(val, APP_ID);
-  } catch (e) {
-    throw new Error("Invalid APP_ID");
-  }
-}

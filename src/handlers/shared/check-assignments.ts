@@ -1,5 +1,4 @@
 import { Context } from "../../types";
-import { getAppId } from "../../utils/shared";
 
 async function getUserStopComments(context: Context, username: string): Promise<number> {
   const { payload, octokit, logger } = context;
@@ -20,7 +19,7 @@ async function getUserStopComments(context: Context, username: string): Promise<
 }
 
 export async function hasUserBeenUnassigned(context: Context, username: string): Promise<boolean> {
-  const APP_ID = getAppId(context);
+  const { env: { APP_ID } } = context
   const events = await getAssignmentEvents(context);
   const userAssignments = events.filter((event) => event.assignee === username);
 
