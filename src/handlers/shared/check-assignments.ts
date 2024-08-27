@@ -1,9 +1,10 @@
 import { Context } from "../../types";
+import { getOwnerRepoFromHtmlUrl } from "../../utils/issue";
 
 async function getUserStopComments(context: Context, username: string): Promise<number> {
   const { payload, octokit, logger } = context;
   const { number, html_url } = payload.issue;
-  const [owner, repo] = html_url.split("/").slice(-4, -2);
+  const { owner, repo } = getOwnerRepoFromHtmlUrl(html_url);
 
   try {
     const comments = await octokit.paginate(octokit.issues.listComments, {

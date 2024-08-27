@@ -186,6 +186,17 @@ export async function getAllPullRequestReviews(context: Context, pullNumber: num
   }
 }
 
+export function getOwnerRepoFromHtmlUrl(url: string) {
+  const parts = url.split("/");
+  if (parts.length < 5) {
+    throw new Error("Invalid URL");
+  }
+  return {
+    owner: parts[3],
+    repo: parts[4],
+  };
+}
+
 export async function getAvailableOpenedPullRequests(context: Context, username: string) {
   const { reviewDelayTolerance } = context.config;
   if (!reviewDelayTolerance) return [];
@@ -195,8 +206,7 @@ export async function getAvailableOpenedPullRequests(context: Context, username:
 
   for (let i = 0; i < openedPullRequests.length; i++) {
     const openedPullRequest = openedPullRequests[i];
-    const owner = openedPullRequest.html_url.split("/")[3];
-    const repo = openedPullRequest.html_url.split("/")[4];
+    const { owner, repo } = getOwnerRepoFromHtmlUrl(openedPullRequest.html_url);
     const reviews = await getAllPullRequestReviews(context, openedPullRequest.number, owner, repo);
 
     if (reviews.length > 0) {
