@@ -86,7 +86,7 @@ export const handlers = [
         db.issue.update({
           where: { id: { equals: issue.id } },
           data: {
-            assignees,
+            assignees: [...issue.assignees, ...assignees],
           },
         });
       }
@@ -116,4 +116,11 @@ export const handlers = [
       return HttpResponse.json(db.pull.getAll());
     }
   }),
+  http.get("https://api.github.com/repos/:owner/:repo/issues/:issue_number", ({ params: { owner, repo, issue_number: issueNumber } }) =>
+    HttpResponse.json(
+      db.issue.findFirst({
+        where: { owner: { equals: owner as string }, repo: { equals: repo as string }, number: { equals: Number(issueNumber) } },
+      })
+    )
+  ),
 ];

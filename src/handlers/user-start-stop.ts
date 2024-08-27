@@ -5,25 +5,22 @@ import { getDeadline } from "./shared/generate-assignment-comment";
 import { start } from "./shared/start";
 import { stop } from "./shared/stop";
 
-function getUser(payload: Context["payload"]) {
-  const { comment, sender } = payload;
-  return comment.user?.login ? { login: comment.user.login, id: comment.user.id } : { login: sender.login, id: sender.id };
-}
-
-export async function userStartStop(context: Context): Promise<Result> {
+export async function userStartStop(context: Context): Promise<{ output: string | null }> {
   const { payload } = context;
-  const { issue, comment, repository } = payload;
+  const { issue, comment, sender, repository } = payload;
   const slashCommand = comment.body.split(" ")[0].replace("/", "");
-
-  const user = getUser(context.payload);
+  const teamMates = comment.body
+    .split("@")
+    .slice(1)
+    .map((teamMate) => teamMate.split(" ")[0]);
 
   if (slashCommand === "stop") {
-    return await stop(context, issue, user, repository);
+    return await stop(context, issue, sender, repository);
   } else if (slashCommand === "start") {
-    return await start(context, issue, user);
+    return await start(context, issue, sender, teamMates);
   }
 
-  return { status: "skipped" };
+  return { output: null };
 }
 
 export async function userSelfAssign(context: Context): Promise<Result> {
