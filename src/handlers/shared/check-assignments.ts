@@ -20,7 +20,9 @@ async function getUserStopComments(context: Context, username: string): Promise<
 }
 
 export async function hasUserBeenUnassigned(context: Context, username: string): Promise<boolean> {
-  const { env: { APP_ID } } = context
+  const {
+    env: { APP_ID },
+  } = context;
   const events = await getAssignmentEvents(context);
   const userAssignments = events.filter((event) => event.assignee === username);
 

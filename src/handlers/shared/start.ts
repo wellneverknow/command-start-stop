@@ -93,8 +93,6 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     return userId;
   });
 
-
-
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, sender.id, duration);
   const logMessage = logger.info("Task assigned successfully", {
     taskDeadline: assignmentComment.deadline,

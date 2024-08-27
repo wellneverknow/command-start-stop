@@ -1,7 +1,5 @@
 import ms from "ms";
-import { Context, Label } from "../types";
-import { Type } from "@sinclair/typebox";
-import { Value } from "@sinclair/typebox/value";
+import { Label } from "../types";
 
 export function calculateDurations(labels: Label[]): number[] {
   // from shortest to longest

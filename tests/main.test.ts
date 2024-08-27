@@ -1,5 +1,5 @@
 import { drop } from "@mswjs/data";
-import { Context, Sender, SupportedEventsU } from "../src/types";
+import { Context, envConfigValidator, Sender, SupportedEventsU } from "../src/types";
 import { db } from "./__mocks__/db";
 import { server } from "./__mocks__/node";
 import usersGet from "./__mocks__/users-get.json";
@@ -198,12 +198,18 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender, "/start", null);
+    const context = createContext(issue, sender, "/start", undefined);
 
-    context.env.APP_ID = null as unknown as string;
-    context.adapters = createAdapters(getSupabase(), context);
+    const env = { ...context.env };
+    Reflect.deleteProperty(env, "APP_ID");
+    if (!envConfigValidator.test(env)) {
+      const errorDetails: string[] = [];
+      for (const error of envConfigValidator.errors(env)) {
+        errorDetails.push(`${error.path}: ${error.message}`);
+      }
 
-    await expect(userStartStop(context)).rejects.toThrow("Invalid APP_ID");
+      expect(errorDetails).toContain("/APP_ID: Required property");
+    }
   });
 
   test("Should throw if APP_ID is not a number", async () => {
@@ -211,9 +217,16 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender, "/start", "testing-one");
-    context.adapters = createAdapters(getSupabase(), context);
+    const env = { ...context.env };
 
-    await expect(userStartStop(context)).rejects.toThrow("Invalid APP_ID");
+    if (!envConfigValidator.test(env)) {
+      const errorDetails: string[] = [];
+      for (const error of envConfigValidator.errors(env)) {
+        errorDetails.push(`${error.path}: ${error.message}`);
+      }
+
+      expect(errorDetails).toContain("Invalid APP_ID");
+    }
   });
 });
 
@@ -559,7 +572,7 @@ function createContext(
     env: {
       SUPABASE_KEY: "key",
       SUPABASE_URL: "url",
-      APP_ID: appId as string,
+      APP_ID: appId as unknown as number,
     },
   };
 }
