@@ -1,5 +1,5 @@
 import { SupportedEvents, SupportedEventsU } from "./context";
-import { Static, Type as T } from "@sinclair/typebox";
+import { Static, StaticDecode, Type as T } from "@sinclair/typebox";
 import { StandardValidator } from "typebox-validators";
 
 export interface PluginInputs<T extends SupportedEventsU = SupportedEventsU, TU extends SupportedEvents[T] = SupportedEvents[T]> {
@@ -41,5 +41,5 @@ export const startStopSchema = T.Object({
   ),
 });
 
-export type StartStopSettings = Static<typeof startStopSchema>;
+export type StartStopSettings = StaticDecode<typeof startStopSchema>;
 export const startStopSettingsValidator = new StandardValidator(startStopSchema);
