@@ -25,11 +25,11 @@ export const startStopSchema = T.Object({
   ),
   miscellaneous: T.Object(
     {
-      startRequiresWallet: T.Boolean({ default: true }}),
+      startRequiresWallet: T.Boolean({ default: true }),
       maxConcurrentTasks: T.Record(T.String(), T.Integer(), { default: { admin: 20, member: 10, contributor: 2 } }),
     },
     {
-      default: {}
+      default: {},
         maxConcurrentTasks: {
           admin: 20,
           member: 10,
@@ -37,7 +37,6 @@ export const startStopSchema = T.Object({
         },
         startRequiresWallet: true,
       },
-    }
   ),
 });
 
