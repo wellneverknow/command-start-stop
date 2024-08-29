@@ -8,7 +8,7 @@ interface MatchingUserProps {
 export async function getUserRoleAndTaskLimit(context: Context, user: string): Promise<MatchingUserProps> {
   const orgLogin = context.payload.organization?.login;
   const { config, logger } = context;
-  const { maxConcurrentTasks } = config.miscellaneous;
+  const { maxConcurrentTasks } = config;
 
   const smallestTask = Object.entries(maxConcurrentTasks).reduce(
     (minTask, [role, limit]) => (limit < minTask.limit ? { role, limit } : minTask),

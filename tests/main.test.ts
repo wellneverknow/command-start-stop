@@ -59,7 +59,7 @@ describe("User start/stop", () => {
   });
 
   test("Stopping an issue should close the author's linked PR", async () => {
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => { });
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
     const context = createContext(issue, sender, "/stop");
@@ -85,7 +85,6 @@ describe("User start/stop", () => {
     const context = createContext(issue, sender, "/stop");
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     const output = await userStartStop(context as unknown as Context);
 
     expect(output).toEqual({ output: "You are not assigned to this task" });
@@ -98,7 +97,6 @@ describe("User start/stop", () => {
     const context = createContext(issue, sender, "/stop");
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     const output = await userStartStop(context as unknown as Context);
 
     expect(output).toEqual({ output: "You are not assigned to this task" });
@@ -109,9 +107,7 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender, "/start");
-
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     const err = "Issue is already assigned";
 
     try {
@@ -126,13 +122,9 @@ describe("User start/stop", () => {
   test("User can't start an issue without a price label", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 3 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
-
     const context = createContext(issue, sender);
-
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
     const err = "No price label is set to calculate the duration";
-
     try {
       await userStartStop(context as unknown as Context);
     } catch (error) {
@@ -249,10 +241,10 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 5 } } }) as unknown as Sender;
 
     const memberLimit = maxConcurrentDefaults.member;
-    // (+ 4) because we have 4 open pull requests being pulled too
-    // ``Math.abs(assignedIssues.length - openedPullRequests.length) >= maxTask.limit)``
+
     createIssuesForMaxAssignment(memberLimit + 4, sender.id);
     const context = createContext(issue, sender) as unknown as Context;
+
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
     await expect(userStartStop(context)).rejects.toThrow(`Too many assigned issues, you have reached your max limit of ${memberLimit} issues.`);
 
@@ -264,11 +256,12 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
     const adminLimit = maxConcurrentDefaults.admin;
-    // (+ 4) because we have 4 open pull requests being pulled too
-    // ``Math.abs(assignedIssues.length - openedPullRequests.length) >= maxTask.limit)``
+
     createIssuesForMaxAssignment(adminLimit + 4, sender.id);
     const context = createContext(issue, sender) as unknown as Context;
+
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
     await expect(userStartStop(context)).rejects.toThrow(`Too many assigned issues, you have reached your max limit of ${adminLimit} issues.`);
 
     expect(adminLimit).toEqual(6);
@@ -412,8 +405,8 @@ async function setupTests() {
     },
     body: "Pull request body",
     owner: "ubiquity",
-    pull_request: {},
     repo: "test-repo",
+    pull_request: {},
     state: "open",
     closed_at: null,
   });
@@ -574,14 +567,10 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
     },
     logger: new Logs("debug"),
     config: {
-      timers: {
-        reviewDelayTolerance: 86000,
-        taskStaleTimeoutDuration: 2580000,
-      },
-      miscellaneous: {
-        maxConcurrentTasks: maxConcurrentDefaults,
-        startRequiresWallet: true,
-      },
+      reviewDelayTolerance: "3 Days",
+      taskStaleTimeoutDuration: "30 Days",
+      maxConcurrentTasks: maxConcurrentDefaults,
+      startRequiresWallet: false,
     },
     octokit: new octokit.Octokit(),
     eventName: "issue_comment.created" as SupportedEventsU,
@@ -599,17 +588,17 @@ function getSupabase(withData = true) {
         single: jest.fn().mockResolvedValue({
           data: withData
             ? {
-                id: 1,
-                wallets: {
-                  address: "0x123",
-                },
-              }
-            : {
-                id: 1,
-                wallets: {
-                  address: undefined,
-                },
+              id: 1,
+              wallets: {
+                address: "0x123",
               },
+            }
+            : {
+              id: 1,
+              wallets: {
+                address: undefined,
+              },
+            },
         }),
       }),
     }),

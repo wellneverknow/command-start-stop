@@ -1,3 +1,4 @@
+import ms from "ms";
 import { Context } from "../types/context";
 import { GitHubIssueSearch, Review } from "../types/payload";
 import { getLinkedPullRequests, GetLinkedResults } from "./get-linked-prs";
@@ -167,7 +168,7 @@ export async function getAllPullRequestReviews(context: Context, pullNumber: num
 }
 
 export async function getAvailableOpenedPullRequests(context: Context, username: string) {
-  const { reviewDelayTolerance } = context.config.timers;
+  const { reviewDelayTolerance } = context.config;
   if (!reviewDelayTolerance) return [];
 
   const openedPullRequests = await getOpenedPullRequests(context, username);
@@ -184,12 +185,22 @@ export async function getAvailableOpenedPullRequests(context: Context, username:
         result.push(openedPullRequest);
       }
     }
-
-    if (reviews.length === 0 && (new Date().getTime() - new Date(openedPullRequest.created_at).getTime()) / (1000 * 60 * 60) >= reviewDelayTolerance) {
+    
+    if (reviews.length === 0 && new Date().getTime() - new Date(openedPullRequest.created_at).getTime() >= getTimeValue(reviewDelayTolerance)) {
       result.push(openedPullRequest);
     }
   }
   return result;
+}
+
+export function getTimeValue(timeString: string): number {
+  const timeValue = ms(timeString);
+
+  if (!timeValue || timeValue <= 0 || isNaN(timeValue)) {
+    throw new Error("Invalid config time value");
+  }
+
+  return timeValue;
 }
 
 async function getOpenedPullRequests(context: Context, username: string): Promise<ReturnType<typeof getAllPullRequests>> {
