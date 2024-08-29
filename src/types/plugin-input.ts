@@ -10,6 +10,7 @@ export interface PluginInputs<T extends SupportedEventsU = SupportedEventsU, TU 
   authToken: string;
   ref: string;
 }
+
 export const startStopSchema = T.Object(
   {
     reviewDelayTolerance: T.String({ default: "1 Day" }),
