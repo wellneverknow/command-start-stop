@@ -221,7 +221,6 @@ describe("User start/stop", () => {
 
   test("should return the role with the smallest task limit if user role is not defined in config", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    // role: new-start
     const sender = db.users.findFirst({ where: { id: { equals: 4 } } }) as unknown as Sender;
 
     const contributorLimit = maxConcurrentDefaults.contributor;

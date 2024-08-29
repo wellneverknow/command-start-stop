@@ -7,7 +7,7 @@ import { getUserRoleAndTaskLimit } from "./get-user-task-limit-and-role";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
-export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"]) {
+export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"], teamMates: string[]) {
   const { logger, config } = context;
   const { taskStaleTimeoutDuration } = config;
   const maxTask = await getUserRoleAndTaskLimit(context, sender.login);
