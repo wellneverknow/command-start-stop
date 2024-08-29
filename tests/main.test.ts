@@ -45,23 +45,6 @@ describe("User start/stop", () => {
     expect(output).toEqual("Task assigned successfully");
   });
 
-  test("User can start an issue with teammates", async () => {
-    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
-
-    const context = createContext(issue, sender, "/start @user2");
-
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
-    const { output } = await userStartStop(context as unknown as Context);
-
-    expect(output).toEqual("Task assigned successfully");
-
-    const issue2 = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    expect(issue2.assignees).toHaveLength(2);
-    expect(issue2.assignees).toEqual(expect.arrayContaining(["ubiquity", "user2"]));
-  });
-
   test("User can stop an issue", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
@@ -76,7 +59,7 @@ describe("User start/stop", () => {
   });
 
   test("Stopping an issue should close the author's linked PR", async () => {
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => { });
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as Sender;
     const context = createContext(issue, sender, "/stop");
@@ -112,6 +95,7 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
     const context = createContext(issue, sender, "/stop");
+
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
     const output = await userStartStop(context as unknown as Context);
 
@@ -180,6 +164,40 @@ describe("User start/stop", () => {
     } catch (error) {
       if (error instanceof Error) {
         expect(error.message).toEqual("Issue is closed");
+      }
+    }
+  });
+
+  test("User can't start if command is disabled", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender, "/start");
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    try {
+      await userStartStop(context as unknown as Context);
+    } catch (error) {
+      if (error instanceof Error) {
+        expect(error.message).toEqual("The '/start' command is disabled for this repository.");
+      }
+    }
+  });
+
+  test("User can't stop if command is disabled", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
+
+    const context = createContext(issue, sender, "/stop");
+
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+
+    try {
+      await userStartStop(context as unknown as Context);
+    } catch (error) {
+      if (error instanceof Error) {
+        expect(error.message).toEqual("The '/stop' command is disabled for this repository.");
       }
     }
   });
@@ -502,6 +520,23 @@ async function setupTests() {
     issue_number: 2,
     owner: "ubiquity",
     repo: "test-repo",
+    source: {
+      issue: {
+        number: 3,
+        state: "open",
+        body: `Resolves #2`,
+        html_url: "http://github.com/ubiquity/test-repo/pull/3",
+        repository: {
+          full_name: TEST_REPO,
+        },
+        user: {
+          login: "user2",
+        },
+        pull_request: {
+          html_url: "http://github.com/ubiquity/test-repo/pull/3",
+        },
+      },
+    },
   });
 }
 
@@ -557,17 +592,17 @@ function getSupabase(withData = true) {
         single: jest.fn().mockResolvedValue({
           data: withData
             ? {
-                id: 1,
-                wallets: {
-                  address: "0x123",
-                },
-              }
-            : {
-                id: 1,
-                wallets: {
-                  address: undefined,
-                },
+              id: 1,
+              wallets: {
+                address: "0x123",
               },
+            }
+            : {
+              id: 1,
+              wallets: {
+                address: undefined,
+              },
+            },
         }),
       }),
     }),

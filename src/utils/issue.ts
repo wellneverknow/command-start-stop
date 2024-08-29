@@ -28,7 +28,8 @@ export async function getAssignedIssues(context: Context, username: string): Pro
         })
       );
   } catch (err: unknown) {
-    throw context.logger.error("Fetching assigned issues failed!", { error: err as Error });
+    context.logger.error("Fetching assigned issues failed!", { error: err as Error });
+    return [];
   }
 }
 
@@ -40,14 +41,14 @@ export async function addCommentToIssue(context: Context, message: string | null
 
   const issueNumber = payload.issue.number;
   try {
-    await context.octokit.rest.issues.createComment({
+    await context.octokit.issues.createComment({
       owner: payload.repository.owner.login,
       repo: payload.repository.name,
       issue_number: issueNumber,
       body: comment,
     });
   } catch (err: unknown) {
-    throw context.logger.error("Adding a comment failed!", { error: err as Error });
+    context.logger.error("Adding a comment failed!", { error: err as Error });
   }
 }
 
@@ -63,17 +64,15 @@ export async function closePullRequest(context: Context, results: GetLinkedResul
       state: "closed",
     });
   } catch (err: unknown) {
-    throw context.logger.error("Closing pull requests failed!", { error: err as Error });
+    context.logger.error("Closing pull requests failed!", { error: err as Error });
   }
 }
 
 export async function closePullRequestForAnIssue(context: Context, issueNumber: number, repository: Context["payload"]["repository"], author: string) {
   const { logger } = context;
   if (!issueNumber) {
-    throw logger.error("Issue is not defined", {
-      issueNumber,
-      repository: repository.name,
-    });
+    logger.error("Issue is not defined");
+    return;
   }
 
   const linkedPullRequests = await getLinkedPullRequests(context, {
@@ -120,35 +119,6 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
   return logger.info(comment);
 }
 
-async function confirmMultiAssignment(context: Context, issueNumber: number, usernames: string[]) {
-  const { logger, payload, octokit } = context;
-
-  if (usernames.length < 2) {
-    return;
-  }
-
-  const { private: isPrivate } = payload.repository;
-
-  const {
-    data: { assignees },
-  } = await octokit.rest.issues.get({
-    owner: payload.repository.owner.login,
-    repo: payload.repository.name,
-    issue_number: issueNumber,
-  });
-
-  if (!assignees?.length) {
-    throw logger.error("We detected that this task was not assigned to anyone. Please report this to the maintainers.", { issueNumber, usernames });
-  }
-
-  if (isPrivate && assignees?.length <= 1) {
-    const log = logger.info("This task belongs to a private repo and can only be assigned to one user without an official paid GitHub subscription.", {
-      issueNumber,
-    });
-    await addCommentToIssue(context, log?.logMessage.diff as string);
-  }
-}
-
 export async function addAssignees(context: Context, issueNo: number, assignees: string[]) {
   const payload = context.payload;
 
@@ -162,8 +132,6 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
   } catch (e: unknown) {
     throw context.logger.error("Adding the assignee failed", { assignee: assignees, issueNo, error: e as Error });
   }
-
-  await confirmMultiAssignment(context, issueNo, assignees);
 }
 
 export async function getAllPullRequests(
@@ -181,7 +149,8 @@ export async function getAllPullRequests(
       sort: "created",
     })) as GitHubIssueSearch["items"];
   } catch (err: unknown) {
-    throw context.logger.error("Fetching all pull requests failed!", { error: err as Error });
+    context.logger.error("Fetching all pull requests failed!", { error: err as Error });
+    return [];
   }
 }
 
@@ -193,7 +162,8 @@ export async function getAllPullRequestReviews(context: Context, pullNumber: num
       pull_number: pullNumber,
     })) as Review[];
   } catch (err: unknown) {
-    throw context.logger.error("Fetching all pull request reviews failed!", { error: err as Error });
+    context.logger.error("Fetching all pull request reviews failed!", { error: err as Error });
+    return [];
   }
 }
 
