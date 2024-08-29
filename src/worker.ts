@@ -47,6 +47,8 @@ export default {
         });
       }
 
+      const decodedEnv = Value.Decode(envConfigValidator.schema, env);
+      webhookPayload.env = decodedEnv;
       webhookPayload.settings = settings;
       await startStopTask(webhookPayload, env);
       return new Response(JSON.stringify("OK"), { status: 200, headers: { "content-type": "application/json" } });

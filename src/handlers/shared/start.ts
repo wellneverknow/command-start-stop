@@ -83,15 +83,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   }
 
   const duration: number = calculateDurations(labels).shift() ?? 0;
-  const toAssignIds = toAssign.map(async (u) => {
-    const userId = await fetchUserId(context, u);
-
-    if (!userId) {
-      throw new Error(logger.error("User not found", { user: u }).logMessage.raw);
-    }
-
-    return userId;
-  });
+  const toAssignIds = await fetchUserIds(context, toAssign);
 
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, sender.id, duration);
   const logMessage = logger.info("Task assigned successfully", {
@@ -124,13 +116,22 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   return { output: "Task assigned successfully" };
 }
 
-async function fetchUserId(context: Context, username: string) {
-  try {
-    const user = await context.octokit.rest.users.getByUsername({ username });
-    return user.data.id;
-  } catch (e) {
-    return null;
+async function fetchUserIds(context: Context, username: string[]) {
+  const ids = [];
+
+  for (const user of username) {
+    const { data } = await context.octokit.rest.users.getByUsername({
+      username: user,
+    });
+
+    ids.push(data.id);
   }
+
+  if (ids.filter((id) => !id).length > 0) {
+    throw new Error("Error while fetching user ids");
+  }
+
+  return ids;
 }
 
 async function handleTaskLimitChecks(username: string, context: Context, maxConcurrentTasks: number, logger: Context["logger"], sender: string) {
