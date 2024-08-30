@@ -1,6 +1,6 @@
 import { Value } from "@sinclair/typebox/value";
 import { startStopTask } from "./plugin";
-import { Env, startStopSchema, startStopSettingsValidator } from "./types";
+import { Env, envConfigValidator, startStopSchema, startStopSettingsValidator } from "./types";
 import manifest from "../manifest.json";
 
 export default {
@@ -36,6 +36,19 @@ export default {
         throw new Error("Invalid settings provided");
       }
 
+      if (!envConfigValidator.test(env)) {
+        const errorDetails: string[] = [];
+        for (const error of envConfigValidator.errors(env)) {
+          errorDetails.push(`${error.path}: ${error.message}`);
+        }
+        return new Response(JSON.stringify({ error: `Bad Request: the environment is invalid. ${errorDetails.join("; ")}` }), {
+          status: 400,
+          headers: { "content-type": "application/json" },
+        });
+      }
+
+      const decodedEnv = Value.Decode(envConfigValidator.schema, env);
+      webhookPayload.env = decodedEnv;
       webhookPayload.settings = settings;
       await startStopTask(webhookPayload, env);
       return new Response(JSON.stringify("OK"), { status: 200, headers: { "content-type": "application/json" } });
