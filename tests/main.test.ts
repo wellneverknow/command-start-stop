@@ -566,6 +566,7 @@ function createContext(
       taskStaleTimeoutDuration: "30 Days",
       maxConcurrentTasks: 3,
       startRequiresWallet,
+      emptyWalletText: "Please set your wallet address with the /wallet command first and try again.",
     },
     octokit: new octokit.Octokit(),
     eventName: "issue_comment.created" as SupportedEventsU,
