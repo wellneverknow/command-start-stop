@@ -19,14 +19,6 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     throw new Error(logger.error(`Skipping '/start' since the issue is a parent issue`).logMessage.raw);
   }
 
-  const hasBeenPreviouslyUnassigned = await hasUserBeenUnassigned(context);
-
-  if (hasBeenPreviouslyUnassigned) {
-    const log = logger.error("You were previously unassigned from this task. You can not reassign yourself.", { sender });
-    await addCommentToIssue(context, log?.logMessage.diff as string);
-    throw new Error("User was previously unassigned from this task");
-  }
-
   let commitHash: string | null = null;
 
   try {

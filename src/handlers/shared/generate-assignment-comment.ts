@@ -11,22 +11,23 @@ export const options: Intl.DateTimeFormatOptions = {
   timeZoneName: "short",
 };
 
-export function getDeadline(issue: Context["payload"]["issue"]) {
+export function getDeadline(issue: Context["payload"]["issue"]): string | null {
   if (!issue?.labels) {
     throw new Error("No labels are set.");
   }
   const startTime = new Date().getTime();
   const duration: number = calculateDurations(issue.labels).shift() ?? 0;
+  if (!duration) return null;
   const endTime = new Date(startTime + duration * 1000);
   return endTime.toLocaleString("en-US", options);
 }
 
-export async function generateAssignmentComment(context: Context, issueCreatedAt: string, issueNumber: number, senderId: number, deadline: string) {
+export async function generateAssignmentComment(context: Context, issueCreatedAt: string, issueNumber: number, senderId: number, deadline: string | null) {
   const startTime = new Date().getTime();
 
   return {
     daysElapsedSinceTaskCreation: Math.floor((startTime - new Date(issueCreatedAt).getTime()) / 1000 / 60 / 60 / 24),
-    deadline,
+    deadline: deadline ?? null,
     registeredWallet:
       (await context.adapters.supabase.user.getWalletByUserId(senderId, issueNumber)) ||
       "Register your wallet address using the following slash command: `/wallet 0x0000...0000`",
