@@ -555,11 +555,11 @@ function createContext(
       issue: issue as unknown as Context["payload"]["issue"],
       sender: sender as unknown as Context["payload"]["sender"],
       repository: db.repo.findFirst({ where: { id: { equals: 1 } } }) as unknown as Context["payload"]["repository"],
-      comment: { body } as unknown as Context["payload"]["comment"],
+      comment: { body } as unknown as Context<"issue_comment.created">["payload"]["comment"],
       action: "created",
       installation: { id: 1 } as unknown as Context["payload"]["installation"],
       organization: { login: "ubiquity" } as unknown as Context["payload"]["organization"],
-    },
+    } as Context["payload"],
     logger: new Logs("debug"),
     config: {
       reviewDelayTolerance: "3 Days",
