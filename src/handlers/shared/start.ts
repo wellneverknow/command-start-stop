@@ -22,7 +22,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const hasBeenPreviouslyUnassigned = await hasUserBeenUnassigned(context);
 
   if (hasBeenPreviouslyUnassigned) {
-    const log = logger.error("You were previously unassigned from this task. You cannot reassign yourself.", { sender });
+    const log = logger.error("You were previously unassigned from this task. You can not reassign yourself.", { sender });
     await addCommentToIssue(context, log?.logMessage.diff as string);
     throw new Error("User was previously unassigned from this task");
   }
