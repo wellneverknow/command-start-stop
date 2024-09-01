@@ -5,7 +5,7 @@ import { getDeadline } from "./shared/generate-assignment-comment";
 import { start } from "./shared/start";
 import { stop } from "./shared/stop";
 
-export async function userStartStop(context: Context): Promise<{ output: string | null }> {
+export async function userStartStop(context: Context<"issue_comment.created">): Promise<Result> {
   const { payload } = context;
   const { issue, comment, sender, repository } = payload;
   const slashCommand = comment.body.split(" ")[0].replace("/", "");
@@ -20,7 +20,7 @@ export async function userStartStop(context: Context): Promise<{ output: string 
     return await start(context, issue, sender, teamMates);
   }
 
-  return { output: null };
+  return { status: "skipped" };
 }
 
 export async function userSelfAssign(context: Context): Promise<Result> {

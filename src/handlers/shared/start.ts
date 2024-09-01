@@ -1,12 +1,13 @@
 import { Context, ISSUE_TYPE, Label } from "../../types";
 import { addAssignees, addCommentToIssue, getAssignedIssues, getAvailableOpenedPullRequests, getTimeValue, isParentIssue } from "../../utils/issue";
+import { Result } from "../proxy";
 import { hasUserBeenUnassigned } from "./check-assignments";
 import { checkTaskStale } from "./check-task-stale";
 import { generateAssignmentComment, getDeadline } from "./generate-assignment-comment";
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
-export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"], teammates: string[]) {
+export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"], teammates: string[]): Promise<Result> {
   const { logger, config } = context;
   const { maxConcurrentTasks, taskStaleTimeoutDuration } = config;
 
