@@ -1,4 +1,4 @@
-import { Context } from "../../types/context";
+import { Context } from "../../types";
 import { calculateDurations } from "../../utils/shared";
 
 export const options: Intl.DateTimeFormatOptions = {
@@ -26,7 +26,7 @@ export async function generateAssignmentComment(context: Context, issueCreatedAt
 
   return {
     daysElapsedSinceTaskCreation: Math.floor((startTime - new Date(issueCreatedAt).getTime()) / 1000 / 60 / 60 / 24),
-    deadline: duration > 0 ? deadline : null,
+    deadline,
     registeredWallet:
       (await context.adapters.supabase.user.getWalletByUserId(senderId, issueNumber)) ||
       "Register your wallet address using the following slash command: `/wallet 0x0000...0000`",

@@ -1,6 +1,6 @@
 import ms from "ms";
 import { Context } from "../types/context";
-import { GitHubIssueSearch, Issue, Review } from "../types/payload";
+import { Issue, GitHubIssueSearch, Review } from "../types/payload";
 import { getLinkedPullRequests, GetLinkedResults } from "./get-linked-prs";
 
 export function isParentIssue(body: string) {
@@ -16,7 +16,7 @@ export async function getAssignedIssues(context: Context, username: string): Pro
       q: `is:issue is:open assignee:${username} org:${payload.repository.owner.login}`,
     })) as Issue[];
   } catch (err: unknown) {
-    throw context.logger.error("Fetching assigned issues failed!", { error: err as Error });
+    throw new Error(context.logger.error("Fetching assigned issues failed!", { error: err as Error }).logMessage.raw);
   }
 }
 
@@ -35,7 +35,7 @@ export async function addCommentToIssue(context: Context, message: string | null
       body: message,
     });
   } catch (err: unknown) {
-    throw context.logger.error("Adding a comment failed!", { error: err as Error });
+    throw new Error(context.logger.error("Adding a comment failed!", { error: err as Error }).logMessage.raw);
   }
 }
 
@@ -51,17 +51,19 @@ export async function closePullRequest(context: Context, results: GetLinkedResul
       state: "closed",
     });
   } catch (err: unknown) {
-    throw context.logger.error("Closing pull requests failed!", { error: err as Error });
+    throw new Error(context.logger.error("Closing pull requests failed!", { error: err as Error }).logMessage.raw);
   }
 }
 
 export async function closePullRequestForAnIssue(context: Context, issueNumber: number, repository: Context["payload"]["repository"], author: string) {
   const { logger } = context;
   if (!issueNumber) {
-    throw logger.error("Issue is not defined", {
-      issueNumber,
-      repository: repository.name,
-    });
+    throw new Error(
+      logger.error("Issue is not defined", {
+        issueNumber,
+        repository: repository.name,
+      }).logMessage.raw
+    );
   }
 
   const linkedPullRequests = await getLinkedPullRequests(context, {
@@ -126,7 +128,9 @@ async function confirmMultiAssignment(context: Context, issueNumber: number, use
   });
 
   if (!assignees?.length) {
-    throw logger.error("We detected that this task was not assigned to anyone. Please report this to the maintainers.", { issueNumber, usernames });
+    throw new Error(
+      logger.error("We detected that this task was not assigned to anyone. Please report this to the maintainers.", { issueNumber, usernames }).logMessage.raw
+    );
   }
 
   if (isPrivate && assignees?.length <= 1) {
@@ -148,7 +152,7 @@ export async function addAssignees(context: Context, issueNo: number, assignees:
       assignees,
     });
   } catch (e: unknown) {
-    throw context.logger.error("Adding the assignee failed", { assignee: assignees, issueNo, error: e as Error });
+    throw new Error(context.logger.error("Adding the assignee failed", { assignee: assignees, issueNo, error: e as Error }).logMessage.raw);
   }
 
   await confirmMultiAssignment(context, issueNo, assignees);
@@ -165,21 +169,32 @@ export async function getAllPullRequests(context: Context, state: "open" | "clos
       sort: "created",
     })) as GitHubIssueSearch["items"];
   } catch (err: unknown) {
-    throw context.logger.error("Fetching all pull requests failed!", { error: err as Error });
+    throw new Error(context.logger.error("Fetching all pull requests failed!", { error: err as Error }).logMessage.raw);
   }
 }
 
 export async function getAllPullRequestReviews(context: Context, pullNumber: number, owner: string, repo: string) {
   try {
-    return (await context.octokit.paginate(context.octokit.rest.pulls.listReviews, {
+    return (await context.octokit.paginate(context.octokit.pulls.listReviews, {
       owner,
       repo,
       pull_number: pullNumber,
       per_page: 100,
     })) as Review[];
   } catch (err: unknown) {
-    throw context.logger.error("Fetching all pull request reviews failed!", { error: err as Error });
+    throw new Error(context.logger.error("Fetching all pull request reviews failed!", { error: err as Error }).logMessage.raw);
   }
+}
+
+export function getOwnerRepoFromHtmlUrl(url: string) {
+  const parts = url.split("/");
+  if (parts.length < 5) {
+    throw new Error("Invalid URL");
+  }
+  return {
+    owner: parts[3],
+    repo: parts[4],
+  };
 }
 
 export async function getAvailableOpenedPullRequests(context: Context, username: string) {

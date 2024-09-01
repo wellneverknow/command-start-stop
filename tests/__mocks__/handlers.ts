@@ -123,4 +123,14 @@ export const handlers = [
       })
     )
   ),
+  // get user
+  http.get("https://api.github.com/users/:username", ({ params: { username } }) => {
+    const user = db.users.findFirst({ where: { login: { equals: username as string } } });
+    if (!user) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    return HttpResponse.json(user);
+  }),
+  // get comments for an issue
+  http.get("https://api.github.com/repos/:owner/:repo/issues/:issue_number/comments", () => HttpResponse.json(db.comments.getAll())),
 ];
