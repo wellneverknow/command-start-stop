@@ -8,7 +8,7 @@ export function isParentIssue(body: string) {
   return body.match(parentPattern);
 }
 
-export async function getAssignedIssues(context: Context, username: string): Promise<GitHubIssueSearch["items"]> {
+export async function getAssignedIssues(context: Context, username: string): Promise<Issue[]> {
   const { payload } = context;
 
   try {
@@ -163,7 +163,7 @@ export async function getAllPullRequests(context: Context, state: "open" | "clos
 
   try {
     return (await context.octokit.paginate(context.octokit.search.issuesAndPullRequests, {
-      q: `org:${payload.repository.owner.login} author:${username} state:${state} is:pr`,
+      q: `org:${payload.repository.owner.login} author:${username} state:${state}`,
       per_page: 100,
       order: "desc",
       sort: "created",
@@ -206,7 +206,7 @@ export async function getAvailableOpenedPullRequests(context: Context, username:
 
   for (let i = 0; i < openedPullRequests.length; i++) {
     const openedPullRequest = openedPullRequests[i];
-    const [owner, repo] = openedPullRequest.html_url.split("/").slice(3, 4);
+    const { owner, repo } = getOwnerRepoFromHtmlUrl(openedPullRequest.html_url);
     const reviews = await getAllPullRequestReviews(context, openedPullRequest.number, owner, repo);
 
     if (reviews.length > 0) {
