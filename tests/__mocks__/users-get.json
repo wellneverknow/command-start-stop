@@ -1,27 +1,14 @@
 [
   {
     "id": 1,
-    "login": "ubiquity",
-    "role": "admin"
+    "login": "ubiquity"
   },
   {
     "id": 2,
-    "login": "user2",
-    "role": "contributor"
+    "login": "user2"
   },
   {
     "id": 3,
-    "login": "user3",
-    "role": "collaborator"
-  },
-  {
-    "id": 4,
-    "login": "user4",
-    "role": "new-start"
-  },
-  {
-    "id": 5,
-    "login": "user5",
-    "role": "member"
+    "login": "user3"
   }
 ]
