@@ -1,5 +1,5 @@
 import { drop } from "@mswjs/data";
-import { Context, SupportedEventsU } from "../src/types";
+import { Context, envConfigValidator, Sender, SupportedEventsU } from "../src/types";
 import { db } from "./__mocks__/db";
 import { server } from "./__mocks__/node";
 import usersGet from "./__mocks__/users-get.json";
@@ -51,7 +51,7 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
-    const context = createContext(issue, sender, "/start @user2");
+    const context = createContext(issue, sender, "/start @user3");
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
@@ -61,7 +61,7 @@ describe("User start/stop", () => {
 
     const issue2 = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     expect(issue2.assignees).toHaveLength(2);
-    expect(issue2.assignees).toEqual(expect.arrayContaining(["ubiquity", "user2"]));
+    expect(issue2.assignees).toEqual(expect.arrayContaining(["ubiquity", "user3"]));
   });
 
   test("User can stop an issue", async () => {
@@ -105,7 +105,7 @@ describe("User start/stop", () => {
 
     context.adapters = createAdapters(getSupabase(), context);
 
-    await expect(userStartStop(context)).rejects.toThrow("```diff\n! You are not assigned to this task\n```");
+    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("```diff\n! You are not assigned to this task\n```");
   });
 
   test("User can't stop an issue without assignees", async () => {
@@ -113,9 +113,9 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender, "/stop");
-    context.adapters = createAdapters(getSupabase(), context);
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
-    await expect(userStartStop(context)).rejects.toThrow("```diff\n! You are not assigned to this task\n```");
+    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("```diff\n! You are not assigned to this task\n```");
   });
 
   test("User can't start an issue that's already assigned", async () => {
@@ -126,7 +126,7 @@ describe("User start/stop", () => {
 
     context.adapters = createAdapters(getSupabase(), context);
 
-    await expect(userStartStop(context)).rejects.toThrow("```diff\n! This issue is already assigned. Please choose another unassigned task.\n```");
+    await expect(userStartStop(context)).rejects.toThrow("This issue is already assigned. Please choose another unassigned task.");
   });
 
   test("User can't start an issue without a price label", async () => {
@@ -144,7 +144,7 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender);
+    const context = createContext(issue, sender, "/start", "2", true);
 
     context.adapters = createAdapters(getSupabase(false), context);
     await expect(userStartStop(context)).rejects.toThrow("No wallet address found");
@@ -158,13 +158,7 @@ describe("User start/stop", () => {
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
-    try {
-      await userStartStop(context as unknown as Context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual("Issue is closed");
-      }
-    }
+    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("This issue is closed, please choose another.");
   });
 
   test("User can't start an issue that's a parent issue", async () => {
@@ -175,7 +169,7 @@ describe("User start/stop", () => {
 
     context.adapters = createAdapters(getSupabase(), context);
 
-    await expect(userStartStop(context)).rejects.toThrow("Issue is a parent issue");
+    await expect(userStartStop(context)).rejects.toThrow("Skipping '/start' since the issue is a parent issue");
   });
 
   test("User can't start another issue if they have reached the max limit", async () => {
@@ -183,33 +177,39 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender);
-    context.config.miscellaneous.maxConcurrentTasks = 2;
+    context.config.maxConcurrentTasks = 1;
 
     context.adapters = createAdapters(getSupabase(), context);
 
-    await expect(userStartStop(context)).rejects.toThrow("Too many assigned issues, you have reached your max limit of 2 issues.");
+    await expect(userStartStop(context)).rejects.toThrow("You have reached your max task limit. Please close out some tasks before assigning new ones.");
   });
 
   test("User can't start an issue if they have previously been unassigned by an admin", async () => {
-    const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
+    const issue = db.issue.findFirst({ where: { id: { equals: 6 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender, "/start");
     context.adapters = createAdapters(getSupabase(), context);
 
-    await expect(userStartStop(context)).rejects.toThrow("User was previously unassigned from this task");
+    await expect(userStartStop(context)).rejects.toThrow("user2 you were previously unassigned from this task. You cannot be reassigned.");
   });
 
   test("Should throw if no APP_ID is set", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender, "/start", null);
+    const context = createContext(issue, sender, "/start", undefined);
 
-    context.env.APP_ID = null as unknown as string;
-    context.adapters = createAdapters(getSupabase(), context);
+    const env = { ...context.env };
+    Reflect.deleteProperty(env, "APP_ID");
+    if (!envConfigValidator.test(env)) {
+      const errorDetails: string[] = [];
+      for (const error of envConfigValidator.errors(env)) {
+        errorDetails.push(`${error.path}: ${error.message}`);
+      }
 
-    await expect(userStartStop(context)).rejects.toThrow("Invalid APP_ID");
+      expect(errorDetails).toContain("/APP_ID: Required property");
+    }
   });
 
   test("Should throw if APP_ID is not a number", async () => {
@@ -217,9 +217,16 @@ describe("User start/stop", () => {
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
     const context = createContext(issue, sender, "/start", "testing-one");
-    context.adapters = createAdapters(getSupabase(), context);
+    const env = { ...context.env };
 
-    await expect(userStartStop(context)).rejects.toThrow("Invalid APP_ID");
+    if (!envConfigValidator.test(env)) {
+      const errorDetails: string[] = [];
+      for (const error of envConfigValidator.errors(env)) {
+        errorDetails.push(`${error.path}: ${error.message}`);
+      }
+
+      expect(errorDetails).toContain("Invalid APP_ID");
+    }
   });
 });
 
@@ -526,9 +533,22 @@ async function setupTests() {
     owner: "ubiquity",
     repo: "test-repo",
   });
+
+  db.comments.create({
+    id: 1,
+    body: "/start",
+    owner: "ubiquity",
+    repo: "test-repo",
+  });
 }
 
-function createContext(issue: Record<string, unknown>, sender: Record<string, unknown>, body = "/start"): Context {
+function createContext(
+  issue: Record<string, unknown>,
+  sender: Record<string, unknown>,
+  body = "/start",
+  appId: string | null = "1",
+  startRequiresWallet = false
+): Context {
   return {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
@@ -545,13 +565,15 @@ function createContext(issue: Record<string, unknown>, sender: Record<string, un
       reviewDelayTolerance: "3 Days",
       taskStaleTimeoutDuration: "30 Days",
       maxConcurrentTasks: 3,
-      startRequiresWallet: false,
+      startRequiresWallet,
+      emptyWalletText: "Please set your wallet address with the /wallet command first and try again.",
     },
     octokit: new octokit.Octokit(),
     eventName: "issue_comment.created" as SupportedEventsU,
     env: {
       SUPABASE_KEY: "key",
       SUPABASE_URL: "url",
+      APP_ID: appId as unknown as number,
     },
   };
 }

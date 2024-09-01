@@ -7,7 +7,6 @@ export const db = factory({
   users: {
     id: primaryKey(Number),
     login: String,
-    role: String,
   },
   issue: {
     id: primaryKey(Number),
@@ -56,7 +55,6 @@ export const db = factory({
       subscriptions_url: String,
       type: String,
       url: String,
-      role: String,
     }),
   },
   repo: {
@@ -104,7 +102,6 @@ export const db = factory({
       type: String,
       url: String,
     }),
-    pull_request: Object,
     assignees: Array,
     requested_reviewers: Array,
     requested_teams: Array,
