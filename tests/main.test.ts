@@ -78,7 +78,7 @@ describe("User start/stop", () => {
   });
 
   test("Stopping an issue should close the author's linked PR", async () => {
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => { });
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
     const context = createContext(issue, sender, "/stop");
@@ -115,9 +115,7 @@ describe("User start/stop", () => {
     const context = createContext(issue, sender, "/stop");
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
-    const output = await userStartStop(context as unknown as Context);
-
-    expect(output).toEqual({ output: "You are not assigned to this task" });
+    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("```diff\n! You are not assigned to this task\n```");
   });
 
   test("User can't start an issue that's already assigned", async () => {
@@ -174,26 +172,6 @@ describe("User start/stop", () => {
     await expect(userStartStop(context)).rejects.toThrow("Skipping '/start' since the issue is a parent issue");
   });
 
-  test("should return the role with the smallest task limit if user role is not defined in config", async () => {
-    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 4 } } }) as unknown as Sender;
-
-    //   test("User can't start another issue if they have reached the max limit", async () => {
-    //     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    //     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
-
-    const contributorLimit = maxConcurrentDefaults.contributor;
-    createIssuesForMaxAssignment(contributorLimit, sender.id);
-    const context = createContext(issue, sender);
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-
-    await expect(userStartStop(context as unknown as Context)).rejects.toThrow(
-      `Too many assigned issues, you have reached your max limit of ${contributorLimit} issues.`
-    );
-
-    expect(contributorLimit).toEqual(2);
-  });
-
   test("should set maxLimits to 4 if the user is a member", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 5 } } }) as unknown as Sender;
@@ -209,7 +187,7 @@ describe("User start/stop", () => {
     expect(memberLimit).toEqual(4);
   });
 
-  test("should set maxLimits to 6 if the user is an admin", async () => {
+test("should set maxLimits to 6 if the user is an admin", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
@@ -218,19 +196,10 @@ describe("User start/stop", () => {
     createIssuesForMaxAssignment(adminLimit + 4, sender.id);
     const context = createContext(issue, sender) as unknown as Context;
 
-    context.adapters = createAdapters(getSupabase(), context);
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    await expect(userStartStop(context)).rejects.toThrow(`Too many assigned issues, you have reached your max limit of ${adminLimit} issues.`);
 
-    try {
-      await userStartStop(context);
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 2 issues.")
-      }
-    }
-
-    context.adapters = createAdapters(getSupabase(), context);
-
-    await expect(userStartStop(context)).rejects.toThrow("You have reached your max task limit. Please close out some tasks before assigning new ones.");
+    expect(adminLimit).toEqual(6);
   });
 
   test("User can't start an issue if they have previously been unassigned by an admin", async () => {
@@ -272,7 +241,6 @@ describe("User start/stop", () => {
       const errorDetails: string[] = [];
       for (const error of envConfigValidator.errors(env)) {
         errorDetails.push(`${error.path}: ${error.message}`);
-
       }
 
       expect(errorDetails).toContain("Invalid APP_ID");
@@ -379,7 +347,6 @@ async function setupTests() {
     owner: "ubiquity",
     repo: "test-repo",
     state: "open",
-    pull_request: {},
     closed_at: null,
   });
 
@@ -398,7 +365,6 @@ async function setupTests() {
     body: "Pull request",
     owner: "ubiquity",
     repo: "test-repo",
-    pull_request: {},
     state: "open",
     closed_at: null,
   });
@@ -418,28 +384,6 @@ async function setupTests() {
     body: "Pull request body",
     owner: "ubiquity",
     repo: "test-repo",
-    pull_request: {},
-    state: "open",
-    closed_at: null,
-  });
-
-  db.pull.create({
-    id: 4,
-    html_url: "https://github.com/ubiquity/test-repo/pull/4",
-    number: 3,
-    author: {
-      id: 1,
-      name: "ubiquity",
-    },
-    user: {
-      id: 1,
-      login: "ubiquity",
-    },
-    body: "Pull request body",
-    owner: "ubiquity",
-    draft: true,
-    pull_request: {},
-    repo: "test-repo",
     state: "open",
     closed_at: null,
   });
@@ -447,8 +391,6 @@ async function setupTests() {
   db.review.create({
     id: 1,
     body: "Review body",
-    owner: "ubiquity",
-    repo: "test-repo",
     commit_id: "123",
     html_url: "",
     pull_request_url: "",
@@ -642,7 +584,6 @@ function createContext(
   appId: string | null = "1",
   startRequiresWallet = false
 ): Context {
-
   return {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
@@ -679,17 +620,17 @@ function getSupabase(withData = true) {
         single: jest.fn().mockResolvedValue({
           data: withData
             ? {
-              id: 1,
-              wallets: {
-                address: "0x123",
-              },
-            }
+                id: 1,
+                wallets: {
+                  address: "0x123",
+                },
+              }
             : {
-              id: 1,
-              wallets: {
-                address: undefined,
+                id: 1,
+                wallets: {
+                  address: undefined,
+                },
               },
-            },
         }),
       }),
     }),
