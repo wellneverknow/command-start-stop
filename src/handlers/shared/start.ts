@@ -75,7 +75,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   }
 
   // get labels
-  const labels = issue.labels;
+  const labels = issue.labels ?? [];
   const priceLabel = labels.find((label: Label) => label.name.startsWith("Price: "));
 
   if (!priceLabel) {
