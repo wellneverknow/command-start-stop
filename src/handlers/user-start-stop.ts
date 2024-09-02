@@ -1,11 +1,14 @@
-import { Context } from "../types";
+import { Context, isContextCommentCreated } from "../types";
 import { addCommentToIssue } from "../utils/issue";
-import { Result } from "./proxy";
+import { HttpStatusCode, Result } from "./proxy";
 import { getDeadline } from "./shared/generate-assignment-comment";
 import { start } from "./shared/start";
 import { stop } from "./shared/stop";
 
-export async function userStartStop(context: Context<"issue_comment.created">): Promise<Result> {
+export async function userStartStop(context: Context): Promise<Result> {
+  if (!isContextCommentCreated(context)) {
+    return { status: HttpStatusCode.NOT_MODIFIED };
+  }
   const { payload } = context;
   const { issue, comment, sender, repository } = payload;
   const slashCommand = comment.body.split(" ")[0].replace("/", "");
@@ -20,7 +23,7 @@ export async function userStartStop(context: Context<"issue_comment.created">): 
     return await start(context, issue, sender, teamMates);
   }
 
-  return { status: "skipped" };
+  return { status: HttpStatusCode.NOT_MODIFIED };
 }
 
 export async function userSelfAssign(context: Context): Promise<Result> {
@@ -31,5 +34,5 @@ export async function userSelfAssign(context: Context): Promise<Result> {
   const users = issue.assignees.map((user) => `@${user?.login}`).join(", ");
 
   await addCommentToIssue(context, `${users} the deadline is at ${deadline}`);
-  return { status: "ok" };
+  return { status: HttpStatusCode.OK };
 }

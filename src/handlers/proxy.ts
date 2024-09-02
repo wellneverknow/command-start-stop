@@ -1,8 +1,13 @@
 import { Context, Env, SupportedEventsU } from "../types";
 import { userSelfAssign, userStartStop } from "./user-start-stop";
 
+export enum HttpStatusCode {
+  OK = 200,
+  NOT_MODIFIED = 304,
+}
+
 export interface Result {
-  status: "ok" | "failed" | "skipped";
+  status: HttpStatusCode;
   content?: string;
   reason?: string;
 }

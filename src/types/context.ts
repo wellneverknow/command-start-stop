@@ -11,6 +11,10 @@ export type SupportedEvents = {
   [K in SupportedEventsU]: K extends WebhookEventName ? WebhookEvent<K> : never;
 };
 
+export function isContextCommentCreated(context: Context): context is Context<"issue_comment.created"> {
+  return "comment" in context;
+}
+
 export interface Context<T extends SupportedEventsU = SupportedEventsU, TU extends SupportedEvents[T] = SupportedEvents[T]> {
   eventName: T;
   payload: TU["payload"];

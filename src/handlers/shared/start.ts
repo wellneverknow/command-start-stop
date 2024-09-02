@@ -1,6 +1,6 @@
 import { Context, ISSUE_TYPE, Label } from "../../types";
 import { addAssignees, addCommentToIssue, getAssignedIssues, getAvailableOpenedPullRequests, getTimeValue, isParentIssue } from "../../utils/issue";
-import { Result } from "../proxy";
+import { HttpStatusCode, Result } from "../proxy";
 import { hasUserBeenUnassigned } from "./check-assignments";
 import { checkTaskStale } from "./check-task-stale";
 import { generateAssignmentComment, getDeadline } from "./generate-assignment-comment";
@@ -113,7 +113,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     ].join("\n") as string
   );
 
-  return { content: "Task assigned successfully", status: "ok" };
+  return { content: "Task assigned successfully", status: HttpStatusCode.OK };
 }
 
 async function fetchUserIds(context: Context, username: string[]) {
