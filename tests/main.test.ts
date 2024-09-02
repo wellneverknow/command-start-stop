@@ -105,7 +105,7 @@ describe("User start/stop", () => {
 
     context.adapters = createAdapters(getSupabase(), context);
 
-    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("```diff\n! You are not assigned to this task\n```");
+    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("You are not assigned to this task");
   });
 
   test("User can't stop an issue without assignees", async () => {
@@ -115,7 +115,7 @@ describe("User start/stop", () => {
     const context = createContext(issue, sender, "/stop");
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
-    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("```diff\n! You are not assigned to this task\n```");
+    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("You are not assigned to this task");
   });
 
   test("User can't start an issue that's already assigned", async () => {
