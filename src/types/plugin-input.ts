@@ -17,6 +17,7 @@ export const startStopSchema = T.Object(
     taskStaleTimeoutDuration: T.String({ default: "30 Days" }),
     startRequiresWallet: T.Boolean({ default: true }),
     maxConcurrentTasks: T.Record(T.String(), T.Integer(), { default: { admin: 20, member: 10, contributor: 2 } }),
+    emptyWalletText: T.String({ default: "Please set your wallet address with the /wallet command first and try again." }),
   },
   {
     default: {}
