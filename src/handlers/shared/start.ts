@@ -77,7 +77,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const toAssign = [];
   // check max assigned issues
   for (const user of teammates) {
-    if (await handleTaskLimitChecks(user, context, maxConcurrentTasks, logger, sender.login)) {
+    if (await handleTaskLimitChecks(user, context, maxTask.limit, logger, sender.login)) {
       toAssign.push(user);
     }
   }
@@ -136,8 +136,6 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   return { output: "Task assigned successfully" };
 }
 
-async function handleTaskLimitChecks(username: string, context: Context, maxConcurrentTasks: { [role: string]: number }, logger: Context["logger"], sender: string) {
-  
 async function fetchUserIds(context: Context, username: string[]) {
   const ids = [];
 
@@ -157,22 +155,16 @@ async function fetchUserIds(context: Context, username: string[]) {
 }
 
 async function handleTaskLimitChecks(username: string, context: Context, maxConcurrentTasks: number, logger: Context["logger"], sender: string) {
-
   const openedPullRequests = await getAvailableOpenedPullRequests(context, username);
   const assignedIssues = await getAssignedIssues(context, username);
 
   // check for max and enforce max
-  const maxTask = await getUserRoleAndTaskLimit(context, sender);
-  const maxTasksForRole = maxConcurrentTasks[maxTask.limit] ?? 0;
-
-  if (assignedIssues.length - openedPullRequests.length >= maxTasksForRole) {
-    throw logger.error(username === sender ? "You have reached your max task limit" : `${username} has reached their max task limit`, {
 
   if (Math.abs(assignedIssues.length - openedPullRequests.length) >= maxConcurrentTasks) {
     const log = logger.error(username === sender ? "You have reached your max task limit" : `${username} has reached their max task limit`, {
       assignedIssues: assignedIssues.length,
       openedPullRequests: openedPullRequests.length,
-      maxConcurrentTasks: maxTasksForRole,
+      maxConcurrentTasks,
     });
     await addCommentToIssue(context, log?.logMessage.diff as string);
     return false;
@@ -184,4 +176,3 @@ async function handleTaskLimitChecks(username: string, context: Context, maxConc
 
   return true;
 }
-

@@ -103,7 +103,6 @@ export const db = factory({
       type: String,
       url: String,
     }),
-    pull_request: Object,
     assignees: Array,
     requested_reviewers: Array,
     requested_teams: Array,

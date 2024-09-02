@@ -105,7 +105,7 @@ describe("User start/stop", () => {
 
     context.adapters = createAdapters(getSupabase(), context);
 
-    expect(output).toEqual({ output: "You are not assigned to this task" });
+    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("```diff\n! You are not assigned to this task\n```");
   });
 
   test("User can't stop an issue without assignees", async () => {
@@ -178,9 +178,9 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 4 } } }) as unknown as Sender;
 
-//   test("User can't start another issue if they have reached the max limit", async () => {
-//     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-//     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
+    //   test("User can't start another issue if they have reached the max limit", async () => {
+    //     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    //     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
 
     const contributorLimit = maxConcurrentDefaults.contributor;
     createIssuesForMaxAssignment(contributorLimit, sender.id);
@@ -224,8 +224,9 @@ describe("User start/stop", () => {
       await userStartStop(context);
     } catch (error) {
       if (error instanceof Error) {
-        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 2 issues.");
-    context.config.maxConcurrentTasks = 1;
+        expect(error.message).toEqual("Too many assigned issues, you have reached your max limit of 2 issues.")
+      }
+    }
 
     context.adapters = createAdapters(getSupabase(), context);
 
@@ -633,7 +634,7 @@ const maxConcurrentDefaults = {
   member: 4,
   contributor: 2,
 };
-    
+
 function createContext(
   issue: Record<string, unknown>,
   sender: Record<string, unknown>,
@@ -641,7 +642,7 @@ function createContext(
   appId: string | null = "1",
   startRequiresWallet = false
 ): Context {
-  
+
   return {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
