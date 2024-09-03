@@ -12,7 +12,7 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
   const userToUnassign = assignees.find((assignee: Partial<Assignee>) => assignee?.login?.toLowerCase() === sender.login.toLowerCase());
 
   if (!userToUnassign) {
-    throw new Error(logger.error("You are not assigned to this task", { issueNumber, user: sender.login })?.logMessage.diff as string);
+    throw new Error(logger.error("You are not assigned to this task", { issueNumber, user: sender.login })?.logMessage.raw as string);
   }
 
   // close PR
