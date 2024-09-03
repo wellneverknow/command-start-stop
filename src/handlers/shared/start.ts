@@ -36,18 +36,12 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     logger.error("Error while getting commit hash", { error: e as Error });
   }
 
-  // check max assigned issues
-  const openedPullRequests = await getAvailableOpenedPullRequests(context, sender.login);
-  logger.info(`Opened Pull Requests with approved reviews or with no reviews but over 24 hours have passed`, {
-    openedPullRequests: openedPullRequests.map((pr) => pr.html_url),
-  });
-
   const assignedIssues = await getAssignedIssues(context, sender.login);
   logger.info("Max issues allowed is", { limit: maxTask.limit, assigned: assignedIssues.length });
 
   // check for max and enforce max
 
-  if (Math.abs(assignedIssues.length - openedPullRequests.length) >= maxTask.limit) {
+  if (assignedIssues.length  >= maxTask.limit) {
     throw new Error(`Too many assigned issues, you have reached your max limit of ${maxTask.limit} issues.`);
   }
 
