@@ -35,16 +35,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   } catch (e) {
     logger.error("Error while getting commit hash", { error: e as Error });
   }
-
-  const assignedIssues = await getAssignedIssues(context, sender.login);
-  logger.info("Max issues allowed is", { limit: maxTask.limit, assigned: assignedIssues.length });
-
-  // check for max and enforce max
-
-  if (assignedIssues.length  >= maxTask.limit) {
-    throw new Error(`Too many assigned issues, you have reached your max limit of ${maxTask.limit} issues.`);
-  }
-
+  
   // is it assignable?
 
   if (issue.state === ISSUE_TYPE.CLOSED) {

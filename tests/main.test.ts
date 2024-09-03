@@ -182,7 +182,7 @@ describe("User start/stop", () => {
     const context = createContext(issue, sender) as unknown as Context;
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-    await expect(userStartStop(context)).rejects.toThrow(`Too many assigned issues, you have reached your max limit of ${memberLimit} issues.`);
+    await expect(userStartStop(context)).rejects.toThrow("You have reached your max task limit. Please close out some tasks before assigning new ones.");
 
     expect(memberLimit).toEqual(4);
   });
@@ -197,7 +197,7 @@ test("should set maxLimits to 6 if the user is an admin", async () => {
     const context = createContext(issue, sender) as unknown as Context;
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-    await expect(userStartStop(context)).rejects.toThrow(`Too many assigned issues, you have reached your max limit of ${adminLimit} issues.`);
+    await expect(userStartStop(context)).rejects.toThrow("You have reached your max task limit. Please close out some tasks before assigning new ones.");
 
     expect(adminLimit).toEqual(6);
   });
