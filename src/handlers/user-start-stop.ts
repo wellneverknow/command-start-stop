@@ -31,6 +31,11 @@ export async function userSelfAssign(context: Context): Promise<Result> {
   const { issue } = payload;
   const deadline = getDeadline(issue);
 
+  if (!deadline) {
+    context.logger.debug("Skipping deadline posting message because no deadline has been set.");
+    return { status: HttpStatusCode.NOT_MODIFIED };
+  }
+
   const users = issue.assignees.map((user) => `@${user?.login}`).join(", ");
 
   await addCommentToIssue(context, `${users} the deadline is at ${deadline}`);
