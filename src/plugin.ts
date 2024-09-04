@@ -2,7 +2,7 @@ import { Octokit } from "@octokit/rest";
 import { createClient } from "@supabase/supabase-js";
 import { LogReturn, Logs } from "@ubiquity-dao/ubiquibot-logger";
 import { createAdapters } from "./adapters";
-import { proxyCallbacks } from "./handlers/proxy";
+import { userSelfAssign, userStartStop } from "./handlers/user-start-stop";
 import { Context, Env, PluginInputs } from "./types";
 import { addCommentToIssue } from "./utils/issue";
 
@@ -23,7 +23,14 @@ export async function startStopTask(inputs: PluginInputs, env: Env) {
   context.adapters = createAdapters(supabase, context);
 
   try {
-    return proxyCallbacks(context)[inputs.eventName](context, env);
+    switch (context.eventName) {
+      case "issue_comment.created":
+        return await userStartStop(context);
+      case "issues.assigned":
+        return await userSelfAssign(context);
+      default:
+        context.logger.error(`Unsupported event: ${context.eventName}`);
+    }
   } catch (err) {
     let errorMessage;
     if (err instanceof LogReturn) {

@@ -1,6 +1,6 @@
 import { Context, ISSUE_TYPE, Label } from "../../types";
 import { addAssignees, addCommentToIssue, getAssignedIssues, getAvailableOpenedPullRequests, getTimeValue, isParentIssue } from "../../utils/issue";
-import { HttpStatusCode, Result } from "../proxy";
+import { HttpStatusCode, Result } from "../result-types";
 import { hasUserBeenUnassigned } from "./check-assignments";
 import { checkTaskStale } from "./check-task-stale";
 import { generateAssignmentComment, getDeadline } from "./generate-assignment-comment";

@@ -1,6 +1,6 @@
 import { Context, isContextCommentCreated } from "../types";
 import { addCommentToIssue } from "../utils/issue";
-import { HttpStatusCode, Result } from "./proxy";
+import { HttpStatusCode, Result } from "./result-types";
 import { getDeadline } from "./shared/generate-assignment-comment";
 import { start } from "./shared/start";
 import { stop } from "./shared/stop";

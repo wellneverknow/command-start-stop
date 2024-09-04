@@ -1,6 +1,6 @@
 import { Assignee, Context, Sender } from "../../types";
 import { addCommentToIssue, closePullRequestForAnIssue } from "../../utils/issue";
-import { HttpStatusCode, Result } from "../proxy";
+import { HttpStatusCode, Result } from "../result-types";
 
 export async function stop(context: Context, issue: Context["payload"]["issue"], sender: Sender, repo: Context["payload"]["repository"]): Promise<Result> {
   const { logger } = context;
