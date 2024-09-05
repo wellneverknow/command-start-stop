@@ -226,7 +226,7 @@ test("should set maxLimits to 6 if the user is an admin", async () => {
         errorDetails.push(`${error.path}: ${error.message}`);
       }
 
-      expect(errorDetails).toContain("/APP_ID: Required property");
+      expect(errorDetails).toContain("/APP_ID: Expected union value");
     }
   });
 
@@ -574,7 +574,7 @@ function createIssuesForMaxAssignment(n: number, userId: number) {
 const maxConcurrentDefaults = {
   admin: 6,
   member: 4,
-  contributor: 2,
+  contributor: 3,
 };
 
 function createContext(
