@@ -21,7 +21,7 @@ export const startStopSchema = T.Object(
   },
   {
     default: {}
-  },
+  }
 );
 
 export type StartStopSettings = StaticDecode<typeof startStopSchema>;
