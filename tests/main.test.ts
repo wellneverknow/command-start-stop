@@ -38,26 +38,26 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender);
+    const context = createContext(issue, sender) as Context<"issue_comment.created">;
 
     context.adapters = createAdapters(getSupabase(), context);
 
-    const { output } = await userStartStop(context);
+    const { content } = await userStartStop(context);
 
-    expect(output).toEqual("Task assigned successfully");
+    expect(content).toEqual("Task assigned successfully");
   });
 
   test("User can start an issue with teammates", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
-    const context = createContext(issue, sender, "/start @user3");
+    const context = createContext(issue, sender, "/start @user3") as Context<"issue_comment.created">;
 
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
+    context.adapters = createAdapters(getSupabase(), context);
 
-    const { output } = await userStartStop(context as unknown as Context);
+    const { content } = await userStartStop(context);
 
-    expect(output).toEqual("Task assigned successfully");
+    expect(content).toEqual("Task assigned successfully");
 
     const issue2 = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     expect(issue2.assignees).toHaveLength(2);
@@ -68,26 +68,26 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender, "/stop");
+    const context = createContext(issue, sender, "/stop") as Context<"issue_comment.created">;
 
     context.adapters = createAdapters(getSupabase(), context);
 
-    const { output } = await userStartStop(context);
+    const { content } = await userStartStop(context);
 
-    expect(output).toEqual("Task unassigned successfully");
+    expect(content).toEqual("Task unassigned successfully");
   });
 
   test("Stopping an issue should close the author's linked PR", async () => {
     const infoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
-    const context = createContext(issue, sender, "/stop");
+    const context = createContext(issue, sender, "/stop") as Context<"issue_comment.created">;
 
     context.adapters = createAdapters(getSupabase(), context);
 
-    const { output } = await userStartStop(context);
+    const { content } = await userStartStop(context);
 
-    expect(output).toEqual("Task unassigned successfully");
+    expect(content).toEqual("Task unassigned successfully");
     const logs = infoSpy.mock.calls.flat();
     expect(logs[0]).toMatch(/Opened prs/);
     expect(cleanLogString(logs[3])).toMatch(
@@ -101,28 +101,28 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender, "/stop");
+    const context = createContext(issue, sender, "/stop") as Context<"issue_comment.created">;
 
     context.adapters = createAdapters(getSupabase(), context);
 
-    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("You are not assigned to this task");
+    await expect(userStartStop(context)).rejects.toThrow("You are not assigned to this task");
   });
 
   test("User can't stop an issue without assignees", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 6 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender, "/stop");
+    const context = createContext(issue, sender, "/stop") as Context<"issue_comment.created">;
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
-    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("You are not assigned to this task");
+    await expect(userStartStop(context)).rejects.toThrow("You are not assigned to this task");
   });
 
   test("User can't start an issue that's already assigned", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender, "/start");
+    const context = createContext(issue, sender, "/start") as Context<"issue_comment.created">;
 
     context.adapters = createAdapters(getSupabase(), context);
 
@@ -133,7 +133,7 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 3 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender);
+    const context = createContext(issue, sender) as Context<"issue_comment.created">;
 
     context.adapters = createAdapters(getSupabase(), context);
 
@@ -144,7 +144,7 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender, "/start", "2", true);
+    const context = createContext(issue, sender, "/start", "2", true) as Context<"issue_comment.created">;
 
     context.adapters = createAdapters(getSupabase(false), context);
     await expect(userStartStop(context)).rejects.toThrow("No wallet address found");
@@ -154,18 +154,18 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 4 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender);
+    const context = createContext(issue, sender) as Context<"issue_comment.created">;
 
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
 
-    await expect(userStartStop(context as unknown as Context)).rejects.toThrow("This issue is closed, please choose another.");
+    await expect(userStartStop(context)).rejects.toThrow("This issue is closed, please choose another.");
   });
 
   test("User can't start an issue that's a parent issue", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 5 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender, "/start");
+    const context = createContext(issue, sender, "/start") as Context<"issue_comment.created">;
 
     context.adapters = createAdapters(getSupabase(), context);
 
@@ -176,7 +176,7 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender);
+    const context = createContext(issue, sender) as Context<"issue_comment.created">;
     context.config.maxConcurrentTasks = 1;
 
     context.adapters = createAdapters(getSupabase(), context);
@@ -188,7 +188,7 @@ describe("User start/stop", () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 6 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
 
-    const context = createContext(issue, sender, "/start");
+    const context = createContext(issue, sender, "/start") as Context<"issue_comment.created">;
     context.adapters = createAdapters(getSupabase(), context);
 
     await expect(userStartStop(context)).rejects.toThrow("user2 you were previously unassigned from this task. You cannot be reassigned.");
@@ -555,11 +555,11 @@ function createContext(
       issue: issue as unknown as Context["payload"]["issue"],
       sender: sender as unknown as Context["payload"]["sender"],
       repository: db.repo.findFirst({ where: { id: { equals: 1 } } }) as unknown as Context["payload"]["repository"],
-      comment: { body } as unknown as Context["payload"]["comment"],
+      comment: { body } as unknown as Context<"issue_comment.created">["payload"]["comment"],
       action: "created",
       installation: { id: 1 } as unknown as Context["payload"]["installation"],
       organization: { login: "ubiquity" } as unknown as Context["payload"]["organization"],
-    },
+    } as Context["payload"],
     logger: new Logs("debug"),
     config: {
       reviewDelayTolerance: "3 Days",
