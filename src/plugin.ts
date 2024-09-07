@@ -23,6 +23,7 @@ export async function startStopTask(inputs: PluginInputs, env: Env) {
   context.adapters = createAdapters(supabase, context);
 
   try {
+    console.log("event", context.eventName);
     switch (context.eventName) {
       case "issue_comment.created":
         return await userStartStop(context);

@@ -52,5 +52,6 @@ export async function userPullRequest(context: Context<"pull_request.opened"> | 
     return { status: HttpStatusCode.NOT_MODIFIED };
   }
   context.logger.debug("Pull request", pull_request);
+  console.log(pull_request);
   return { status: HttpStatusCode.NOT_MODIFIED };
 }
