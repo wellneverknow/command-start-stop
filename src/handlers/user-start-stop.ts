@@ -45,8 +45,10 @@ export async function userSelfAssign(context: Context<"issues.assigned">): Promi
 export async function userPullRequest(context: Context<"pull_request.opened"> | Context<"pull_request.reopened">): Promise<Result> {
   const { payload } = context;
   const { pull_request } = payload;
-  const deadline = getDeadline(pull_request);
+  console.log(pull_request);
 
+  const deadline = getDeadline(pull_request);
+  console.log(deadline);
   if (!deadline) {
     context.logger.debug("Skipping deadline posting message because no deadline has been set.");
     return { status: HttpStatusCode.NOT_MODIFIED };
