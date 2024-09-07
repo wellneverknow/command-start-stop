@@ -1,5 +1,6 @@
 import { Context, isContextCommentCreated } from "../types";
-import { addCommentToIssue } from "../utils/issue";
+import { QUERY_CLOSING_ISSUE_REFERENCES } from "../utils/get-closing-issue-references";
+import { addCommentToIssue, getOwnerRepoFromHtmlUrl } from "../utils/issue";
 import { HttpStatusCode, Result } from "./result-types";
 import { getDeadline } from "./shared/generate-assignment-comment";
 import { start } from "./shared/start";
@@ -53,7 +54,21 @@ export async function userPullRequest(context: Context<"pull_request.opened"> | 
     context.logger.debug("Skipping deadline posting message because no deadline has been set.");
     return { status: HttpStatusCode.NOT_MODIFIED };
   }
-  context.logger.debug("Pull request", pull_request);
+  const { owner, repo } = getOwnerRepoFromHtmlUrl(pull_request.html_url);
+  const linkedIssues = await context.octokit.graphql.paginate(QUERY_CLOSING_ISSUE_REFERENCES, {
+    owner,
+    repo,
+    issue_number: pull_request.id,
+  });
+  console.log(
+    "Pull request",
+    {
+      owner,
+      repo,
+      issue_number: pull_request.id,
+    },
+    linkedIssues
+  );
   console.log(pull_request);
   return { status: HttpStatusCode.NOT_MODIFIED };
 }

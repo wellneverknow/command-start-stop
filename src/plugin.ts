@@ -1,3 +1,4 @@
+import { paginateGraphQL } from "@octokit/plugin-paginate-graphql";
 import { Octokit } from "@octokit/rest";
 import { createClient } from "@supabase/supabase-js";
 import { LogReturn, Logs } from "@ubiquity-dao/ubiquibot-logger";
@@ -7,7 +8,8 @@ import { Context, Env, PluginInputs } from "./types";
 import { addCommentToIssue } from "./utils/issue";
 
 export async function startStopTask(inputs: PluginInputs, env: Env) {
-  const octokit = new Octokit({ auth: inputs.authToken });
+  const customOctokit = Octokit.plugin(paginateGraphQL);
+  const octokit = new customOctokit({ auth: inputs.authToken });
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_KEY);
 
   const context: Context = {
@@ -23,7 +25,6 @@ export async function startStopTask(inputs: PluginInputs, env: Env) {
   context.adapters = createAdapters(supabase, context);
 
   try {
-    console.log("event", context.eventName);
     switch (context.eventName) {
       case "issue_comment.created":
         return await userStartStop(context);
