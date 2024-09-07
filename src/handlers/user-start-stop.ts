@@ -50,7 +50,7 @@ export async function userPullRequest(context: Context<"pull_request.opened"> | 
   const linkedIssues = await context.octokit.graphql.paginate(QUERY_CLOSING_ISSUE_REFERENCES, {
     owner,
     repo,
-    issue_number: pull_request.id,
+    issue_number: pull_request.number,
   });
   console.log(
     "Pull request",
