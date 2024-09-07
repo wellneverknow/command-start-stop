@@ -48,13 +48,13 @@ export async function userPullRequest(context: Context<"pull_request.opened"> | 
   const { payload } = context;
   const { pull_request } = payload;
   const { owner, repo } = getOwnerRepoFromHtmlUrl(pull_request.html_url);
-  const linkedIssues = await context.octokit.graphql.paginate<Repository>(QUERY_CLOSING_ISSUE_REFERENCES, {
+  const linkedIssues = await context.octokit.graphql.paginate<{ repository: Repository }>(QUERY_CLOSING_ISSUE_REFERENCES, {
     owner,
     repo,
     issue_number: pull_request.number,
   });
   console.log(linkedIssues);
-  const issues = linkedIssues.pullRequest?.closingIssuesReferences?.nodes;
+  const issues = linkedIssues.repository.pullRequest?.closingIssuesReferences?.nodes;
   if (!issues) {
     context.logger.info("No linked issues were found, nothing to do.");
     return { status: HttpStatusCode.NOT_MODIFIED };
