@@ -1,3 +1,4 @@
+import { Repository } from "@octokit/graphql-schema";
 import { Context, isContextCommentCreated } from "../types";
 import { QUERY_CLOSING_ISSUE_REFERENCES } from "../utils/get-closing-issue-references";
 import { addCommentToIssue, getOwnerRepoFromHtmlUrl } from "../utils/issue";
@@ -47,21 +48,23 @@ export async function userPullRequest(context: Context<"pull_request.opened"> | 
   const { payload } = context;
   const { pull_request } = payload;
   const { owner, repo } = getOwnerRepoFromHtmlUrl(pull_request.html_url);
-  const linkedIssues = await context.octokit.graphql.paginate(QUERY_CLOSING_ISSUE_REFERENCES, {
+  const linkedIssues = await context.octokit.graphql.paginate<Repository>(QUERY_CLOSING_ISSUE_REFERENCES, {
     owner,
     repo,
     issue_number: pull_request.number,
   });
-  console.log(
-    "Pull request",
-    {
-      owner,
-      repo,
-      issue_number: pull_request.id,
-    },
-    linkedIssues
-  );
-  console.log(pull_request);
+  console.log(linkedIssues);
+  const issues = linkedIssues.pullRequest?.closingIssuesReferences?.nodes;
+  if (!issues) {
+    context.logger.info("No linked issues were found, nothing to do.");
+    return { status: HttpStatusCode.NOT_MODIFIED };
+  }
+  for (const issue of issues) {
+    console.log(issue, pull_request.user);
+    if (!issue?.assignees.nodes?.includes((node) => node.login === pull_request.user?.login)) {
+      console.log("assigning!");
+    }
+  }
   // console.log(pull_request);
   //
   // const deadline = getDeadline(pull_request);

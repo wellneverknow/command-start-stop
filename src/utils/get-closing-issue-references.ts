@@ -6,6 +6,13 @@ export const QUERY_CLOSING_ISSUE_REFERENCES = /* GraphQL */ `
         closingIssuesReferences(first: 10, after: $cursor) {
           nodes {
             id
+            url
+            assignees(first: 100) {
+              nodes {
+                id
+                login
+              }
+            }
           }
           pageInfo {
             hasNextPage
