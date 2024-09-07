@@ -1,12 +1,8 @@
-import { Assignee, Context, ISSUE_TYPE, Label } from "../../types";
+import { Context, ISSUE_TYPE, Label } from "../../types";
 import { isParentIssue, getAvailableOpenedPullRequests, getAssignedIssues, addAssignees, addCommentToIssue, getTimeValue } from "../../utils/issue";
-import { calculateDurations } from "../../utils/shared";
 import { checkTaskStale } from "./check-task-stale";
 import { hasUserBeenUnassigned } from "./check-assignments";
-import { generateAssignmentComment } from "./generate-assignment-comment";
 import { getUserRoleAndTaskLimit } from "./get-user-task-limit-and-role";
-import { Context, ISSUE_TYPE, Label } from "../../types";
-import { addAssignees, addCommentToIssue, getAssignedIssues, getAvailableOpenedPullRequests, getTimeValue, isParentIssue } from "../../utils/issue";
 import { HttpStatusCode, Result } from "../result-types";
 import { generateAssignmentComment, getDeadline } from "./generate-assignment-comment";
 import structuredMetadata from "./structured-metadata";
@@ -14,8 +10,7 @@ import { assignTableComment } from "./table";
 
 export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"], teammates: string[]): Promise<Result> {
   const { logger, config } = context;
-  const { maxConcurrentTasks, taskStaleTimeoutDuration } = config;
-  const maxTask = await getUserRoleAndTaskLimit(context, sender.login);
+  const { taskStaleTimeoutDuration } = config;
 
   // is it a child issue?
   if (issue.body && isParentIssue(issue.body)) {
@@ -38,7 +33,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   } catch (e) {
     logger.error("Error while getting commit hash", { error: e as Error });
   }
-  
+
   // is it assignable?
 
   if (issue.state === ISSUE_TYPE.CLOSED) {
@@ -63,7 +58,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
   const toAssign = [];
   // check max assigned issues
   for (const user of teammates) {
-    if (await handleTaskLimitChecks(user, context, maxTask.limit, logger, sender.login)) {
+    if (await handleTaskLimitChecks(user, context, logger, sender.login)) {
       toAssign.push(user);
     }
   }
@@ -140,26 +135,26 @@ async function fetchUserIds(context: Context, username: string[]) {
   return ids;
 }
 
-async function handleTaskLimitChecks(username: string, context: Context, maxConcurrentTasks: number, logger: Context["logger"], sender: string) {
+async function handleTaskLimitChecks(username: string, context: Context, logger: Context["logger"], sender: string) {
   const openedPullRequests = await getAvailableOpenedPullRequests(context, username);
   const assignedIssues = await getAssignedIssues(context, username);
+  const { limit } = await getUserRoleAndTaskLimit(context, username);
 
   // check for max and enforce max
-
-  if (Math.abs(assignedIssues.length - openedPullRequests.length) >= maxConcurrentTasks) {
+  if (Math.abs(assignedIssues.length - openedPullRequests.length) >= limit) {
     if (username !== sender) {
       const logMessage = `${username} has reached their max task limit`;
       const log = logger.error(logMessage, {
         assignedIssues: assignedIssues.length,
         openedPullRequests: openedPullRequests.length,
-        maxConcurrentTasks,
+        limit,
       });
-    
+
       if (log?.logMessage?.diff) {
         await addCommentToIssue(context, log.logMessage.diff as string);
       }
     }
-  
+
     return false;
   }
 

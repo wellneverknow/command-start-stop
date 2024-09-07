@@ -172,7 +172,7 @@ describe("User start/stop", () => {
     await expect(userStartStop(context)).rejects.toThrow("Skipping '/start' since the issue is a parent issue");
   });
 
-  test("should set maxLimits to 4 if the user is a member", async () => {
+  test("should set maxLimits to 6 if the user is a member", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 5 } } }) as unknown as Sender;
 
@@ -184,10 +184,10 @@ describe("User start/stop", () => {
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
     await expect(userStartStop(context)).rejects.toThrow("You have reached your max task limit. Please close out some tasks before assigning new ones.");
 
-    expect(memberLimit).toEqual(4);
+    expect(memberLimit).toEqual(6);
   });
 
-test("should set maxLimits to 6 if the user is an admin", async () => {
+  test("should set maxLimits to 8 if the user is an admin", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
 
@@ -199,7 +199,7 @@ test("should set maxLimits to 6 if the user is an admin", async () => {
     context.adapters = createAdapters(getSupabase(), context as unknown as Context);
     await expect(userStartStop(context)).rejects.toThrow("You have reached your max task limit. Please close out some tasks before assigning new ones.");
 
-    expect(adminLimit).toEqual(6);
+    expect(adminLimit).toEqual(8);
   });
 
   test("User can't start an issue if they have previously been unassigned by an admin", async () => {
@@ -572,9 +572,9 @@ function createIssuesForMaxAssignment(n: number, userId: number) {
 }
 
 const maxConcurrentDefaults = {
-  admin: 6,
-  member: 4,
-  contributor: 3,
+  admin: 8,
+  member: 6,
+  contributor: 4,
 };
 
 function createContext(
