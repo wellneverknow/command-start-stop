@@ -1,7 +1,7 @@
 {
   "name": "Start | Stop",
   "description": "Assign or un-assign yourself from an issue.",
-  "ubiquity:listeners": ["issue_comment.created", "issues.assigned"],
+  "ubiquity:listeners": ["issue_comment.created", "issues.assigned", "pull_request.opened"],
   "commands": {
     "start": {
       "ubiquity:example": "/start",

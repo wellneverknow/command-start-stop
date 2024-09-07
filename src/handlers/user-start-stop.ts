@@ -26,7 +26,7 @@ export async function userStartStop(context: Context): Promise<Result> {
   return { status: HttpStatusCode.NOT_MODIFIED };
 }
 
-export async function userSelfAssign(context: Context): Promise<Result> {
+export async function userSelfAssign(context: Context<"issues.assigned">): Promise<Result> {
   const { payload } = context;
   const { issue } = payload;
   const deadline = getDeadline(issue);
@@ -40,4 +40,17 @@ export async function userSelfAssign(context: Context): Promise<Result> {
 
   await addCommentToIssue(context, `${users} the deadline is at ${deadline}`);
   return { status: HttpStatusCode.OK };
+}
+
+export async function userPullRequest(context: Context<"pull_request.opened">): Promise<Result> {
+  const { payload } = context;
+  const { pull_request } = payload;
+  const deadline = getDeadline(pull_request);
+
+  if (!deadline) {
+    context.logger.debug("Skipping deadline posting message because no deadline has been set.");
+    return { status: HttpStatusCode.NOT_MODIFIED };
+  }
+  context.logger.debug("Pull request", pull_request);
+  return { status: HttpStatusCode.NOT_MODIFIED };
 }
