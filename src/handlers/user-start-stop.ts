@@ -61,17 +61,17 @@ export async function userPullRequest(context: Context<"pull_request.opened"> | 
   }
   for (const issue of issues) {
     console.log(issue, pull_request.user);
-    if (!issue?.assignees.nodes?.includes((node) => node.login === pull_request.user?.login)) {
-      console.log("assigning!");
+    if (!issue?.assignees.nodes?.includes((node) => node.id === pull_request.user?.id)) {
+      const deadline = getDeadline(issue);
+      console.log(deadline);
+      if (!deadline) {
+        context.logger.debug("Skipping deadline posting message because no deadline has been set.");
+        return { status: HttpStatusCode.NOT_MODIFIED };
+      } else {
+        console.log("assigning!");
+        return await start(context, issue, payload.sender, []);
+      }
     }
   }
-  // console.log(pull_request);
-  //
-  // const deadline = getDeadline(pull_request);
-  // console.log(deadline);
-  // if (!deadline) {
-  //   context.logger.debug("Skipping deadline posting message because no deadline has been set.");
-  //   return { status: HttpStatusCode.NOT_MODIFIED };
-  // }
   return { status: HttpStatusCode.NOT_MODIFIED };
 }
