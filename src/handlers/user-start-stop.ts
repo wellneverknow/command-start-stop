@@ -62,14 +62,18 @@ export async function userPullRequest(context: Context<"pull_request.opened"> | 
   for (const issue of issues) {
     console.log(issue, pull_request.user);
     if (!issue?.assignees.nodes?.includes((node) => node.id === pull_request.user?.id)) {
-      const deadline = getDeadline(issue);
-      console.log(deadline);
-      if (!deadline) {
-        context.logger.debug("Skipping deadline posting message because no deadline has been set.");
-        return { status: HttpStatusCode.NOT_MODIFIED };
-      } else {
-        console.log("assigning!");
-        return await start(context, issue, payload.sender, []);
+      try {
+        const deadline = getDeadline(issue);
+        console.log(deadline);
+        if (!deadline) {
+          context.logger.debug("Skipping deadline posting message because no deadline has been set.");
+          return { status: HttpStatusCode.NOT_MODIFIED };
+        } else {
+          console.log("assigning!");
+          return await start(context, issue, payload.sender, []);
+        }
+      } catch (e) {
+        context.logger.error("Failed to assign the user to the issue.", { e });
       }
     }
   }
