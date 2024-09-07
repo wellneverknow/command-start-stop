@@ -46,14 +46,6 @@ export async function userSelfAssign(context: Context<"issues.assigned">): Promi
 export async function userPullRequest(context: Context<"pull_request.opened"> | Context<"pull_request.reopened">): Promise<Result> {
   const { payload } = context;
   const { pull_request } = payload;
-  console.log(pull_request);
-
-  const deadline = getDeadline(pull_request);
-  console.log(deadline);
-  if (!deadline) {
-    context.logger.debug("Skipping deadline posting message because no deadline has been set.");
-    return { status: HttpStatusCode.NOT_MODIFIED };
-  }
   const { owner, repo } = getOwnerRepoFromHtmlUrl(pull_request.html_url);
   const linkedIssues = await context.octokit.graphql.paginate(QUERY_CLOSING_ISSUE_REFERENCES, {
     owner,
@@ -70,5 +62,13 @@ export async function userPullRequest(context: Context<"pull_request.opened"> | 
     linkedIssues
   );
   console.log(pull_request);
+  // console.log(pull_request);
+  //
+  // const deadline = getDeadline(pull_request);
+  // console.log(deadline);
+  // if (!deadline) {
+  //   context.logger.debug("Skipping deadline posting message because no deadline has been set.");
+  //   return { status: HttpStatusCode.NOT_MODIFIED };
+  // }
   return { status: HttpStatusCode.NOT_MODIFIED };
 }
