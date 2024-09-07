@@ -150,9 +150,7 @@ async function handleTaskLimitChecks(username: string, context: Context, logger:
         limit,
       });
 
-      if (log.logMessage?.diff) {
-        await addCommentToIssue(context, log.logMessage.diff as string);
-      }
+      await addCommentToIssue(context, log.logMessage.diff);
     }
 
     return false;
