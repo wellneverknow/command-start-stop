@@ -1,7 +1,8 @@
 import { Assignee, Context, Sender } from "../../types";
 import { addCommentToIssue, closePullRequestForAnIssue } from "../../utils/issue";
+import { HttpStatusCode, Result } from "../result-types";
 
-export async function stop(context: Context, issue: Context["payload"]["issue"], sender: Sender, repo: Context["payload"]["repository"]) {
+export async function stop(context: Context, issue: Context["payload"]["issue"], sender: Sender, repo: Context["payload"]["repository"]): Promise<Result> {
   const { logger } = context;
   const issueNumber = issue.number;
 
@@ -11,7 +12,7 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
   const userToUnassign = assignees.find((assignee: Partial<Assignee>) => assignee?.login?.toLowerCase() === sender.login.toLowerCase());
 
   if (!userToUnassign) {
-    throw new Error(logger.error("You are not assigned to this task", { issueNumber, user: sender.login })?.logMessage.diff as string);
+    throw new Error(logger.error("You are not assigned to this task", { issueNumber, user: sender.login })?.logMessage.raw as string);
   }
 
   // close PR
@@ -47,5 +48,5 @@ export async function stop(context: Context, issue: Context["payload"]["issue"],
   });
 
   await addCommentToIssue(context, unassignedLog?.logMessage.diff as string);
-  return { output: "Task unassigned successfully" };
+  return { content: "Task unassigned successfully", status: HttpStatusCode.OK };
 }
