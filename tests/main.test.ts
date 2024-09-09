@@ -89,7 +89,7 @@ describe("User start/stop", () => {
 
     const { content } = await userStartStop(context);
 
-    expect(content).toEqual(SUCCESS_MESSAGE);
+    expect(content).toEqual("Task unassigned successfully");
   });
 
   test("Stopping an issue should close the author's linked PR", async () => {
