@@ -44,7 +44,7 @@ export async function userSelfAssign(context: Context<"issues.assigned">): Promi
   return { status: HttpStatusCode.OK };
 }
 
-export async function userPullRequest(context: Context<"pull_request.opened"> | Context<"pull_request.reopened">): Promise<Result> {
+export async function userPullRequest(context: Context<"pull_request.opened">): Promise<Result> {
   const { payload } = context;
   const { pull_request } = payload;
   const { owner, repo } = getOwnerRepoFromHtmlUrl(pull_request.html_url);
