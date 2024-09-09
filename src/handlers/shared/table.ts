@@ -14,7 +14,7 @@ export function assignTableComment({ taskDeadline, registeredWallet, isTaskStale
 ${taskStaleWarning}
 ${deadlineWarning}
 <tr>
-<td>Registered Wallet</td>
+<td>Beneficiary</td>
 <td>${registeredWallet}</td>
 </tr>
 </table>
