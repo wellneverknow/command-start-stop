@@ -2143,6 +2143,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@octokit/graphql-schema@npm:15.25.0":
+  version: 15.25.0
+  resolution: "@octokit/graphql-schema@npm:15.25.0"
+  dependencies:
+    graphql: "npm:^16.0.0"
+    graphql-tag: "npm:^2.10.3"
+  checksum: 10c0/c61898d062aa2559a72a2ac3f573410053ca763fe2797f7c4b46ddfa0c435325a7645e8f4613a6d39368d5b66db98b126efdb20ccb370b263eaaab5a67d1e2aa
+  languageName: node
+  linkType: hard
+
 "@octokit/graphql@npm:^7.1.0":
   version: 7.1.0
   resolution: "@octokit/graphql@npm:7.1.0"
@@ -2165,6 +2175,15 @@ __metadata:
   version: 8.2.1
   resolution: "@octokit/openapi-webhooks-types@npm:8.2.1"
   checksum: 10c0/9efd4eb29dc02ce0184cc8de3746ab4f1b260cfc37e714273ad16553ef69701cb71b43e6993bef1f648e5f7e343e13641bdb823ccfdd7ab9b89ff612cd04f954
+  languageName: node
+  linkType: hard
+
+"@octokit/plugin-paginate-graphql@npm:5.2.2":
+  version: 5.2.2
+  resolution: "@octokit/plugin-paginate-graphql@npm:5.2.2"
+  peerDependencies:
+    "@octokit/core": ">=6"
+  checksum: 10c0/726944d27459cf5f5682a65b52c01821d023a5b9d7a9ad3078070ebfd839a4819fb1ada64255a04ee0ef15dd43ee3286295a7a071e42d738221104aaa0f235d5
   languageName: node
   linkType: hard
 
@@ -2780,6 +2799,8 @@ __metadata:
     "@eslint/js": "npm:9.5.0"
     "@jest/globals": "npm:29.7.0"
     "@mswjs/data": "npm:0.16.1"
+    "@octokit/graphql-schema": "npm:15.25.0"
+    "@octokit/plugin-paginate-graphql": "npm:5.2.2"
     "@octokit/rest": "npm:20.1.1"
     "@octokit/webhooks": "npm:13.2.7"
     "@sinclair/typebox": "npm:^0.32.5"
@@ -5229,7 +5250,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql@npm:^16.8.1":
+"graphql-tag@npm:^2.10.3":
+  version: 2.12.6
+  resolution: "graphql-tag@npm:2.12.6"
+  dependencies:
+    tslib: "npm:^2.1.0"
+  peerDependencies:
+    graphql: ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 10c0/7763a72011bda454ed8ff1a0d82325f43ca6478e4ce4ab8b7910c4c651dd00db553132171c04d80af5d5aebf1ef6a8a9fd53ccfa33b90ddc00aa3d4be6114419
+  languageName: node
+  linkType: hard
+
+"graphql@npm:^16.0.0, graphql@npm:^16.8.1":
   version: 16.9.0
   resolution: "graphql@npm:16.9.0"
   checksum: 10c0/a8850f077ff767377237d1f8b1da2ec70aeb7623cdf1dfc9e1c7ae93accc0c8149c85abe68923be9871a2934b1bce5a2496f846d4d56e1cfb03eaaa7ddba9b6a
@@ -8740,6 +8772,13 @@ __metadata:
     minimist: "npm:^1.2.6"
     strip-bom: "npm:^3.0.0"
   checksum: 10c0/09a5877402d082bb1134930c10249edeebc0211f36150c35e1c542e5b91f1047b1ccf7da1e59babca1ef1f014c525510f4f870de7c9bda470c73bb4e2721b3ea
+  languageName: node
+  linkType: hard
+
+"tslib@npm:^2.1.0":
+  version: 2.7.0
+  resolution: "tslib@npm:2.7.0"
+  checksum: 10c0/469e1d5bf1af585742128827000711efa61010b699cb040ab1800bcd3ccdd37f63ec30642c9e07c4439c1db6e46345582614275daca3e0f4abae29b0083f04a6
   languageName: node
   linkType: hard
 
