@@ -72,7 +72,7 @@ describe("User start/stop", () => {
 
     const { content } = await userStartStop(context);
 
-    expect(content).toEqual("Task assigned successfully");
+    expect(content).toEqual(SUCCESS_MESSAGE);
 
     const issue2 = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     expect(issue2.assignees).toHaveLength(2);
