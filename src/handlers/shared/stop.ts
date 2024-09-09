@@ -47,11 +47,5 @@ export async function stop(
     );
   }
 
-  const unassignedLog = logger.info("You have been unassigned from the task", {
-    issueNumber,
-    user: userToUnassign.login,
-  });
-
-  await addCommentToIssue(context, unassignedLog?.logMessage.diff as string);
   return { content: "Task unassigned successfully", status: HttpStatusCode.OK };
 }
