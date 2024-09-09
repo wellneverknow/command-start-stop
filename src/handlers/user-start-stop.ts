@@ -11,7 +11,7 @@ export async function userStartStop(context: Context): Promise<Result> {
   }
   const { payload } = context;
   const { issue, comment, sender, repository } = payload;
-  const slashCommand = comment.body.split(" ")[0].replace("/", "");
+  const slashCommand = comment.body.trim().split(" ")[0].replace("/", "");
   const teamMates = comment.body
     .split("@")
     .slice(1)

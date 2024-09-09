@@ -27,6 +27,8 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
+const SUCCESS_MESSAGE = "Task assigned successfully";
+
 describe("User start/stop", () => {
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -44,7 +46,20 @@ describe("User start/stop", () => {
 
     const { content } = await userStartStop(context);
 
-    expect(content).toEqual("Task assigned successfully");
+    expect(content).toEqual(SUCCESS_MESSAGE);
+  });
+
+  test("User can start an issue with trimmed command", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
+
+    const context = createContext(issue, sender, "\n\n/start\n") as Context<"issue_comment.created">;
+
+    context.adapters = createAdapters(getSupabase(), context);
+
+    const { content } = await userStartStop(context);
+
+    expect(content).toEqual(SUCCESS_MESSAGE);
   });
 
   test("User can start an issue with teammates", async () => {
@@ -74,7 +89,7 @@ describe("User start/stop", () => {
 
     const { content } = await userStartStop(context);
 
-    expect(content).toEqual("Task unassigned successfully");
+    expect(content).toEqual(SUCCESS_MESSAGE);
   });
 
   test("Stopping an issue should close the author's linked PR", async () => {
