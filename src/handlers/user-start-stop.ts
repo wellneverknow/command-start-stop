@@ -1,5 +1,5 @@
 import { Repository } from "@octokit/graphql-schema";
-import { Context, isContextCommentCreated } from "../types";
+import { Context, isContextCommentCreated, Label } from "../types";
 import { QUERY_CLOSING_ISSUE_REFERENCES } from "../utils/get-closing-issue-references";
 import { addCommentToIssue, getOwnerRepoFromHtmlUrl } from "../utils/issue";
 import { HttpStatusCode, Result } from "./result-types";
@@ -59,16 +59,32 @@ export async function userPullRequest(context: Context<"pull_request.opened"> | 
     return { status: HttpStatusCode.NOT_MODIFIED };
   }
   for (const issue of issues) {
-    if (!issue?.assignees.nodes?.some((node) => node?.id.toString() === pull_request.user?.id.toString())) {
-      const deadline = getDeadline(issue?.labels?.nodes);
+    if (issue && !issue.assignees.nodes?.length) {
+      const labels =
+        issue.labels?.nodes?.reduce<Label[]>((acc, curr) => {
+          if (curr) {
+            acc.push({
+              ...curr,
+              id: Number(curr.id),
+              node_id: curr.id,
+              default: true,
+              description: curr.description ?? null,
+            });
+          }
+          return acc;
+        }, []) ?? [];
+      const deadline = getDeadline(labels);
       if (!deadline) {
         context.logger.debug("Skipping deadline posting message because no deadline has been set.");
         return { status: HttpStatusCode.NOT_MODIFIED };
       } else {
-        issue.assignees = issue.assignees.nodes;
-        issue.labels = issue.labels.nodes;
-        context.payload.issue = issue;
-        return await start(context, issue, payload.sender, []);
+        const issueWithComment: Context<"issue_comment.created">["payload"]["issue"] = {
+          ...issue,
+          assignees: issue.assignees.nodes as Context<"issue_comment.created">["payload"]["issue"]["assignees"],
+          labels,
+        } as unknown as Context<"issue_comment.created">["payload"]["issue"];
+        context.payload.issue = issueWithComment;
+        return await start(context, issueWithComment, payload.sender, []);
       }
     }
   }

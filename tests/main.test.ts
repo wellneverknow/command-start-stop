@@ -12,7 +12,7 @@ import dotenv from "dotenv";
 import { Logs, cleanLogString } from "@ubiquity-dao/ubiquibot-logger";
 dotenv.config();
 
-type Issue = Context["payload"]["issue"];
+type Issue = Context<"issue_comment.created">["payload"]["issue"];
 type PayloadSender = Context["payload"]["sender"];
 
 const octokit = jest.requireActual("@octokit/rest");
@@ -552,7 +552,7 @@ function createContext(
   return {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
-      issue: issue as unknown as Context["payload"]["issue"],
+      issue: issue as unknown as Context<"issue_comment.created">["payload"]["issue"],
       sender: sender as unknown as Context["payload"]["sender"],
       repository: db.repo.findFirst({ where: { id: { equals: 1 } } }) as unknown as Context["payload"]["repository"],
       comment: { body } as unknown as Context<"issue_comment.created">["payload"]["comment"],

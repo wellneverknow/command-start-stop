@@ -12,6 +12,7 @@ export const QUERY_CLOSING_ISSUE_REFERENCES = /* GraphQL */ `
               nodes {
                 id
                 name
+                description
               }
             }
             assignees(first: 100) {
