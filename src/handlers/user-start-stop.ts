@@ -82,8 +82,9 @@ export async function userPullRequest(context: Context<"pull_request.opened"> | 
           ...issue,
           assignees: issue.assignees.nodes as Context<"issue_comment.created">["payload"]["issue"]["assignees"],
           labels,
+          html_url: issue.url,
         } as unknown as Context<"issue_comment.created">["payload"]["issue"];
-        context.payload.issue = issueWithComment;
+        context.payload = Object.assign({ issue: issueWithComment }, context.payload);
         return await start(context, issueWithComment, payload.sender, []);
       }
     }
