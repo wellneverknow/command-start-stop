@@ -31,7 +31,7 @@ export async function userStartStop(context: Context): Promise<Result> {
 export async function userSelfAssign(context: Context<"issues.assigned">): Promise<Result> {
   const { payload } = context;
   const { issue } = payload;
-  const deadline = getDeadline(issue);
+  const deadline = getDeadline(issue.labels);
 
   if (!deadline) {
     context.logger.debug("Skipping deadline posting message because no deadline has been set.");
@@ -53,27 +53,22 @@ export async function userPullRequest(context: Context<"pull_request.opened"> | 
     repo,
     issue_number: pull_request.number,
   });
-  console.log(linkedIssues);
   const issues = linkedIssues.repository.pullRequest?.closingIssuesReferences?.nodes;
   if (!issues) {
     context.logger.info("No linked issues were found, nothing to do.");
     return { status: HttpStatusCode.NOT_MODIFIED };
   }
   for (const issue of issues) {
-    console.log(issue, pull_request.user);
-    if (!issue?.assignees.nodes?.includes((node) => node.id === pull_request.user?.id)) {
-      try {
-        const deadline = getDeadline(issue);
-        console.log(deadline);
-        if (!deadline) {
-          context.logger.debug("Skipping deadline posting message because no deadline has been set.");
-          return { status: HttpStatusCode.NOT_MODIFIED };
-        } else {
-          console.log("assigning!");
-          return await start(context, issue, payload.sender, []);
-        }
-      } catch (e) {
-        context.logger.error("Failed to assign the user to the issue.", { e });
+    if (!issue?.assignees.nodes?.some((node) => node?.id.toString() === pull_request.user?.id.toString())) {
+      const deadline = getDeadline(issue?.labels?.nodes);
+      if (!deadline) {
+        context.logger.debug("Skipping deadline posting message because no deadline has been set.");
+        return { status: HttpStatusCode.NOT_MODIFIED };
+      } else {
+        issue.assignees = issue.assignees.nodes;
+        issue.labels = issue.labels.nodes;
+        context.payload.issue = issue;
+        return await start(context, issue, payload.sender, []);
       }
     }
   }
