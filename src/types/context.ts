@@ -13,7 +13,7 @@ export type SupportedEvents = {
 };
 
 export function isContextCommentCreated(context: Context): context is Context<"issue_comment.created"> {
-  return "comment" in context.payload;
+  return "issue" in context.payload;
 }
 
 export interface Context<T extends SupportedEventsU = SupportedEventsU, TU extends SupportedEvents[T] = SupportedEvents[T]> {
