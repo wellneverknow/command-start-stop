@@ -1,8 +1,7 @@
 import { Repository } from "@octokit/graphql-schema";
 import { Context, isContextCommentCreated, Label } from "../types";
 import { QUERY_CLOSING_ISSUE_REFERENCES } from "../utils/get-closing-issue-references";
-import { getLinkedPullRequests } from "../utils/get-linked-prs";
-import { addCommentToIssue, getOwnerRepoFromHtmlUrl } from "../utils/issue";
+import { addCommentToIssue, closePullRequestForAnIssue, getOwnerRepoFromHtmlUrl } from "../utils/issue";
 import { HttpStatusCode, Result } from "./result-types";
 import { getDeadline } from "./shared/generate-assignment-comment";
 import { start } from "./shared/start";
@@ -98,32 +97,8 @@ export async function userUnassigned(context: Context): Promise<Result> {
     context.logger.debug("Payload does not contain an issue, skipping issues.unassigned event.");
     return { status: HttpStatusCode.NOT_MODIFIED };
   }
-  const { payload, logger } = context;
+  const { payload } = context;
   const { issue, sender, repository } = payload;
-  const linkedPullRequests = await getLinkedPullRequests(context, { owner: repository.owner.login, repository: repository.name, issue: issue.number });
-  context.logger.debug("Linked pull-requests", { linkedPullRequests });
-  if (!linkedPullRequests.length) {
-    return { status: HttpStatusCode.NOT_MODIFIED, content: logger.info("No linked pull requests to close").logMessage.raw };
-  }
-  for (const pullRequest of linkedPullRequests) {
-    if (pullRequest.author === sender.login) {
-      context.logger.info("Will attempt to close PR", { pullRequest });
-      await closePullRequest(context, pullRequest.number);
-    }
-  }
+  await closePullRequestForAnIssue(context, issue.number, repository, sender.login);
   return { status: HttpStatusCode.OK };
-}
-
-async function closePullRequest(context: Context, pullNumber: number) {
-  const payload = context.payload;
-  try {
-    await context.octokit.rest.pulls.update({
-      owner: payload.repository.owner.login,
-      repo: payload.repository.name,
-      pull_number: pullNumber,
-      state: "closed",
-    });
-  } catch (err) {
-    context.logger.fatal(`Closing pull request ${pullNumber} failed!`, { err });
-  }
 }
