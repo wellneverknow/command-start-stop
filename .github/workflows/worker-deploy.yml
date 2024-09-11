@@ -41,11 +41,11 @@ jobs:
           secrets: |
             SUPABASE_URL
             SUPABASE_KEY
-            APP_ID
+            BOT_USER_ID
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          APP_ID: ${{ secrets.APP_ID }}
+          BOT_USER_ID: ${{ secrets.BOT_USER_ID }}
 
       - name: Write Deployment URL to Summary
         run: |

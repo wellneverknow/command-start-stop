@@ -158,6 +158,15 @@ async function handleTaskLimitChecks(username: string, context: Context, logger:
       await addCommentToIssue(context, log.logMessage.diff);
     }
 
+<<<<<<< max-assignments
+=======
+  if (Math.abs(assignedIssues.length - openedPullRequests.length) >= maxConcurrentTasks) {
+    logger.error(username === sender ? "You have reached your max task limit" : `${username} has reached their max task limit`, {
+      assignedIssues: assignedIssues.length,
+      openedPullRequests: openedPullRequests.length,
+      maxConcurrentTasks,
+    });
+>>>>>>> development
     return false;
   }
 
