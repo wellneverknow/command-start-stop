@@ -8,7 +8,12 @@ import { generateAssignmentComment, getDeadline } from "./generate-assignment-co
 import structuredMetadata from "./structured-metadata";
 import { assignTableComment } from "./table";
 
-export async function start(context: Context, issue: Context["payload"]["issue"], sender: Context["payload"]["sender"], teammates: string[]): Promise<Result> {
+export async function start(
+  context: Context,
+  issue: Context<"issue_comment.created">["payload"]["issue"],
+  sender: Context["payload"]["sender"],
+  teammates: string[]
+): Promise<Result> {
   const { logger, config } = context;
   const { taskStaleTimeoutDuration } = config;
 
@@ -83,7 +88,7 @@ export async function start(context: Context, issue: Context["payload"]["issue"]
     throw new Error(logger.error("No price label is set to calculate the duration", { issueNumber: issue.number }).logMessage.raw);
   }
 
-  const deadline = getDeadline(issue);
+  const deadline = getDeadline(labels);
   const toAssignIds = await fetchUserIds(context, toAssign);
 
   const assignmentComment = await generateAssignmentComment(context, issue.created_at, issue.number, sender.id, deadline);

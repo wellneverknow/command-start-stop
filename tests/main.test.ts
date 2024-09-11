@@ -12,7 +12,7 @@ import dotenv from "dotenv";
 import { Logs, cleanLogString } from "@ubiquity-dao/ubiquibot-logger";
 dotenv.config();
 
-type Issue = Context["payload"]["issue"];
+type Issue = Context<"issue_comment.created">["payload"]["issue"];
 type PayloadSender = Context["payload"]["sender"];
 
 const octokit = jest.requireActual("@octokit/rest");
@@ -26,6 +26,8 @@ afterEach(() => {
   server.resetHandlers();
 });
 afterAll(() => server.close());
+
+const SUCCESS_MESSAGE = "Task assigned successfully";
 
 describe("User start/stop", () => {
   beforeEach(async () => {
@@ -44,7 +46,20 @@ describe("User start/stop", () => {
 
     const { content } = await userStartStop(context);
 
-    expect(content).toEqual("Task assigned successfully");
+    expect(content).toEqual(SUCCESS_MESSAGE);
+  });
+
+  test("User can start an issue with trimmed command", async () => {
+    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as PayloadSender;
+
+    const context = createContext(issue, sender, "\n\n/start\n") as Context<"issue_comment.created">;
+
+    context.adapters = createAdapters(getSupabase(), context);
+
+    const { content } = await userStartStop(context);
+
+    expect(content).toEqual(SUCCESS_MESSAGE);
   });
 
   test("User can start an issue with teammates", async () => {
@@ -57,7 +72,7 @@ describe("User start/stop", () => {
 
     const { content } = await userStartStop(context);
 
-    expect(content).toEqual("Task assigned successfully");
+    expect(content).toEqual(SUCCESS_MESSAGE);
 
     const issue2 = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
     expect(issue2.assignees).toHaveLength(2);
@@ -587,7 +602,7 @@ function createContext(
   return {
     adapters: {} as ReturnType<typeof createAdapters>,
     payload: {
-      issue: issue as unknown as Context["payload"]["issue"],
+      issue: issue as unknown as Context<"issue_comment.created">["payload"]["issue"],
       sender: sender as unknown as Context["payload"]["sender"],
       repository: db.repo.findFirst({ where: { id: { equals: 1 } } }) as unknown as Context["payload"]["repository"],
       comment: { body } as unknown as Context<"issue_comment.created">["payload"]["comment"],

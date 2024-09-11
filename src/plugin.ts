@@ -1,13 +1,15 @@
+import { paginateGraphQL } from "@octokit/plugin-paginate-graphql";
 import { Octokit } from "@octokit/rest";
 import { createClient } from "@supabase/supabase-js";
 import { LogReturn, Logs } from "@ubiquity-dao/ubiquibot-logger";
 import { createAdapters } from "./adapters";
-import { userSelfAssign, userStartStop } from "./handlers/user-start-stop";
+import { userPullRequest, userSelfAssign, userStartStop } from "./handlers/user-start-stop";
 import { Context, Env, PluginInputs } from "./types";
 import { addCommentToIssue } from "./utils/issue";
 
 export async function startStopTask(inputs: PluginInputs, env: Env) {
-  const octokit = new Octokit({ auth: inputs.authToken });
+  const customOctokit = Octokit.plugin(paginateGraphQL);
+  const octokit = new customOctokit({ auth: inputs.authToken });
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_KEY);
 
   const context: Context = {
@@ -27,7 +29,9 @@ export async function startStopTask(inputs: PluginInputs, env: Env) {
       case "issue_comment.created":
         return await userStartStop(context);
       case "issues.assigned":
-        return await userSelfAssign(context);
+        return await userSelfAssign(context as Context<"issues.assigned">);
+      case "pull_request.opened":
+        return await userPullRequest(context as Context<"pull_request.opened">);
       default:
         context.logger.error(`Unsupported event: ${context.eventName}`);
     }

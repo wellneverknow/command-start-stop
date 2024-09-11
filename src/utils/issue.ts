@@ -1,6 +1,6 @@
 import ms from "ms";
-import { Context } from "../types/context";
-import { GitHubIssueSearch, Review } from "../types/payload";
+import { Context, isContextCommentCreated } from "../types/context";
+import { GitHubIssueSearch, Issue, Review } from "../types/payload";
 import { getLinkedPullRequests, GetLinkedResults } from "./get-linked-prs";
 
 export function isParentIssue(body: string) {
@@ -30,11 +30,16 @@ export async function getAssignedIssues(context: Context, username: string): Pro
 }
 
 export async function addCommentToIssue(context: Context, message: string | null) {
-  const { payload, logger } = context;
   if (!message) {
-    logger.error("Message is not defined");
+    context.logger.error("Message is not defined");
     return;
   }
+
+  if (!isContextCommentCreated(context)) {
+    context.logger.error("Cannot post without a referenced issue.");
+    return;
+  }
+  const { payload } = context;
 
   try {
     await context.octokit.rest.issues.createComment({
