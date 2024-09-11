@@ -100,5 +100,5 @@ export async function userUnassigned(context: Context): Promise<Result> {
   const { payload } = context;
   const { issue, sender, repository } = payload;
   await closePullRequestForAnIssue(context, issue.number, repository, sender.login);
-  return { status: HttpStatusCode.OK };
+  return { status: HttpStatusCode.OK, content: "Linked pull-requests closed." };
 }
