@@ -6,14 +6,14 @@ import { createAdapters } from "../adapters";
 import { Env } from "./env";
 import { Logs } from "@ubiquity-dao/ubiquibot-logger";
 
-export type SupportedEventsU = "issue_comment.created" | "issues.assigned" | "pull_request.opened";
+export type SupportedEventsU = "issue_comment.created" | "issues.assigned" | "pull_request.opened" | "issues.unassigned";
 
 export type SupportedEvents = {
   [K in SupportedEventsU]: K extends WebhookEventName ? WebhookEvent<K> : never;
 };
 
 export function isContextCommentCreated(context: Context): context is Context<"issue_comment.created"> {
-  return "comment" in context.payload;
+  return "issue" in context.payload;
 }
 
 export interface Context<T extends SupportedEventsU = SupportedEventsU, TU extends SupportedEvents[T] = SupportedEvents[T]> {
