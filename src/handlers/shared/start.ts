@@ -147,26 +147,12 @@ async function handleTaskLimitChecks(username: string, context: Context, logger:
 
   // check for max and enforce max
   if (Math.abs(assignedIssues.length - openedPullRequests.length) >= limit) {
-    if (username !== sender) {
-      const logMessage = `${username} has reached their max task limit`;
-      const log = logger.error(logMessage, {
-        assignedIssues: assignedIssues.length,
-        openedPullRequests: openedPullRequests.length,
-        limit,
-      });
-
-      await addCommentToIssue(context, log.logMessage.diff);
-    }
-
-<<<<<<< max-assignments
-=======
-  if (Math.abs(assignedIssues.length - openedPullRequests.length) >= maxConcurrentTasks) {
     logger.error(username === sender ? "You have reached your max task limit" : `${username} has reached their max task limit`, {
       assignedIssues: assignedIssues.length,
       openedPullRequests: openedPullRequests.length,
-      maxConcurrentTasks,
+      limit,
     });
->>>>>>> development
+
     return false;
   }
 

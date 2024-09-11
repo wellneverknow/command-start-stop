@@ -1,6 +1,6 @@
 import ms from "ms";
 import { Context, isContextCommentCreated } from "../types/context";
-import { GitHubIssueSearch, Issue, Review } from "../types/payload";
+import { GitHubIssueSearch, Review } from "../types/payload";
 import { getLinkedPullRequests, GetLinkedResults } from "./get-linked-prs";
 
 export function isParentIssue(body: string) {
