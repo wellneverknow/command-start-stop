@@ -1,6 +1,6 @@
 import ms from "ms";
 import { Context } from "../types/context";
-import { Issue, GitHubIssueSearch, Review } from "../types/payload";
+import { GitHubIssueSearch, Review } from "../types/payload";
 import { getLinkedPullRequests, GetLinkedResults } from "./get-linked-prs";
 
 export function isParentIssue(body: string) {
@@ -21,17 +21,13 @@ export async function getAssignedIssues(context: Context, username: string): Pro
       })
       .then((issues) =>
         issues.filter((issue) => {
-          return (
-            issue.state === "open" &&
-            (issue.assignee?.login === username || issue.assignees?.some((assignee) => assignee.login === username))
-          );
+          return issue.state === "open" && (issue.assignee?.login === username || issue.assignees?.some((assignee) => assignee.login === username));
         })
       );
   } catch (err: unknown) {
     throw new Error(context.logger.error("Fetching assigned issues failed!", { error: err as Error }).logMessage.raw);
   }
 }
-
 
 export async function addCommentToIssue(context: Context, message: string | null) {
   const { payload, logger } = context;
