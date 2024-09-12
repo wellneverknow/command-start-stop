@@ -202,21 +202,6 @@ describe("User start/stop", () => {
     expect(memberLimit).toEqual(6);
   });
 
-  test("should set maxLimits to 8 if the user is an admin", async () => {
-    const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 1 } } }) as unknown as Sender;
-
-    const adminLimit = maxConcurrentDefaults.admin;
-
-    createIssuesForMaxAssignment(adminLimit + 4, sender.id);
-    const context = createContext(issue, sender) as unknown as Context;
-
-    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
-    await expect(userStartStop(context)).rejects.toThrow("You have reached your max task limit. Please close out some tasks before assigning new ones.");
-
-    expect(adminLimit).toEqual(8);
-  });
-
   test("User can't start an issue if they have previously been unassigned by an admin", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 6 } } }) as unknown as Issue;
     const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
@@ -587,7 +572,7 @@ function createIssuesForMaxAssignment(n: number, userId: number) {
 }
 
 const maxConcurrentDefaults = {
-  admin: 8,
+  admin: Infinity,
   member: 6,
   contributor: 4,
 };

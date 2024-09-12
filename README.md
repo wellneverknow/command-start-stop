@@ -39,7 +39,6 @@ To configure your Ubiquibot to run this plugin, add the following to the `.ubiqu
     reviewDelayTolerance: "3 Days"
     taskStaleTimeoutDuration: "30 Days"
     maxConcurrentTasks: # Default concurrent task limits per role.
-      admin: 10
       member: 5
       contributor: 3
     startRequiresWallet: true # default is true
