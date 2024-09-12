@@ -187,16 +187,19 @@ describe("User start/stop", () => {
     await expect(userStartStop(context)).rejects.toThrow("Skipping '/start' since the issue is a parent issue");
   });
 
-  test("User can't start another issue if they have reached the max limit", async () => {
+  test("should set maxLimits to 6 if the user is a member", async () => {
     const issue = db.issue.findFirst({ where: { id: { equals: 1 } } }) as unknown as Issue;
-    const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
+    const sender = db.users.findFirst({ where: { id: { equals: 5 } } }) as unknown as Sender;
 
-    const context = createContext(issue, sender) as Context<"issue_comment.created">;
-    context.config.maxConcurrentTasks = 1;
+    const memberLimit = maxConcurrentDefaults.member;
 
-    context.adapters = createAdapters(getSupabase(), context);
+    createIssuesForMaxAssignment(memberLimit + 4, sender.id);
+    const context = createContext(issue, sender) as unknown as Context;
 
+    context.adapters = createAdapters(getSupabase(), context as unknown as Context);
     await expect(userStartStop(context)).rejects.toThrow("You have reached your max task limit. Please close out some tasks before assigning new ones.");
+
+    expect(memberLimit).toEqual(6);
   });
 
   test("User can't start an issue if they have previously been unassigned by an admin", async () => {
@@ -557,6 +560,23 @@ async function setupTests() {
   });
 }
 
+function createIssuesForMaxAssignment(n: number, userId: number) {
+  const user = db.users.findFirst({ where: { id: { equals: userId } } });
+  for (let i = 0; i < n; i++) {
+    db.issue.create({
+      ...issueTemplate,
+      id: i + 7,
+      assignee: user,
+    });
+  }
+}
+
+const maxConcurrentDefaults = {
+  admin: Infinity,
+  member: 6,
+  contributor: 4,
+};
+
 function createContext(
   issue: Record<string, unknown>,
   sender: Record<string, unknown>,
@@ -579,7 +599,7 @@ function createContext(
     config: {
       reviewDelayTolerance: "3 Days",
       taskStaleTimeoutDuration: "30 Days",
-      maxConcurrentTasks: 3,
+      maxConcurrentTasks: maxConcurrentDefaults,
       startRequiresWallet,
       emptyWalletText: "Please set your wallet address with the /wallet command first and try again.",
     },
