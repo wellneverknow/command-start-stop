@@ -1,6 +1,6 @@
 import ms from "ms";
 import { Context } from "../types/context";
-import { GitHubIssueSearch, Issue, Review } from "../types/payload";
+import { GitHubIssueSearch, Review } from "../types/payload";
 import { getLinkedPullRequests, GetLinkedResults } from "./get-linked-prs";
 
 export function isParentIssue(body: string) {
@@ -8,13 +8,22 @@ export function isParentIssue(body: string) {
   return body.match(parentPattern);
 }
 
-export async function getAssignedIssues(context: Context, username: string): Promise<Issue[]> {
-  const { payload } = context;
+export async function getAssignedIssues(context: Context, username: string): Promise<GitHubIssueSearch["items"]> {
+  const payload = context.payload;
 
   try {
-    return (await context.octokit.paginate(context.octokit.rest.search.issuesAndPullRequests, {
-      q: `is:issue is:open assignee:${username} org:${payload.repository.owner.login}`,
-    })) as Issue[];
+    return await context.octokit
+      .paginate(context.octokit.search.issuesAndPullRequests, {
+        q: `org:${payload.repository.owner.login} assignee:${username} is:open is:issue`,
+        per_page: 100,
+        order: "desc",
+        sort: "created",
+      })
+      .then((issues) =>
+        issues.filter((issue) => {
+          return issue.state === "open" && (issue.assignee?.login === username || issue.assignees?.some((assignee) => assignee.login === username));
+        })
+      );
   } catch (err: unknown) {
     throw new Error(context.logger.error("Fetching assigned issues failed!", { error: err as Error }).logMessage.raw);
   }
