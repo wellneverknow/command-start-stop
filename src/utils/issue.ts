@@ -1,5 +1,5 @@
 import ms from "ms";
-import { Context, isContextCommentCreated } from "../types/context";
+import { Context } from "../types/context";
 import { GitHubIssueSearch, Issue, Review } from "../types/payload";
 import { getLinkedPullRequests, GetLinkedResults } from "./get-linked-prs";
 
@@ -26,7 +26,7 @@ export async function addCommentToIssue(context: Context, message: string | null
     return;
   }
 
-  if (!isContextCommentCreated(context)) {
+  if (!("issue" in context.payload)) {
     context.logger.error("Cannot post without a referenced issue.");
     return;
   }

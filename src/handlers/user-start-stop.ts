@@ -1,5 +1,5 @@
 import { Repository } from "@octokit/graphql-schema";
-import { Context, isContextCommentCreated, Label } from "../types";
+import { Context, isIssueCommentEvent, Label } from "../types";
 import { QUERY_CLOSING_ISSUE_REFERENCES } from "../utils/get-closing-issue-references";
 import { addCommentToIssue, closePullRequestForAnIssue, getOwnerRepoFromHtmlUrl } from "../utils/issue";
 import { HttpStatusCode, Result } from "./result-types";
@@ -8,7 +8,7 @@ import { start } from "./shared/start";
 import { stop } from "./shared/stop";
 
 export async function userStartStop(context: Context): Promise<Result> {
-  if (!isContextCommentCreated(context)) {
+  if (!isIssueCommentEvent(context)) {
     return { status: HttpStatusCode.NOT_MODIFIED };
   }
   const { payload } = context;
@@ -93,7 +93,7 @@ export async function userPullRequest(context: Context<"pull_request.opened">): 
 }
 
 export async function userUnassigned(context: Context): Promise<Result> {
-  if (!isContextCommentCreated(context)) {
+  if (!("issue" in context.payload)) {
     context.logger.debug("Payload does not contain an issue, skipping issues.unassigned event.");
     return { status: HttpStatusCode.NOT_MODIFIED };
   }

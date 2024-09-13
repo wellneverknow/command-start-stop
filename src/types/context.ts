@@ -12,7 +12,7 @@ export type SupportedEvents = {
   [K in SupportedEventsU]: K extends WebhookEventName ? WebhookEvent<K> : never;
 };
 
-export function isContextCommentCreated(context: Context): context is Context<"issue_comment.created"> {
+export function isIssueCommentEvent(context: Context): context is Context<"issue_comment.created"> {
   return "issue" in context.payload;
 }
 
