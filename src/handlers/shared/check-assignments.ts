@@ -1,8 +1,8 @@
-import { Context, isContextCommentCreated } from "../../types";
+import { Context } from "../../types";
 import { getOwnerRepoFromHtmlUrl } from "../../utils/issue";
 
 async function getUserStopComments(context: Context, username: string): Promise<number> {
-  if (!isContextCommentCreated(context)) {
+  if (!("issue" in context.payload)) {
     throw new Error("The context does not contain an issue.");
   }
   const { payload, octokit, logger } = context;
@@ -55,7 +55,7 @@ export async function hasUserBeenUnassigned(context: Context, username: string):
 }
 
 async function getAssignmentEvents(context: Context) {
-  if (!isContextCommentCreated(context)) {
+  if (!("issue" in context.payload)) {
     throw new Error("The context does not contain an issue.");
   }
   const { repository, issue } = context.payload;

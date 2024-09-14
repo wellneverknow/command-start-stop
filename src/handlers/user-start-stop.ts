@@ -1,14 +1,14 @@
 import { Repository } from "@octokit/graphql-schema";
-import { Context, isContextCommentCreated, Label } from "../types";
+import { Context, isIssueCommentEvent, Label } from "../types";
 import { QUERY_CLOSING_ISSUE_REFERENCES } from "../utils/get-closing-issue-references";
-import { addCommentToIssue, getOwnerRepoFromHtmlUrl } from "../utils/issue";
+import { addCommentToIssue, closePullRequestForAnIssue, getOwnerRepoFromHtmlUrl } from "../utils/issue";
 import { HttpStatusCode, Result } from "./result-types";
 import { getDeadline } from "./shared/generate-assignment-comment";
 import { start } from "./shared/start";
 import { stop } from "./shared/stop";
 
 export async function userStartStop(context: Context): Promise<Result> {
-  if (!isContextCommentCreated(context)) {
+  if (!isIssueCommentEvent(context)) {
     return { status: HttpStatusCode.NOT_MODIFIED };
   }
   const { payload } = context;
@@ -90,4 +90,15 @@ export async function userPullRequest(context: Context<"pull_request.opened">): 
     }
   }
   return { status: HttpStatusCode.NOT_MODIFIED };
+}
+
+export async function userUnassigned(context: Context): Promise<Result> {
+  if (!("issue" in context.payload)) {
+    context.logger.debug("Payload does not contain an issue, skipping issues.unassigned event.");
+    return { status: HttpStatusCode.NOT_MODIFIED };
+  }
+  const { payload } = context;
+  const { issue, sender, repository } = payload;
+  await closePullRequestForAnIssue(context, issue.number, repository, sender.login);
+  return { status: HttpStatusCode.OK, content: "Linked pull-requests closed." };
 }

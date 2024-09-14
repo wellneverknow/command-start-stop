@@ -4,7 +4,7 @@ import { db } from "./__mocks__/db";
 import { server } from "./__mocks__/node";
 import usersGet from "./__mocks__/users-get.json";
 import { expect, describe, beforeAll, beforeEach, afterAll, afterEach } from "@jest/globals";
-import { userStartStop } from "../src/handlers/user-start-stop";
+import { userStartStop, userUnassigned } from "../src/handlers/user-start-stop";
 import issueTemplate from "./__mocks__/issue-template";
 import { createAdapters } from "../src/adapters";
 import { createClient } from "@supabase/supabase-js";
@@ -103,6 +103,26 @@ describe("User start/stop", () => {
     const { content } = await userStartStop(context);
 
     expect(content).toEqual("Task unassigned successfully");
+    const logs = infoSpy.mock.calls.flat();
+    expect(logs[0]).toMatch(/Opened prs/);
+    expect(cleanLogString(logs[3])).toMatch(
+      cleanLogString(
+        " › ```diff# These linked pull requests are closed:  http://github.com/ubiquity/test-repo/pull/2  http://github.com/ubiquity/test-repo/pull/3"
+      )
+    );
+  });
+
+  test("Author's manual unassign should close linked issue", async () => {
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
+    const issue = db.issue.findFirst({ where: { id: { equals: 2 } } }) as unknown as Issue;
+    const sender = db.users.findFirst({ where: { id: { equals: 2 } } }) as unknown as PayloadSender;
+    const context = createContext(issue, sender, "") as Context<"issues.unassigned">;
+
+    context.adapters = createAdapters(getSupabase(), context);
+
+    const { content } = await userUnassigned(context);
+
+    expect(content).toEqual("Linked pull-requests closed.");
     const logs = infoSpy.mock.calls.flat();
     expect(logs[0]).toMatch(/Opened prs/);
     expect(cleanLogString(logs[3])).toMatch(
