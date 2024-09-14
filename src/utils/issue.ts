@@ -120,7 +120,6 @@ export async function closePullRequestForAnIssue(context: Context, issueNumber: 
     return logger.info(`No PRs were closed`);
   }
 
-  await addCommentToIssue(context, comment);
   return logger.info(comment);
 }
 
