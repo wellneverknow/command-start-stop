@@ -35,7 +35,9 @@ export default {
       if (!startStopSettingsValidator.test(settings)) {
         const errorDetails: string[] = [];
         for (const error of startStopSettingsValidator.errors(settings)) {
-          errorDetails.push(`${error.path}: ${error.message}`);
+          const errorMessage = `${error.path}: ${error.message}`;
+          console.error(errorMessage);
+          errorDetails.push(errorMessage);
         }
         return new Response(JSON.stringify({ error: `Bad Request: the settings are invalid. ${errorDetails.join("; ")}` }), {
           status: 400,
@@ -48,7 +50,9 @@ export default {
       if (!envConfigValidator.test(env)) {
         const errorDetails: string[] = [];
         for (const error of envConfigValidator.errors(env)) {
-          errorDetails.push(`${error.path}: ${error.message}`);
+          const errorMessage = `${error.path}: ${error.message}`;
+          console.error(errorMessage);
+          errorDetails.push(errorMessage);
         }
         return new Response(JSON.stringify({ error: `Bad Request: the environment is invalid. ${errorDetails.join("; ")}` }), {
           status: 400,
