@@ -1,7 +1,7 @@
 import { Value } from "@sinclair/typebox/value";
 import manifest from "../manifest.json";
 import { startStopTask } from "./plugin";
-import { Env, envConfigValidator, startStopSchema, startStopSettingsValidator } from "./types";
+import { Env, envConfigValidator, startStopSchema, StartStopSettings, startStopSettingsValidator } from "./types";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -30,11 +30,20 @@ export default {
 
       const webhookPayload = await request.json();
 
-      const settings = Value.Decode(startStopSchema, Value.Default(startStopSchema, webhookPayload.settings));
+      const settings = Value.Default(startStopSchema, webhookPayload.settings) as StartStopSettings;
 
       if (!startStopSettingsValidator.test(settings)) {
-        throw new Error("Invalid settings provided");
+        const errorDetails: string[] = [];
+        for (const error of startStopSettingsValidator.errors(settings)) {
+          errorDetails.push(`${error.path}: ${error.message}`);
+        }
+        return new Response(JSON.stringify({ error: `Bad Request: the settings are invalid. ${errorDetails.join("; ")}` }), {
+          status: 400,
+          headers: { "content-type": "application/json" },
+        });
       }
+
+      const decodedSettings = Value.Decode(startStopSchema, settings);
 
       if (!envConfigValidator.test(env)) {
         const errorDetails: string[] = [];
@@ -49,7 +58,7 @@ export default {
 
       const decodedEnv = Value.Decode(envConfigValidator.schema, env);
       webhookPayload.env = decodedEnv;
-      webhookPayload.settings = settings;
+      webhookPayload.settings = decodedSettings;
       await startStopTask(webhookPayload, decodedEnv);
       return new Response(JSON.stringify("OK"), { status: 200, headers: { "content-type": "application/json" } });
     } catch (error) {
