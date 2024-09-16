@@ -10,14 +10,10 @@ export async function getUserRoleAndTaskLimit(context: Context, user: string): P
   const { config, logger } = context;
   const { maxConcurrentTasks } = config;
 
-  console.log("max concurrent tasks", maxConcurrentTasks);
-
   const minUserTaskLimit = Object.entries(maxConcurrentTasks).reduce((minTask, [role, limit]) => (limit < minTask.limit ? { role, limit } : minTask), {
     role: "",
     limit: Infinity,
   } as MatchingUserProps);
-
-  console.log(minUserTaskLimit);
 
   try {
     // Validate the organization login
